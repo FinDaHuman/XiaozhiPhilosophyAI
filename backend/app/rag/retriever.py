@@ -10,7 +10,7 @@ from typing import Optional
 
 from langchain_core.documents import Document
 from langchain_chroma import Chroma
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from app.rag.embeddings import get_embedding_model
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -38,16 +38,13 @@ class PhilosophyRetriever:
         self.collection_name = collection_name or CHROMA_COLLECTION
         self.top_k = top_k or TOP_K
         self._vectorstore: Optional[Chroma] = None
-        self._embeddings: Optional[GoogleGenerativeAIEmbeddings] = None
+        self._embeddings = None
 
     @property
-    def embeddings(self) -> GoogleGenerativeAIEmbeddings:
+    def embeddings(self):
         """Lazy-initialize the embedding model."""
         if self._embeddings is None:
-            self._embeddings = GoogleGenerativeAIEmbeddings(
-                model=EMBEDDING_MODEL,
-                google_api_key=os.getenv("GOOGLE_API_KEY"),
-            )
+            self._embeddings = get_embedding_model()
         return self._embeddings
 
     @property

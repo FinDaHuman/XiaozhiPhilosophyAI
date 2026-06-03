@@ -1,8 +1,9 @@
 # Environment
 .env
 
-# Vector store
+# Vector store and local models
 chroma_db/
+models/
 
 # Python
 __pycache__/

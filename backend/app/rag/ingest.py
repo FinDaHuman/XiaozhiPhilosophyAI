@@ -23,7 +23,7 @@ import fitz  # PyMuPDF
 from docx import Document as DocxDocument
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from app.rag.embeddings import get_embedding_model as get_embeddings
 from langchain_chroma import Chroma
 from dotenv import load_dotenv
 
@@ -159,17 +159,12 @@ def chunk_documents(documents: list[Document]) -> list[Document]:
     return chunks
 
 
-def get_embeddings() -> GoogleGenerativeAIEmbeddings:
-    """Create the embedding model instance."""
-    return GoogleGenerativeAIEmbeddings(
-        model=EMBEDDING_MODEL,
-        google_api_key=os.getenv("GOOGLE_API_KEY"),
-    )
+
 
 
 def build_vector_store(
     chunks: list[Document],
-    embeddings: Optional[GoogleGenerativeAIEmbeddings] = None,
+    embeddings = None,
     persist_directory: Optional[str] = None,
 ) -> Chroma:
     """
@@ -182,7 +177,7 @@ def build_vector_store(
     embeddings = embeddings or get_embeddings()
     persist_dir = persist_directory or CHROMA_PERSIST_DIR
 
-    BATCH_SIZE = 20  # Small batches to stay well under 100 req/min
+    BATCH_SIZE = 500  # Larger batches for local embeddings
     MAX_RETRIES = 5
     total_batches = math.ceil(len(chunks) / BATCH_SIZE)
 
@@ -228,17 +223,12 @@ def build_vector_store(
                 else:
                     raise  # Non-rate-limit error, don't retry
 
-        # Delay between successful batches to avoid hitting limits
-        if i + BATCH_SIZE < len(chunks):
-            print(f"  ⏳ Cooling down 65s before next batch...")
-            time.sleep(65)
 
-    print(f"\n  ✅ Vector store built successfully!")
     return vectorstore
 
 
 def load_existing_vector_store(
-    embeddings: Optional[GoogleGenerativeAIEmbeddings] = None,
+    embeddings = None,
     persist_directory: Optional[str] = None,
 ) -> Optional[Chroma]:
     """Load an existing ChromaDB vector store, if it exists."""
@@ -255,7 +245,7 @@ def load_existing_vector_store(
     )
 
 
-def run_ingest_pipeline(data_dir: Optional[str] = None) -> Chroma:
+def run_ingest_pipeline(data_dir: Optional[str] = None, resume: bool = False) -> Chroma:
     """
     Full ingestion pipeline:
     1. Load documents from data/
@@ -263,6 +253,8 @@ def run_ingest_pipeline(data_dir: Optional[str] = None) -> Chroma:
     3. Chunk
     4. Embed
     5. Store in ChromaDB
+
+    If resume=True, skip chunks that were already embedded in a previous run.
     """
     print("\n🚀 Starting Knowledge Base Ingestion Pipeline")
     print("=" * 50)
@@ -279,6 +271,36 @@ def run_ingest_pipeline(data_dir: Optional[str] = None) -> Chroma:
     chunks = chunk_documents(documents)
     print(f"  📊 Created {len(chunks)} chunks (size={CHUNK_SIZE}, overlap={CHUNK_OVERLAP})")
 
+    # Check for resume
+    if resume:
+        existing = load_existing_vector_store()
+        if existing is not None:
+            try:
+                existing_count = existing._collection.count()
+                if existing_count > 0 and existing_count < len(chunks):
+                    print(f"\n🔄 Resuming: skipping {existing_count} already-embedded chunks...")
+                    chunks = chunks[existing_count:]
+                    print(f"  📊 Remaining: {len(chunks)} chunks to embed")
+
+                    # Add remaining chunks to existing store
+                    print("\n🧠 Step 3: Embedding remaining chunks...")
+                    vectorstore = build_vector_store_resume(chunks, existing)
+
+                    total = existing_count + len(chunks)
+                    print("\n" + "=" * 50)
+                    print("✅ Knowledge Base Updated!")
+                    print(f"   Previously embedded: {existing_count}")
+                    print(f"   Newly embedded: {len(chunks)}")
+                    print(f"   Total chunks: {total}")
+                    print(f"   Store: {CHROMA_PERSIST_DIR}")
+                    return vectorstore
+
+                elif existing_count >= len(chunks):
+                    print(f"\n✅ All {existing_count} chunks already embedded. Nothing to do!")
+                    return existing
+            except Exception as e:
+                print(f"  ⚠️  Could not read existing store: {e}. Starting fresh...")
+
     # Step 4 & 5: Embed and Store
     print("\n🧠 Step 3: Embedding and storing...")
     vectorstore = build_vector_store(chunks)
@@ -292,7 +314,56 @@ def run_ingest_pipeline(data_dir: Optional[str] = None) -> Chroma:
     return vectorstore
 
 
+def build_vector_store_resume(
+    chunks: list[Document],
+    existing_store: Chroma,
+) -> Chroma:
+    """Add new chunks to an existing vector store with rate limiting."""
+    import time
+    import math
+
+    BATCH_SIZE = 20
+    MAX_RETRIES = 5
+    total_batches = math.ceil(len(chunks) / BATCH_SIZE)
+
+    print(f"  📊 Embedding {len(chunks)} chunks in {total_batches} batches...")
+
+    for i in range(0, len(chunks), BATCH_SIZE):
+        batch_num = (i // BATCH_SIZE) + 1
+        batch = chunks[i : i + BATCH_SIZE]
+
+        for attempt in range(1, MAX_RETRIES + 1):
+            try:
+                print(f"\n  📦 Batch {batch_num}/{total_batches}: embedding {len(batch)} chunks...")
+                existing_store.add_documents(batch)
+                print(f"  ✅ Batch {batch_num}/{total_batches} complete!")
+                break
+            except Exception as e:
+                error_str = str(e)
+                if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str:
+                    wait_secs = 65 * attempt
+                    print(f"  ⚠️  Rate limited (attempt {attempt}/{MAX_RETRIES}). Waiting {wait_secs}s...")
+                    time.sleep(wait_secs)
+                    if attempt == MAX_RETRIES:
+                        raise RuntimeError(
+                            f"Failed after {MAX_RETRIES} retries. "
+                            f"Embedded up to batch {batch_num-1}. Run with --resume again later."
+                        ) from e
+                else:
+                    raise
+
+        if i + BATCH_SIZE < len(chunks):
+            print(f"  ⏳ Cooling down 65s before next batch...")
+            time.sleep(65)
+
+    print(f"\n  ✅ All remaining chunks embedded!")
+    return existing_store
+
+
 # ─── CLI Entry Point ─────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    run_ingest_pipeline()
+    import sys
+    resume = "--resume" in sys.argv
+    run_ingest_pipeline(resume=resume)
+

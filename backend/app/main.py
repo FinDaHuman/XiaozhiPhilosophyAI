@@ -11,10 +11,14 @@ import sys
 import os
 
 # Fix Windows console encoding for emoji/Unicode output
+if os.name == "nt":
+    os.system("chcp 65001 >nul 2>&1")
 if sys.stdout and hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 if sys.stderr and hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+if sys.stdin and hasattr(sys.stdin, "reconfigure"):
+    sys.stdin.reconfigure(encoding="utf-8", errors="replace")
 
 # Ensure the backend directory is in the path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -72,7 +76,8 @@ def run_api():
 def run_ingest():
     """Run the document ingestion pipeline."""
     from app.rag.ingest import run_ingest_pipeline
-    run_ingest_pipeline()
+    resume = "--resume" in sys.argv
+    run_ingest_pipeline(resume=resume)
 
 
 def print_usage():
