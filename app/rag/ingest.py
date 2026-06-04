@@ -130,15 +130,37 @@ def load_documents(data_dir: Optional[str] = None) -> list[Document]:
                 print(f"  ⚠️  Skipped (empty): {file_path.name}")
                 continue
 
-            doc = Document(
-                page_content=cleaned,
-                metadata={
-                    "source": file_path.name,
-                    "file_type": ext,
-                    "file_path": str(file_path.resolve()),
-                },
-            )
-            documents.append(doc)
+            if file_path.name == "Slide_OCR.md":
+                import re
+                # Split text whenever "## [Slide X]" is encountered
+                slides = re.split(r'(?=## \[Slide \d+\])', cleaned)
+                for slide_text in slides:
+                    slide_text = slide_text.strip()
+                    if not slide_text:
+                        continue
+                    
+                    match = re.search(r'## \[Slide (\d+)\]', slide_text)
+                    if match:
+                        slide_num = match.group(1)
+                        doc = Document(
+                            page_content=slide_text,
+                            metadata={
+                                "source": f"Slide {slide_num}",
+                                "file_type": ext,
+                                "file_path": str(file_path.resolve()),
+                            },
+                        )
+                        documents.append(doc)
+            else:
+                doc = Document(
+                    page_content=cleaned,
+                    metadata={
+                        "source": file_path.name,
+                        "file_type": ext,
+                        "file_path": str(file_path.resolve()),
+                    },
+                )
+                documents.append(doc)
             print(f"  ✅ Loaded: {file_path.name} ({len(cleaned):,} chars)")
 
         except Exception as e:

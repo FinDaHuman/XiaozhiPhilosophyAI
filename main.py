@@ -62,11 +62,22 @@ def run_api():
     from fastapi import FastAPI
     from app.api.routes import router
 
+    from fastapi.middleware.cors import CORSMiddleware
+
     app = FastAPI(
         title="Xiaozhi Philosophy AI",
         description="API cho trợ lý AI Triết học Mác-Lênin",
         version="1.0.0",
     )
+    
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    
     app.include_router(router)
 
     print("🚀 Starting Xiaozhi Philosophy AI API...")
@@ -81,6 +92,8 @@ def run_web():
     from fastapi import FastAPI
     from fastapi.staticfiles import StaticFiles
     from app.api.routes import router
+
+    from fastapi.middleware.cors import CORSMiddleware
 
     # Pre-extract slides
     print("📚 Extracting lesson slides from PDF...")
@@ -98,6 +111,15 @@ def run_web():
         description="Website học Triết học Mác-Lênin với AI",
         version="1.0.0",
     )
+    
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    
     app.include_router(router)
 
     print("")
