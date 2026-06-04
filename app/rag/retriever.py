@@ -1,8 +1,8 @@
 """
 Philosophy Retriever
 
-Wraps ChromaDB similarity search to retrieve relevant document chunks
-for a given question.
+Wraps ChromaDB similarity search, BM25 keyword search, and MultiQueryRetriever 
+to retrieve relevant document chunks for a given question.
 """
 
 import os
@@ -10,6 +10,11 @@ from typing import Optional
 
 from langchain_core.documents import Document
 from langchain_chroma import Chroma
+from langchain.retrievers import EnsembleRetriever
+from langchain.retrievers.multi_query import MultiQueryRetriever
+from langchain_community.retrievers import BM25Retriever
+from langchain_groq import ChatGroq
+
 from app.rag.embeddings import get_embedding_model
 from dotenv import load_dotenv
 
@@ -20,12 +25,13 @@ CHROMA_PERSIST_DIR = os.getenv("CHROMA_PERSIST_DIR", "chroma_db")
 CHROMA_COLLECTION = os.getenv("CHROMA_COLLECTION", "philosophy_docs")
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "models/gemini-embedding-001")
 TOP_K = int(os.getenv("TOP_K", "5"))
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 
 
 class PhilosophyRetriever:
     """
-    Retriever that searches the philosophy vector store
-    for the most relevant document chunks.
+    Advanced Retriever that combines Vector Search, BM25 Keyword Search,
+    and MultiQuery expansion for maximum retrieval accuracy.
     """
 
     def __init__(
@@ -39,6 +45,11 @@ class PhilosophyRetriever:
         self.top_k = top_k or TOP_K
         self._vectorstore: Optional[Chroma] = None
         self._embeddings = None
+        
+        # Advanced Retrievers
+        self._bm25_retriever: Optional[BM25Retriever] = None
+        self._ensemble_retriever: Optional[EnsembleRetriever] = None
+        self._multi_query_retriever: Optional[MultiQueryRetriever] = None
 
     @property
     def embeddings(self):
@@ -57,24 +68,69 @@ class PhilosophyRetriever:
                 persist_directory=self.persist_directory,
             )
         return self._vectorstore
+        
+    @property
+    def retriever_pipeline(self):
+        """Lazy-initialize the full retrieval pipeline."""
+        if self._multi_query_retriever is not None:
+            return self._multi_query_retriever
+
+        # 1. Base Vector Retriever
+        vector_retriever = self.vectorstore.as_retriever(search_kwargs={"k": self.top_k})
+        
+        # 2. Build BM25 Retriever from Chroma documents
+        try:
+            # We load all documents from Chroma to build the BM25 index in memory
+            # This is fast for <10,000 documents
+            all_docs_dict = self.vectorstore.get()
+            docs = []
+            for i in range(len(all_docs_dict["ids"])):
+                docs.append(Document(
+                    page_content=all_docs_dict["documents"][i],
+                    metadata=all_docs_dict["metadatas"][i]
+                ))
+            if docs:
+                self._bm25_retriever = BM25Retriever.from_documents(docs)
+                self._bm25_retriever.k = self.top_k
+            else:
+                self._bm25_retriever = None
+        except Exception as e:
+            print(f"Warning: Failed to build BM25 index: {e}")
+            self._bm25_retriever = None
+
+        # 3. Ensemble (Hybrid Search)
+        if self._bm25_retriever:
+            self._ensemble_retriever = EnsembleRetriever(
+                retrievers=[vector_retriever, self._bm25_retriever],
+                weights=[0.6, 0.4] # Give slightly more weight to semantic search
+            )
+            base_retriever = self._ensemble_retriever
+        else:
+            base_retriever = vector_retriever
+
+        # 4. MultiQuery Expansion
+        api_key = os.getenv("GROQ_API_KEY")
+        if api_key:
+            llm = ChatGroq(
+                temperature=0, 
+                model_name=GROQ_MODEL,
+                api_key=api_key
+            )
+            self._multi_query_retriever = MultiQueryRetriever.from_llm(
+                retriever=base_retriever,
+                llm=llm
+            )
+        else:
+            self._multi_query_retriever = base_retriever
+            
+        return self._multi_query_retriever
 
     def retrieve(self, query: str, top_k: Optional[int] = None) -> list[Document]:
         """
-        Retrieve the top-k most relevant document chunks for a query.
+        Retrieve the most relevant document chunks for a query using the advanced pipeline.
         """
-        k = top_k or self.top_k
-        results = self.vectorstore.similarity_search(query, k=k)
-        return results
-
-    def retrieve_with_scores(
-        self, query: str, top_k: Optional[int] = None
-    ) -> list[tuple[Document, float]]:
-        """
-        Retrieve documents with their similarity scores.
-        """
-        k = top_k or self.top_k
-        results = self.vectorstore.similarity_search_with_score(query, k=k)
-        return results
+        # We ignore top_k override here for simplicity because MultiQuery uses the pipeline's fixed k
+        return self.retriever_pipeline.invoke(query)
 
     def get_collection_stats(self) -> dict:
         """Get stats about the current vector store collection."""
@@ -86,11 +142,16 @@ class PhilosophyRetriever:
                 "document_count": count,
                 "persist_directory": self.persist_directory,
                 "embedding_model": EMBEDDING_MODEL,
+                "hybrid_search": self._bm25_retriever is not None,
+                "multi_query": isinstance(self._multi_query_retriever, MultiQueryRetriever)
             }
         except Exception as e:
             return {"error": str(e)}
 
     def reload(self):
-        """Force reload the vector store (after re-ingestion)."""
+        """Force reload the vector store and rebuild BM25 (after re-ingestion)."""
         self._vectorstore = None
-        _ = self.vectorstore  # re-initialize
+        self._bm25_retriever = None
+        self._ensemble_retriever = None
+        self._multi_query_retriever = None
+        _ = self.retriever_pipeline  # re-initialize

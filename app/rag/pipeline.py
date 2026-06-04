@@ -14,12 +14,12 @@ from dotenv import load_dotenv
 from groq import Groq
 
 from app.rag.retriever import PhilosophyRetriever
-from app.rag.prompts import SYSTEM_PROMPT, build_prompt
+from app.rag.prompts import SYSTEM_PROMPT, ROUTER_PROMPT, build_prompt
 from app.rag.ingest import run_ingest_pipeline
 
 load_dotenv()
 
-GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 
 
 class RAGPipeline:
@@ -48,13 +48,30 @@ class RAGPipeline:
         Ask a philosophy question. Returns the answer as a string.
         This is the MCP-compatible interface.
         """
-        # Step 1: Retrieve relevant chunks
-        context_docs = self.retriever.retrieve(question)
+        
+        # Step 1: Agentic Routing (GREETING vs QUESTION)
+        router_messages = [
+            {"role": "user", "content": ROUTER_PROMPT.format(question=question)}
+        ]
+        router_completion = self.client.chat.completions.create(
+            model="llama-3.1-8b-instant", # Use fast model for routing
+            messages=router_messages,
+            temperature=0,
+            max_tokens=10,
+        )
+        route = router_completion.choices[0].message.content.strip().upper()
+        
+        if "GREETING" in route:
+            # Skip retrieval for greetings
+            user_prompt = question
+        else:
+            # Step 2: Retrieve relevant chunks (MultiQuery + Hybrid)
+            context_docs = self.retriever.retrieve(question)
 
-        # Step 2: Build prompt with context
-        user_prompt = build_prompt(question, context_docs)
+            # Step 3: Build prompt with context
+            user_prompt = build_prompt(question, context_docs)
 
-        # Step 3: Build messages
+        # Step 4: Build messages for generation
         messages = [
             {"role": "system", "content": SYSTEM_PROMPT},
         ]
@@ -66,7 +83,7 @@ class RAGPipeline:
 
         messages.append({"role": "user", "content": user_prompt})
 
-        # Step 4: Call Groq
+        # Step 5: Call Groq
         completion = self.client.chat.completions.create(
             model=GROQ_MODEL,
             messages=messages,
@@ -75,7 +92,7 @@ class RAGPipeline:
         )
         answer = completion.choices[0].message.content or ""
 
-        # Step 5: Store in conversation history
+        # Step 6: Store in conversation history
         self._conversation_history.append({
             "question": question,
             "answer": answer,

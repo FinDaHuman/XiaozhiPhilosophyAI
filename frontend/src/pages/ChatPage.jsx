@@ -71,23 +71,23 @@ const ChatPage = () => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-hidden p-4 md:p-6 flex gap-6 max-w-[1800px] mx-auto w-full transition-all duration-500">
+      <div className="flex-1 overflow-hidden p-4 md:p-6 flex flex-col lg:flex-row gap-6 max-w-[1800px] mx-auto w-full transition-all duration-500">
         {/* LEFT PANEL - SLIDE VIEWER */}
         {activeSlide && (
-          <div className="hidden lg:flex w-2/3 bg-white/50 backdrop-blur-sm rounded-2xl border-2 border-secondary/20 shadow-clay flex-col overflow-hidden transition-all duration-500 opacity-100">
-            <div className="bg-white border-b-2 border-secondary/20 p-4 flex items-center justify-between shrink-0">
-              <h2 className="text-lg font-bold text-primary flex items-center gap-2">
-                <Presentation className="w-5 h-5" /> Nguồn trích dẫn: Slide {activeSlide}
+          <div className="flex w-full lg:w-2/3 h-[40vh] lg:h-full bg-white/50 backdrop-blur-sm rounded-2xl border-2 border-secondary/20 shadow-clay flex-col overflow-hidden transition-all duration-500 opacity-100">
+            <div className="bg-white border-b-2 border-secondary/20 p-2 md:p-4 flex items-center justify-between shrink-0">
+              <h2 className="text-base md:text-lg font-bold text-primary flex items-center gap-2">
+                <Presentation className="w-4 h-4 md:w-5 md:h-5" /> Nguồn trích dẫn: Slide {activeSlide}
               </h2>
               <button 
                 onClick={() => setActiveSlide(null)}
-                className="p-2 hover:bg-secondary/10 rounded-full text-text/60 hover:text-text transition-colors"
+                className="p-1.5 md:p-2 hover:bg-secondary/10 rounded-full text-text/60 hover:text-text transition-colors"
                 title="Đóng slide"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4 md:w-5 md:h-5" />
               </button>
             </div>
-            <div className="flex-1 p-6 flex items-center justify-center bg-secondary/5 min-h-0">
+            <div className="flex-1 p-4 md:p-6 flex items-center justify-center bg-secondary/5 min-h-0">
               <img 
                 src={`/slides/slide_${activeSlide}.jpg`} 
                 alt={`Slide ${activeSlide}`} 

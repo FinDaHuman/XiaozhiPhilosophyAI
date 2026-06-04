@@ -1,6 +1,6 @@
 import os
 from typing import List
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings
 
 class E5Embeddings(HuggingFaceEmbeddings):
     """Wrapper for E5 models to prepend passage/query prefixes."""
