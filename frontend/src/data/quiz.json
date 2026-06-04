@@ -1,0 +1,922 @@
+[
+  {
+    "id": "1",
+    "text": "Tên đầy đủ của quy luật mâu thuẫn là gì?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Quy luật lượng – chất"
+      },
+      {
+        "id": "B",
+        "text": "Quy luật phủ định của phủ định"
+      },
+      {
+        "id": "C",
+        "text": "Quy luật thống nhất và đấu tranh của các mặt đối lập"
+      },
+      {
+        "id": "D",
+        "text": "Quy luật phát triển"
+      }
+    ],
+    "correctAnswer": "C"
+  },
+  {
+    "id": "2",
+    "text": "Quy luật mâu thuẫn được coi là gì trong phép biện chứng duy vật?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Bổ sung"
+      },
+      {
+        "id": "B",
+        "text": "Hạt nhân"
+      },
+      {
+        "id": "C",
+        "text": "Kết quả"
+      },
+      {
+        "id": "D",
+        "text": "Hình thức"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "3",
+    "text": "Quy luật mâu thuẫn nói về:",
+    "options": [
+      {
+        "id": "A",
+        "text": "Hình thức tồn tại"
+      },
+      {
+        "id": "B",
+        "text": "Nguyên nhân và động lực phát triển"
+      },
+      {
+        "id": "C",
+        "text": "Nguồn gốc vật chất"
+      },
+      {
+        "id": "D",
+        "text": "Sự ngẫu nhiên"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "4",
+    "text": "Theo Lênin, phép biện chứng là học thuyết về:",
+    "options": [
+      {
+        "id": "A",
+        "text": "Sự biến đổi lượng"
+      },
+      {
+        "id": "B",
+        "text": "Sự thống nhất các mặt đối lập"
+      },
+      {
+        "id": "C",
+        "text": "Tính khách quan"
+      },
+      {
+        "id": "D",
+        "text": "Tính ngẫu nhiên"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "5",
+    "text": "Mâu thuẫn biện chứng tồn tại trong:",
+    "options": [
+      {
+        "id": "A",
+        "text": "Tự nhiên"
+      },
+      {
+        "id": "B",
+        "text": "Xã hội"
+      },
+      {
+        "id": "C",
+        "text": "Tư duy"
+      },
+      {
+        "id": "D",
+        "text": "Cả A, B, C"
+      }
+    ],
+    "correctAnswer": "D"
+  },
+  {
+    "id": "6",
+    "text": "Mặt đối lập là những yếu tố có khuynh hướng:",
+    "options": [
+      {
+        "id": "A",
+        "text": "Giống nhau"
+      },
+      {
+        "id": "B",
+        "text": "Phụ thuộc nhau"
+      },
+      {
+        "id": "C",
+        "text": "Trái ngược nhau"
+      },
+      {
+        "id": "D",
+        "text": "Ngẫu nhiên"
+      }
+    ],
+    "correctAnswer": "C"
+  },
+  {
+    "id": "7",
+    "text": "Các mặt đối lập có đặc điểm:",
+    "options": [
+      {
+        "id": "A",
+        "text": "Chỉ đối kháng"
+      },
+      {
+        "id": "B",
+        "text": "Chỉ thống nhất"
+      },
+      {
+        "id": "C",
+        "text": "Vừa thống nhất vừa đấu tranh"
+      },
+      {
+        "id": "D",
+        "text": "Không liên hệ"
+      }
+    ],
+    "correctAnswer": "C"
+  },
+  {
+    "id": "8",
+    "text": "Mâu thuẫn biện chứng là:",
+    "options": [
+      {
+        "id": "A",
+        "text": "Sự bất đồng ý kiến"
+      },
+      {
+        "id": "B",
+        "text": "Sự tác động giữa các mặt đối lập"
+      },
+      {
+        "id": "C",
+        "text": "Sai lầm logic"
+      },
+      {
+        "id": "D",
+        "text": "Tranh cãi cá nhân"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "9",
+    "text": "Mâu thuẫn mang tính:",
+    "options": [
+      {
+        "id": "A",
+        "text": "Chủ quan"
+      },
+      {
+        "id": "B",
+        "text": "Khách quan"
+      },
+      {
+        "id": "C",
+        "text": "Tưởng tượng"
+      },
+      {
+        "id": "D",
+        "text": "Tạm thời"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "10",
+    "text": "Mâu thuẫn là nguồn gốc của:",
+    "options": [
+      {
+        "id": "A",
+        "text": "Sự đứng im"
+      },
+      {
+        "id": "B",
+        "text": "Sự phát triển"
+      },
+      {
+        "id": "C",
+        "text": "Sự lặp lại"
+      },
+      {
+        "id": "D",
+        "text": "Sự bảo thủ"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "11",
+    "text": "Thống nhất giữa các mặt đối lập nghĩa là:",
+    "options": [
+      {
+        "id": "A",
+        "text": "Không khác nhau"
+      },
+      {
+        "id": "B",
+        "text": "Cần nhau để tồn tại"
+      },
+      {
+        "id": "C",
+        "text": "Triệt tiêu nhau"
+      },
+      {
+        "id": "D",
+        "text": "Không liên quan"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "12",
+    "text": "Không có mặt này thì không có mặt kia thể hiện:",
+    "options": [
+      {
+        "id": "A",
+        "text": "Đấu tranh"
+      },
+      {
+        "id": "B",
+        "text": "Thống nhất"
+      },
+      {
+        "id": "C",
+        "text": "Phủ định"
+      },
+      {
+        "id": "D",
+        "text": "Phát triển"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "13",
+    "text": "Sự thống nhất có tính:",
+    "options": [
+      {
+        "id": "A",
+        "text": "Tuyệt đối"
+      },
+      {
+        "id": "B",
+        "text": "Tương đối"
+      },
+      {
+        "id": "C",
+        "text": "Vĩnh viễn"
+      },
+      {
+        "id": "D",
+        "text": "Bất biến"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "14",
+    "text": "Ví dụ về thống nhất là:",
+    "options": [
+      {
+        "id": "A",
+        "text": "Nóng – lạnh"
+      },
+      {
+        "id": "B",
+        "text": "Cha – con"
+      },
+      {
+        "id": "C",
+        "text": "Mua – bán"
+      },
+      {
+        "id": "D",
+        "text": "Cả A,B,C"
+      }
+    ],
+    "correctAnswer": "D"
+  },
+  {
+    "id": "15",
+    "text": "Trong thống nhất, các mặt đối lập:",
+    "options": [
+      {
+        "id": "A",
+        "text": "Loại trừ hoàn toàn"
+      },
+      {
+        "id": "B",
+        "text": "Phụ thuộc nhau"
+      },
+      {
+        "id": "C",
+        "text": "Không liên quan"
+      },
+      {
+        "id": "D",
+        "text": "Tách biệt"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "16",
+    "text": "Sự cân bằng giữa cái mới và cái cũ là biểu hiện của:",
+    "options": [
+      {
+        "id": "A",
+        "text": "Đấu tranh"
+      },
+      {
+        "id": "B",
+        "text": "Thống nhất"
+      },
+      {
+        "id": "C",
+        "text": "Mâu thuẫn ngoài"
+      },
+      {
+        "id": "D",
+        "text": "Mâu thuẫn đối kháng"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "17",
+    "text": "Đồng nhất giữa các mặt đối lập nghĩa là:",
+    "options": [
+      {
+        "id": "A",
+        "text": "Hoàn toàn giống nhau"
+      },
+      {
+        "id": "B",
+        "text": "Có yếu tố giống nhau"
+      },
+      {
+        "id": "C",
+        "text": "Không khác biệt"
+      },
+      {
+        "id": "D",
+        "text": "Không mâu thuẫn"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "18",
+    "text": "Sự thống nhất chỉ tồn tại khi:",
+    "options": [
+      {
+        "id": "A",
+        "text": "Không có mâu thuẫn"
+      },
+      {
+        "id": "B",
+        "text": "Có điều kiện nhất định"
+      },
+      {
+        "id": "C",
+        "text": "Vĩnh viễn"
+      },
+      {
+        "id": "D",
+        "text": "Không thay đổi"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "19",
+    "text": "Đấu tranh giữa các mặt đối lập là:",
+    "options": [
+      {
+        "id": "A",
+        "text": "Tương hỗ"
+      },
+      {
+        "id": "B",
+        "text": "Phủ định lẫn nhau"
+      },
+      {
+        "id": "C",
+        "text": "Đồng nhất"
+      },
+      {
+        "id": "D",
+        "text": "Bổ sung"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "20",
+    "text": "Đấu tranh mang tính:",
+    "options": [
+      {
+        "id": "A",
+        "text": "Tạm thời"
+      },
+      {
+        "id": "B",
+        "text": "Tương đối"
+      },
+      {
+        "id": "C",
+        "text": "Tuyệt đối"
+      },
+      {
+        "id": "D",
+        "text": "Ngẫu nhiên"
+      }
+    ],
+    "correctAnswer": "C"
+  },
+  {
+    "id": "21",
+    "text": "Đấu tranh làm cho sự vật:",
+    "options": [
+      {
+        "id": "A",
+        "text": "Đứng yên"
+      },
+      {
+        "id": "B",
+        "text": "Phát triển"
+      },
+      {
+        "id": "C",
+        "text": "Biến mất ngay"
+      },
+      {
+        "id": "D",
+        "text": "Không đổi"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "22",
+    "text": "Theo Lênin, phát triển là:",
+    "options": [
+      {
+        "id": "A",
+        "text": "Tích lũy"
+      },
+      {
+        "id": "B",
+        "text": "Cuộc đấu tranh giữa các mặt đối lập"
+      },
+      {
+        "id": "C",
+        "text": "Sự đồng nhất"
+      },
+      {
+        "id": "D",
+        "text": "Sự ngẫu nhiên"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "23",
+    "text": "Đấu tranh làm phá vỡ:",
+    "options": [
+      {
+        "id": "A",
+        "text": "Sự ổn định tương đối"
+      },
+      {
+        "id": "B",
+        "text": "Quy luật"
+      },
+      {
+        "id": "C",
+        "text": "Tính khách quan"
+      },
+      {
+        "id": "D",
+        "text": "Tính thống nhất"
+      }
+    ],
+    "correctAnswer": "A"
+  },
+  {
+    "id": "24",
+    "text": "Kết quả của đấu tranh là:",
+    "options": [
+      {
+        "id": "A",
+        "text": "Chuyển hóa về chất"
+      },
+      {
+        "id": "B",
+        "text": "Không đổi"
+      },
+      {
+        "id": "C",
+        "text": "Dừng lại"
+      },
+      {
+        "id": "D",
+        "text": "Tách rời"
+      }
+    ],
+    "correctAnswer": "A"
+  },
+  {
+    "id": "25",
+    "text": "Nếu không có đấu tranh thì:",
+    "options": [
+      {
+        "id": "A",
+        "text": "Không có phát triển"
+      },
+      {
+        "id": "B",
+        "text": "Có phát triển nhanh hơn"
+      },
+      {
+        "id": "C",
+        "text": "Không ảnh hưởng"
+      },
+      {
+        "id": "D",
+        "text": "Chỉ có thống nhất"
+      }
+    ],
+    "correctAnswer": "A"
+  },
+  {
+    "id": "26",
+    "text": "Đấu tranh diễn ra:",
+    "options": [
+      {
+        "id": "A",
+        "text": "Liên tục"
+      },
+      {
+        "id": "B",
+        "text": "Một lần"
+      },
+      {
+        "id": "C",
+        "text": "Ngẫu nhiên"
+      },
+      {
+        "id": "D",
+        "text": "Không thường xuyên"
+      }
+    ],
+    "correctAnswer": "A"
+  },
+  {
+    "id": "27",
+    "text": "Mâu thuẫn cơ bản là mâu thuẫn:",
+    "options": [
+      {
+        "id": "A",
+        "text": "Quy định bản chất sự vật"
+      },
+      {
+        "id": "B",
+        "text": "Nhỏ nhất"
+      },
+      {
+        "id": "C",
+        "text": "Không quan trọng"
+      },
+      {
+        "id": "D",
+        "text": "Tạm thời"
+      }
+    ],
+    "correctAnswer": "A"
+  },
+  {
+    "id": "28",
+    "text": "Mâu thuẫn không cơ bản:",
+    "options": [
+      {
+        "id": "A",
+        "text": "Quy định bản chất"
+      },
+      {
+        "id": "B",
+        "text": "Chỉ ảnh hưởng một mặt"
+      },
+      {
+        "id": "C",
+        "text": "Không tồn tại"
+      },
+      {
+        "id": "D",
+        "text": "Quan trọng nhất"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "29",
+    "text": "Mâu thuẫn chủ yếu là mâu thuẫn:",
+    "options": [
+      {
+        "id": "A",
+        "text": "Nổi bật nhất từng giai đoạn"
+      },
+      {
+        "id": "B",
+        "text": "Nhỏ nhất"
+      },
+      {
+        "id": "C",
+        "text": "Phụ"
+      },
+      {
+        "id": "D",
+        "text": "Không quan trọng"
+      }
+    ],
+    "correctAnswer": "A"
+  },
+  {
+    "id": "30",
+    "text": "Mâu thuẫn thứ yếu là:",
+    "options": [
+      {
+        "id": "A",
+        "text": "Quyết định"
+      },
+      {
+        "id": "B",
+        "text": "Không quyết định"
+      },
+      {
+        "id": "C",
+        "text": "Luôn chủ yếu"
+      },
+      {
+        "id": "D",
+        "text": "Cơ bản nhất"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "31",
+    "text": "Mâu thuẫn bên trong:",
+    "options": [
+      {
+        "id": "A",
+        "text": "Nằm trong sự vật"
+      },
+      {
+        "id": "B",
+        "text": "Ngoài sự vật"
+      },
+      {
+        "id": "C",
+        "text": "Không quan trọng"
+      },
+      {
+        "id": "D",
+        "text": "Không tồn tại"
+      }
+    ],
+    "correctAnswer": "A"
+  },
+  {
+    "id": "32",
+    "text": "Mâu thuẫn bên ngoài:",
+    "options": [
+      {
+        "id": "A",
+        "text": "Quy định trực tiếp"
+      },
+      {
+        "id": "B",
+        "text": "Tác động thông qua bên trong"
+      },
+      {
+        "id": "C",
+        "text": "Không ảnh hưởng"
+      },
+      {
+        "id": "D",
+        "text": "Quan trọng nhất"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "33",
+    "text": "Mâu thuẫn đối kháng là:",
+    "options": [
+      {
+        "id": "A",
+        "text": "Có thể hòa giải"
+      },
+      {
+        "id": "B",
+        "text": "Không thể điều hòa"
+      },
+      {
+        "id": "C",
+        "text": "Không tồn tại"
+      },
+      {
+        "id": "D",
+        "text": "Tạm thời"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "34",
+    "text": "Mâu thuẫn không đối kháng là:",
+    "options": [
+      {
+        "id": "A",
+        "text": "Đối lập tuyệt đối"
+      },
+      {
+        "id": "B",
+        "text": "Có thể giải quyết hòa bình"
+      },
+      {
+        "id": "C",
+        "text": "Không có lợi ích"
+      },
+      {
+        "id": "D",
+        "text": "Không tồn tại"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "35",
+    "text": "Khi giải quyết mâu thuẫn phải:",
+    "options": [
+      {
+        "id": "A",
+        "text": "Theo ý muốn"
+      },
+      {
+        "id": "B",
+        "text": "Theo điều kiện khách quan"
+      },
+      {
+        "id": "C",
+        "text": "Theo cảm tính"
+      },
+      {
+        "id": "D",
+        "text": "Theo số đông"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "36",
+    "text": "Muốn giải quyết mâu thuẫn phải:",
+    "options": [
+      {
+        "id": "A",
+        "text": "Né tránh"
+      },
+      {
+        "id": "B",
+        "text": "Nhận diện đúng mâu thuẫn"
+      },
+      {
+        "id": "C",
+        "text": "Bỏ qua"
+      },
+      {
+        "id": "D",
+        "text": "Điều hòa ngay"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "37",
+    "text": "Phân tích mâu thuẫn cần:",
+    "options": [
+      {
+        "id": "A",
+        "text": "Chung chung"
+      },
+      {
+        "id": "B",
+        "text": "Cụ thể từng mâu thuẫn"
+      },
+      {
+        "id": "C",
+        "text": "Cảm tính"
+      },
+      {
+        "id": "D",
+        "text": "Ngẫu nhiên"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "38",
+    "text": "Phân tích mâu thuẫn không nên:",
+    "options": [
+      {
+        "id": "A",
+        "text": "Phân tích"
+      },
+      {
+        "id": "B",
+        "text": "Nóng vội"
+      },
+      {
+        "id": "C",
+        "text": "Quan sát"
+      },
+      {
+        "id": "D",
+        "text": "Nhận diện"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "39",
+    "text": "Giải quyết mâu thuẫn bằng cách:",
+    "options": [
+      {
+        "id": "A",
+        "text": "Điều hòa hoàn toàn"
+      },
+      {
+        "id": "B",
+        "text": "Đấu tranh giữa các mặt đối lập"
+      },
+      {
+        "id": "C",
+        "text": "Né tránh"
+      },
+      {
+        "id": "D",
+        "text": "Phủ nhận tồn tại"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "40",
+    "text": "Ý nghĩa lớn nhất của quy luật là:",
+    "options": [
+      {
+        "id": "A",
+        "text": "Hiểu động lực phát triển"
+      },
+      {
+        "id": "B",
+        "text": "Học thuộc lý thuyết"
+      },
+      {
+        "id": "C",
+        "text": "Ghi nhớ khái niệm"
+      },
+      {
+        "id": "D",
+        "text": "Không cần vận dụng"
+      }
+    ],
+    "correctAnswer": "A"
+  }
+]

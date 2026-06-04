@@ -54,3 +54,8 @@ MANIFEST
 
 # Large Media files
 webcontent/Slide.pdf
+
+# Temporary Extraction Scripts
+err.json
+extract.py
+extract_vision.py
