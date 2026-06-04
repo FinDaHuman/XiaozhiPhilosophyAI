@@ -144,5 +144,22 @@ python main.py api
 
 ---
 
+## ⚠️ Xử lý lỗi thường gặp (Troubleshooting)
+
+**Lỗi `500 Internal Server Error` hoặc `ModuleNotFoundError: No module named 'groq'` (hoặc các thư viện khác)**
+Lỗi này thường xảy ra trên Windows PowerShell khi Terminal hiển thị đã kích hoạt `(venv)` nhưng biến môi trường chưa được cập nhật đúng, dẫn đến việc gọi nhầm Python của hệ thống.
+
+**Cách khắc phục:**
+1. Khuyên dùng: Gọi trực tiếp đường dẫn tuyệt đối tới file `python.exe` bên trong thư mục `venv`:
+   ```bash
+   .\venv\Scripts\python.exe main.py api
+   ```
+2. Hoặc chạy lại lệnh cài đặt thư viện một lần nữa để nó cài bổ sung vào môi trường đang active:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+---
+
 ## 📜 Giấy phép
 Dự án được xây dựng cho mục đích học tập và tra cứu Triết học Mác-Lênin.
