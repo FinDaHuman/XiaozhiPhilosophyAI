@@ -128,9 +128,47 @@ class PhilosophyRetriever:
     def retrieve(self, query: str, top_k: Optional[int] = None) -> list[Document]:
         """
         Retrieve the most relevant document chunks for a query using the advanced pipeline.
+        Slides are always re-ranked to the top. Textbook chunks whose content is already
+        covered by a retrieved slide chunk are suppressed to prevent duplication.
         """
-        # We ignore top_k override here for simplicity because MultiQuery uses the pipeline's fixed k
-        return self.retriever_pipeline.invoke(query)
+        raw_docs = self.retriever_pipeline.invoke(query)
+        return self._rerank_slide_priority(raw_docs)
+
+    def _rerank_slide_priority(self, docs: list[Document]) -> list[Document]:
+        """
+        Re-rank retrieved documents so that Slide chunks come first.
+        Also deduplicates: if a textbook chunk overlaps >50% with an included
+        slide chunk (by shared word tokens), the textbook chunk is dropped.
+        """
+        slides = []
+        textbook = []
+
+        for doc in docs:
+            source = doc.metadata.get("source", "")
+            # Slides are tagged with source like "Slide 19"
+            if source.lower().startswith("slide"):
+                slides.append(doc)
+            else:
+                textbook.append(doc)
+
+        # Build a combined token set from all slide content for overlap check
+        slide_tokens = set()
+        for slide_doc in slides:
+            slide_tokens.update(slide_doc.page_content.lower().split())
+
+        # Keep a textbook chunk only if it adds unique information
+        # (less than 50% of its words already appear in slide chunks)
+        filtered_textbook = []
+        for tb_doc in textbook:
+            tb_words = tb_doc.page_content.lower().split()
+            if not tb_words:
+                continue
+            overlap_ratio = sum(1 for w in tb_words if w in slide_tokens) / len(tb_words)
+            if overlap_ratio < 0.5:
+                filtered_textbook.append(tb_doc)
+
+        # Slides first, then non-overlapping textbook chunks
+        return slides + filtered_textbook
 
     def get_collection_stats(self) -> dict:
         """Get stats about the current vector store collection."""

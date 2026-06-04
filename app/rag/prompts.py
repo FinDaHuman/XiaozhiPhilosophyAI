@@ -41,10 +41,12 @@ CONTEXT_TEMPLATE = """## Tài liệu tham khảo:
 ## Câu hỏi: {question}
 
 Hãy tổng hợp thông tin từ tài liệu trên để trả lời câu hỏi một cách thông minh, ngắn gọn và trực tiếp nhất.
-ĐẶC BIỆT LƯU Ý BẮT BUỘC: Bạn PHẢI trích dẫn nguồn ở cuối câu hoặc cuối đoạn! 
-- Nếu lấy từ slide, phải ghi rõ: [Slide X]. Hãy tìm thẻ [Slide X] trong nội dung tài liệu.
-- Nếu lấy từ giáo trình, ghi rõ: [Giáo trình].
-KHÔNG ĐƯỢC BỎ QUÊN TRÍCH DẪN!
+
+**QUY TẮC TRÍCH DẪN NGUỒN (BẮT BUỘC)**:
+1. **Ưu tiên Slide**: Nếu nội dung câu trả lời có trong slide, BẮT BUỘC phải trích slide đó là nguồn chính (ví dụ: [Slide 19]).
+2. Nếu slide và giáo trình cùng nói về một nội dung, CHỈ trích slide, không trích cả hai.
+3. Nếu lấy thông tin từ giáo trình (không có trong slide nào đã cho), thì ghi: [Giáo trình].
+4. KHÔNG ĐƯỢC BỎ QUÊN TRÍCH DẪN ở cuối mỗi câu hoặc đoạn!
 """
 
 NO_CONTEXT_TEMPLATE = """## Câu hỏi: {question}
@@ -63,14 +65,30 @@ Câu nói của người dùng: {question}"""
 def build_prompt(question: str, context_docs: list) -> str:
     """
     Build the user prompt from question and retrieved context documents.
+    Slide chunks are always placed first in the context block so the LLM
+    sees them as the primary source.
     """
     if not context_docs:
         return NO_CONTEXT_TEMPLATE.format(question=question)
 
+    # Separate slides and textbook for display grouping
+    slide_docs = [d for d in context_docs if d.metadata.get("source", "").lower().startswith("slide")]
+    other_docs = [d for d in context_docs if not d.metadata.get("source", "").lower().startswith("slide")]
+    ordered_docs = slide_docs + other_docs
+
     context_parts = []
-    for i, doc in enumerate(context_docs, 1):
-        source = doc.metadata.get("source", "Không rõ nguồn")
-        context_parts.append(f"### Đoạn {i} (Nguồn: {source})\n{doc.page_content}")
+
+    if slide_docs:
+        context_parts.append("📌 **NGUỒN SLIDE (ƯU TIÊN TRÍCH DẪN)**")
+        for i, doc in enumerate(slide_docs, 1):
+            source = doc.metadata.get("source", "Không rõ nguồn")
+            context_parts.append(f"### Slide {i} (Nguồn: {source})\n{doc.page_content}")
+
+    if other_docs:
+        context_parts.append("\n📚 **NGUỒN GIÁO TRÌNH (chỉ dùng nếu slide không đề cập)**")
+        for i, doc in enumerate(other_docs, 1):
+            source = doc.metadata.get("source", "Không rõ nguồn")
+            context_parts.append(f"### Giáo trình {i} (Nguồn: {source})\n{doc.page_content}")
 
     context = "\n\n".join(context_parts)
     return CONTEXT_TEMPLATE.format(context=context, question=question)
