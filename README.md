@@ -1,17 +1,23 @@
 # Xiaozhi Philosophy AI (小智哲学) 🤖📖
 
-Xiaozhi (Tiểu Trí) là một trợ lý AI thông minh chuyên về **Triết học Mác - Lênin**, được xây dựng dựa trên công nghệ **RAG (Retrieval-Augmented Generation)**. Hệ thống sử dụng mô hình nhúng (Embeddings) chạy hoàn toàn offline bằng HuggingFace và kết hợp sức mạnh phân tích của **Groq API** (LLaMA) để cung cấp những câu trả lời triết học mạch lạc, chính xác và bám sát giáo trình.
+Xiaozhi (Tiểu Trí) là một trợ lý AI thông minh chuyên về **Triết học Mác - Lênin**, được xây dựng dựa trên công nghệ **RAG (Retrieval-Augmented Generation)**. Hệ thống cung cấp câu trả lời triết học mạch lạc, chính xác, bám sát giáo trình và có khả năng trích dẫn trực tiếp nguồn slide. Đặc biệt, hệ thống hỗ trợ tích hợp với Robot vật lý thông qua **Model Context Protocol (MCP)**.
 
 ---
 
 ## 🌟 Tính năng nổi bật
 
-* **Giao diện Web Trực Quan**: Web App chia đôi màn hình (Split Screen) hiện đại, tự động hiển thị Slide tham chiếu ngay bên cạnh nội dung chat.
-* **Local Embeddings**: Chạy nhúng văn bản cục bộ (`multilingual-e5-small`) giúp tiết kiệm chi phí API và không bị giới hạn quota.
-* **Vector Database**: Sử dụng `ChromaDB` lưu trữ cục bộ, truy xuất tốc độ cao.
-* **Groq LLM**: Sử dụng Groq API (`llama-3.3-70b-versatile`) với tốc độ phản hồi cực nhanh và thông minh.
-* **Terminal UI (TUI) đẹp mắt**: Giao diện dòng lệnh tương tác trực quan bằng thư viện `Rich`.
-* **REST API**: Tích hợp sẵn FastAPI, dễ dàng kết nối với Web, App hoặc các nền tảng khác.
+1. **Giao diện Web Tương Tác Cấp Cao (React/Vite)**
+   - **Chat Split-Screen:** Vừa trò chuyện với AI, vừa xem slide trích dẫn ngay bên cạnh.
+   - **Bài học (Lessons):** Lộ trình học được chia bài bản, liên kết trực tiếp với slide.
+   - **Kiểm tra kiến thức (Quiz):** 40 câu hỏi trắc nghiệm có phản hồi giải thích ngay lập tức.
+2. **Tích hợp Robot Vật Lý (MCP Server)**
+   - Cho phép kết nối phần cứng Robot vật lý với AI thông qua cổng WebSocket bảo mật.
+   - Server MCP chạy ẩn và tự động đồng bộ kho tri thức FAISS.
+3. **Kiến trúc RAG Đa Lớp (Advanced RAG)**
+   - **Local Embeddings:** Sử dụng `multilingual-e5-small` chạy hoàn toàn offline.
+   - **Hybrid Search:** Kết hợp Vector Search (ChromaDB) và Keyword Search (BM25) để tăng độ chính xác.
+4. **Terminal UI (TUI)**
+   - Cung cấp giao diện chat dòng lệnh cực kỳ đẹp mắt và nhanh gọn.
 
 ---
 
@@ -19,147 +25,149 @@ Xiaozhi (Tiểu Trí) là một trợ lý AI thông minh chuyên về **Triết 
 
 ```
 XiaozhiPhilosophyAI/
-├── app/                        # Core backend (ChromaDB + Groq)
-│   ├── rag/                    # RAG pipeline, retriever, embeddings
+├── app/                        # Core backend FastAPI & RAG ChromaDB
+│   ├── rag/                    # RAG pipeline, retriever, prompts
 │   ├── api/                    # FastAPI REST endpoints
 │   └── ui/                     # Terminal chat UI
-├── frontend/                   # React Vite Web Frontend (UI)
-├── chroma_db/                  # Vector database (persistent)
-├── models/                     # HuggingFace embeddings cache
-├── mcp/                        # MCP server (FAISS + Groq)
-├── data/                       # Source documents cho RAG
-├── main.py                     # Entry point (API, TUI, Ingest)
-├── requirements.txt
-└── .env
+├── frontend/                   # React Vite Web Frontend
+├── mcp/                        # MCP server (FAISS) kết nối Robot
+├── data/                       # Chứa tài liệu nguồn (PDF, DOCX)
+├── chroma_db/                  # Vector database chính
+├── models/                     # Thư mục cache cho mô hình Local
+└── main.py                     # Entry point khởi chạy các dịch vụ
 ```
 
 ---
 
-## 🛠 Cài đặt & Môi trường
+## 🛠 Cài đặt & Môi trường (Setup)
 
 ### 1. Yêu cầu hệ thống
 * Python 3.10 trở lên
-* Node.js 18+ (để chạy Web frontend)
-* Có kết nối mạng (để tải Model từ HuggingFace lần đầu và gọi Groq API).
+* Node.js 18+
+* Trình duyệt web hiện đại
 
-### 2. Thiết lập dự án
-Clone dự án và di chuyển vào thư mục gốc:
+### 2. Cài đặt Backend
+Mở Terminal, di chuyển vào thư mục gốc của dự án:
 ```bash
-git clone https://github.com/FinDaHuman/XiaozhiPhilosophyAI.git
-cd XiaozhiPhilosophyAI
-```
-
-### 3. Cài đặt Backend (Python)
-Cần tạo môi trường ảo (virtual environment) để tránh xung đột thư viện:
-
-```bash
-# 1. Tạo môi trường ảo
+# 1. Tạo môi trường ảo (Virtual Environment)
 python -m venv venv
 
-# 2. Kích hoạt môi trường ảo (BẮT BUỘC TRƯỚC KHI CHẠY CODE)
-# Trên Windows:
+# 2. Kích hoạt môi trường ảo
+# Windows:
 .\venv\Scripts\activate
-# Trên Mac/Linux:
+# Mac/Linux:
 source venv/bin/activate
 
-# 3. Cài đặt thư viện
+# 3. Cài đặt thư viện Python
 pip install -r requirements.txt
 ```
 
-### 4. Cấu hình biến môi trường (`.env`)
-Trong thư mục gốc dự án, tạo file `.env`:
+### 3. Cấu hình biến môi trường (`.env`)
+Tạo file `.env` tại thư mục gốc và điền thông tin sau:
 ```ini
-# Groq API Key (Bắt buộc)
-# Lấy tại: https://console.groq.com/keys
-GROQ_API_KEY=gsk_your_groq_api_key_here
+# Groq API Key (Lấy tại: https://console.groq.com/keys)
+GROQ_API_KEY=gsk_your_api_key_here
 GROQ_MODEL=llama-3.3-70b-versatile
 
-# Embedding model (chạy local, không cần API key)
+# Cấu hình RAG
 EMBEDDING_MODEL=intfloat/multilingual-e5-small
-
-# Vector DB & RAG config
 CHROMA_PERSIST_DIR=chroma_db
 CHROMA_COLLECTION=philosophy_docs
-CHUNK_SIZE=1200
-CHUNK_OVERLAP=200
-TOP_K=3
+
+# Cấu hình kết nối Robot
+MCP_ENDPOINT=wss://api.xiaozhi.me/mcp/?token=YOUR_ROBOT_TOKEN
+```
+
+### 4. Cài đặt Frontend
+Mở một Terminal khác:
+```bash
+cd frontend
+npm install
 ```
 
 ### 5. Nạp dữ liệu (Ingestion)
-Đặt các file tài liệu (`.pdf`, `.docx`, `.txt`) vào thư mục `data/` (và ảnh slide vào `frontend/public/slides/`), sau đó chạy lệnh để vector hóa tài liệu:
+Quét toàn bộ tài liệu trong thư mục `data/` vào cơ sở dữ liệu:
 ```bash
-# Nhớ kích hoạt venv trước khi chạy: .\venv\Scripts\activate
+.\venv\Scripts\activate
 python main.py ingest
 ```
 
 ---
 
-## 🚀 Hướng dẫn sử dụng
+## 🚀 Hướng dẫn sử dụng chi tiết
 
-Bạn có 3 cách để tương tác với XiaoZhi: Web UI, API, hoặc Terminal UI (TUI). 
-**Lưu ý: Luôn kích hoạt môi trường ảo (`.\venv\Scripts\activate`) ở mỗi terminal chạy Backend.**
+Dự án cung cấp 3 cách chính để tương tác với XiaoZhi.
 
-### Cách 1: Chạy giao diện Web (Khuyên dùng)
-Bạn cần chạy song song cả Backend API và Frontend. Mở **2 cửa sổ Terminal**:
+### Chế độ 1: Sử dụng Giao diện Web (Web UI)
+Đây là chế độ đầy đủ tính năng nhất, bao gồm Học, Thi và Chat.
 
-**Terminal 1 (Backend API):**
+**Bước 1: Chạy Backend API**
+Mở Terminal 1:
 ```bash
 .\venv\Scripts\activate
 python main.py api
 ```
-*(Server sẽ chạy tại `http://localhost:8000`)*
+*(Backend chạy tại `http://localhost:8000`)*
 
-**Terminal 2 (Frontend Web):**
+**Bước 2: Chạy Frontend**
+Mở Terminal 2:
 ```bash
 cd frontend
-npm install   # Chỉ chạy lần đầu
 npm run dev
 ```
-*(Web sẽ chạy tại `http://localhost:5173`. Mở link này trên trình duyệt để sử dụng.)*
+*(Truy cập trình duyệt tại `http://localhost:5173`)*
+
+**Tương tác với Robot qua Web:**
+Từ trang chủ Web, bạn chỉ cần bấm nút **"Hỏi XiaoZhi ngay"**. Lệnh này sẽ gửi tín hiệu xuống Backend để **tự động khởi chạy kết nối MCP với Robot ở chế độ chạy ngầm**, sau đó chuyển bạn vào giao diện Chat. Bạn có thể vừa chat trên Web, vừa nói chuyện với Robot vật lý cùng một lúc.
 
 ---
 
-### Cách 2: Chạy chế độ Terminal UI (TUI)
-Nếu bạn thích dùng dòng lệnh, XiaoZhi có một giao diện chat trực quan ngay trên terminal:
+### Chế độ 2: Chạy độc lập MCP Server cho Robot (Terminal)
+Nếu bạn chỉ muốn bật kết nối cho Robot vật lý mà không cần giao diện Web.
+
+**Bước 1: Cập nhật dữ liệu FAISS cho Robot (Chỉ làm lần đầu hoặc khi có dữ liệu mới)**
+```bash
+.\venv\Scripts\activate
+cd mcp
+python mcp_rag.py --ingest
+```
+
+**Bước 2: Mở cầu nối (Pipe) kết nối Robot lên mạng**
+```bash
+.\venv\Scripts\activate
+cd mcp
+python mcp_pipe.py
+```
+*(Terminal sẽ báo `Started server process: python mcp_rag.py`. Kể từ lúc này, bạn có thể bấm nút trên Robot để bắt đầu hỏi đáp).*
+
+---
+
+### Chế độ 3: Sử dụng Terminal UI (TUI)
+Một giao diện Chat cực nhanh và đẹp mắt ngay trong màn hình Terminal của bạn (Dành cho Developer/Hacker).
+
 ```bash
 .\venv\Scripts\activate
 python main.py terminal
 ```
-Gõ câu hỏi để chat với AI. Gõ `quit` hoặc `exit` để thoát.
+- Gõ câu hỏi trực tiếp để chat.
+- Gõ `clear` để xóa lịch sử trò chuyện.
+- Gõ `quit` hoặc `exit` để thoát chương trình.
 
 ---
 
-### Cách 3: Chạy chế độ API Server (Dành cho Developer)
-Để cung cấp REST API cho các ứng dụng khác kết nối vào:
-```bash
-.\venv\Scripts\activate
-python main.py api
-```
-- API Server: `http://localhost:8000`
-- Swagger UI (Tài liệu API): `http://localhost:8000/docs`
-- Endpoint chat: `POST http://localhost:8000/chat`
-  ```json
-  { "message": "Mâu thuẫn biện chứng là gì?" }
-  ```
+## ⚠️ Xử lý lỗi thường gặp
+
+1. **Lỗi `ModuleNotFoundError` khi chạy API hoặc TUI:**
+   - **Nguyên nhân:** Chưa kích hoạt môi trường ảo.
+   - **Cách sửa:** Luôn chạy lệnh `.\venv\Scripts\activate` (trên Windows) trước khi chạy bất kỳ lệnh `python` nào.
+
+2. **Lỗi khi chạy `mcp_pipe.py` (Lỗi thư viện `mcp`):**
+   - **Nguyên nhân:** Config gọi nhầm file Python của hệ thống thay vì môi trường ảo.
+   - **Cách sửa:** Chắc chắn rằng file `mcp/mcp_config.json` có dòng:
+     `"command": "../venv/Scripts/python.exe"` (đối với Windows).
+
+3. **Web không hiển thị ảnh Slide:**
+   - Đảm bảo các ảnh slide `.jpg` đã được bỏ vào thư mục `frontend/public/slides/`. Nếu thiếu, Web sẽ hiển thị khung hình mờ thông báo "Chưa cập nhật" thay vì lỗi vỡ ảnh.
 
 ---
-
-## ⚠️ Xử lý lỗi thường gặp (Troubleshooting)
-
-**Lỗi `500 Internal Server Error` hoặc `ModuleNotFoundError: No module named 'groq'` (hoặc các thư viện khác)**
-Lỗi này thường xảy ra trên Windows PowerShell khi Terminal hiển thị đã kích hoạt `(venv)` nhưng biến môi trường chưa được cập nhật đúng, dẫn đến việc gọi nhầm Python của hệ thống.
-
-**Cách khắc phục:**
-1. Khuyên dùng: Gọi trực tiếp đường dẫn tuyệt đối tới file `python.exe` bên trong thư mục `venv`:
-   ```bash
-   .\venv\Scripts\python.exe main.py api
-   ```
-2. Hoặc chạy lại lệnh cài đặt thư viện một lần nữa để nó cài bổ sung vào môi trường đang active:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
----
-
-## 📜 Giấy phép
-Dự án được xây dựng cho mục đích học tập và tra cứu Triết học Mác-Lênin.
+*Dự án phát triển nội bộ cho môn học Triết học Mác-Lênin.*

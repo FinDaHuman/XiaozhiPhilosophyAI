@@ -1,27 +1,70 @@
-@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Serif:wght@500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@layer utilities {
-  .clay-card {
-    @apply bg-white border-[3px] border-secondary/20 shadow-clay rounded-2xl transition-all duration-200;
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
   }
-  .clay-card:hover {
-    @apply -translate-y-1 shadow-clay transform;
+
+  body {
+    @apply min-h-screen bg-background text-text font-sans;
+    background-image:
+      linear-gradient(180deg, rgba(255, 253, 248, 0.9), rgba(245, 239, 228, 0.97));
   }
-  .clay-btn {
-    @apply bg-primary text-white border-[3px] border-primary shadow-clay rounded-xl px-4 py-2 font-semibold transition-all duration-200;
+
+  img {
+    outline: 1px solid rgba(33, 26, 22, 0.1);
+    outline-offset: -1px;
   }
-  .clay-btn:hover {
-    @apply -translate-y-1 bg-opacity-90;
-  }
-  .clay-btn:active {
-    @apply translate-y-0 shadow-clay-active bg-primary;
+
+  ::selection {
+    @apply bg-primary text-white;
   }
 }
 
-body {
-  @apply bg-background text-text font-sans antialiased min-h-screen;
+@layer components {
+  .clay-card {
+    @apply rounded-2xl border border-text/10 bg-paper/95 shadow-paper;
+  }
+  .clay-card:hover {
+    @apply shadow-paper;
+  }
+  .clay-btn {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-primary/80 bg-primary px-4 py-2 font-semibold text-white shadow-soft transition-[background-color,box-shadow,transform] duration-150 ease-out;
+  }
+  .clay-btn:hover {
+    @apply bg-primary/95 shadow-paper;
+  }
+  .clay-btn:active {
+    @apply scale-[0.98] shadow-clay-active;
+  }
+  .surface-card {
+    @apply rounded-2xl border border-text/10 bg-paper/90 shadow-soft;
+  }
+  .study-panel {
+    @apply rounded-2xl border border-white/20 bg-paper/90 shadow-paper backdrop-blur-md;
+  }
+  .eyebrow {
+    @apply text-xs font-bold uppercase tracking-[0.18em] text-secondary;
+  }
+  .heading-balance {
+    text-wrap: balance;
+  }
+  .body-pretty {
+    text-wrap: pretty;
+  }
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cta/25 focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+  .icon-button {
+    @apply inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-text/10 bg-paper text-text shadow-soft transition-[background-color,border-color,color,transform] duration-150 ease-out hover:border-primary/30 hover:bg-primary/5 hover:text-primary active:scale-[0.98];
+  }
+  .nav-link {
+    @apply inline-flex min-h-11 items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-text/75 transition-[background-color,color] duration-150 hover:bg-text/5 hover:text-text;
+  }
 }

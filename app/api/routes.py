@@ -291,6 +291,42 @@ async def mcp_websocket(websocket: WebSocket):
             logger.info("MCP RAG process terminated")
 
 
+# ─── MCP Pipe Execution ──────────────────────────────────────────────────────
+
+_mcp_pipe_process = None
+
+@router.post("/api/start-mcp")
+async def start_mcp_pipe():
+    """Start the MCP Pipe background process if not already running."""
+    global _mcp_pipe_process
+    
+    # Check if already running
+    if _mcp_pipe_process is not None:
+        if _mcp_pipe_process.poll() is None:
+            return {"status": "already_running"}
+            
+    mcp_pipe_script = MCP_DIR / "mcp_pipe.py"
+    if not mcp_pipe_script.exists():
+        raise HTTPException(status_code=500, detail="mcp_pipe.py not found")
+        
+    try:
+        env = os.environ.copy()
+        # Ensure we run using the venv python
+        _mcp_pipe_process = subprocess.Popen(
+            [sys.executable, str(mcp_pipe_script)],
+            cwd=str(MCP_DIR),
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if sys.platform == "win32" else 0
+        )
+        logger.info(f"Started mcp_pipe.py with PID {_mcp_pipe_process.pid}")
+        return {"status": "started", "pid": _mcp_pipe_process.pid}
+    except Exception as e:
+        logger.error(f"Failed to start mcp_pipe: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ─── Existing Endpoints ─────────────────────────────────────────────────────
 
 # Lazy-load RAG pipeline only when needed

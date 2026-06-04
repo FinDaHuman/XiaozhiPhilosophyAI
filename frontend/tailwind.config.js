@@ -7,18 +7,25 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: '#4F46E5',
-        secondary: '#818CF8',
-        cta: '#22C55E',
-        background: '#EEF2FF',
-        text: '#312E81',
+        primary: '#7C241D',
+        secondary: '#9A6A2F',
+        cta: '#0F766E',
+        background: '#F5EFE4',
+        text: '#211A16',
+        ink: '#211A16',
+        paper: '#FFFDF8',
+        parchment: '#E9DDC7',
+        muted: '#6F6259',
       },
       fontFamily: {
-        sans: ['"Baloo 2"', 'sans-serif'],
+        sans: ['Inter', 'Noto Sans', 'system-ui', 'sans-serif'],
+        serif: ['"Noto Serif"', 'Georgia', 'serif'],
       },
       boxShadow: {
-        'clay': 'inset -4px -4px 8px rgba(0,0,0,0.1), inset 4px 4px 8px rgba(255,255,255,0.7), 4px 4px 10px rgba(0,0,0,0.05)',
-        'clay-active': 'inset -2px -2px 4px rgba(0,0,0,0.1), inset 2px 2px 4px rgba(255,255,255,0.7), 2px 2px 5px rgba(0,0,0,0.05)',
+        'clay': '0 18px 50px rgba(46, 35, 26, 0.10), 0 1px 0 rgba(255,255,255,0.9) inset',
+        'clay-active': '0 8px 22px rgba(46, 35, 26, 0.12), 0 1px 0 rgba(255,255,255,0.8) inset',
+        'paper': '0 18px 55px rgba(45, 34, 24, 0.12)',
+        'soft': '0 10px 28px rgba(45, 34, 24, 0.08)',
       },
     },
   },

@@ -2,7 +2,7 @@
   "mcpServers": {
     "local-rag": {
       "type": "stdio",
-      "command": "python",
+      "command": "../venv/Scripts/python.exe",
       "args": ["mcp_rag.py"]
     }
   }

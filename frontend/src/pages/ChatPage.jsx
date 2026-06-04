@@ -1,6 +1,38 @@
-import React, { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, Send, Bot, User, Loader2, Sparkles, X, Presentation } from 'lucide-react'
+import {
+  ArrowLeft,
+  Bot,
+  Brain,
+  Library,
+  Lightbulb,
+  Loader2,
+  MessageCircle,
+  PanelLeft,
+  Presentation,
+  Send,
+  Sparkles,
+  User,
+  X,
+} from 'lucide-react'
+
+const quickPrompts = [
+  {
+    icon: Brain,
+    label: 'Giải thích khái niệm',
+    prompt: 'Giải thích quy luật thống nhất và đấu tranh của các mặt đối lập theo cách dễ hiểu.',
+  },
+  {
+    icon: Lightbulb,
+    label: 'Cho ví dụ',
+    prompt: 'Cho tôi một ví dụ đời sống về mâu thuẫn biện chứng và phân tích từng mặt đối lập.',
+  },
+  {
+    icon: Library,
+    label: 'Ôn theo slide',
+    prompt: 'Tóm tắt các ý quan trọng nhất về phân loại mâu thuẫn và chỉ ra slide nguồn.',
+  },
+]
 
 const ChatPage = () => {
   const [messages, setMessages] = useState([
@@ -10,6 +42,7 @@ const ChatPage = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [activeSlide, setActiveSlide] = useState(null)
   const messagesEndRef = useRef(null)
+  const inputRef = useRef(null)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -18,6 +51,11 @@ const ChatPage = () => {
   useEffect(() => {
     scrollToBottom()
   }, [messages])
+
+  const choosePrompt = (prompt) => {
+    setInput(prompt)
+    window.requestAnimationFrame(() => inputRef.current?.focus())
+  }
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return
@@ -38,7 +76,6 @@ const ChatPage = () => {
         const data = await response.json()
         setMessages(prev => [...prev, { role: 'ai', text: data.answer }])
         
-        // Auto-detect slide to show
         const slideMatches = data.answer.match(/\[Slide\s*(\d+)\]/gi)
         if (slideMatches) {
           const firstSlide = slideMatches[0].replace(/[^0-9]/g, '')
@@ -56,130 +93,227 @@ const ChatPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col h-screen">
-      <div className="bg-white shadow-sm sticky top-0 z-40 border-b-2 border-secondary/20 flex-shrink-0">
-        <div className="w-full px-4 py-4 flex items-center justify-between">
-          <Link to="/" className="flex items-center text-primary font-bold hover:opacity-80 transition-opacity">
-            <ArrowLeft className="w-5 h-5 mr-1" />
+    <div className="flex h-screen min-h-screen flex-col bg-background">
+      <header className="flex-shrink-0 border-b border-text/10 bg-paper/95 backdrop-blur">
+        <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 py-3 md:px-6">
+          <Link to="/" className="nav-link focus-ring">
+            <ArrowLeft className="h-5 w-5" aria-hidden="true" />
             Trang chủ
           </Link>
-          <h1 className="text-xl md:text-2xl font-bold text-text flex items-center gap-2">
-            <Bot className="text-primary w-6 h-6" />
+          <h1 className="flex items-center gap-2 font-serif text-xl font-bold text-text md:text-2xl">
+            <Bot className="h-6 w-6 text-primary" aria-hidden="true" />
             XiaoZhi AI
           </h1>
-          <div className="w-24"></div>
+          <Link to="/quiz" className="hidden nav-link text-primary focus-ring sm:inline-flex">
+            Ôn tập
+          </Link>
         </div>
-      </div>
+      </header>
 
-      <div className="flex-1 overflow-hidden p-4 md:p-6 flex flex-col lg:flex-row gap-6 max-w-[1800px] mx-auto w-full transition-all duration-500">
-        {/* LEFT PANEL - SLIDE VIEWER */}
-        {activeSlide && (
-          <div className="flex w-full lg:w-2/3 h-[40vh] lg:h-full bg-white/50 backdrop-blur-sm rounded-2xl border-2 border-secondary/20 shadow-clay flex-col overflow-hidden transition-all duration-500 opacity-100">
-            <div className="bg-white border-b-2 border-secondary/20 p-2 md:p-4 flex items-center justify-between shrink-0">
-              <h2 className="text-base md:text-lg font-bold text-primary flex items-center gap-2">
-                <Presentation className="w-4 h-4 md:w-5 md:h-5" /> Nguồn trích dẫn: Slide {activeSlide}
-              </h2>
-              <button 
-                onClick={() => setActiveSlide(null)}
-                className="p-1.5 md:p-2 hover:bg-secondary/10 rounded-full text-text/60 hover:text-text transition-colors"
-                title="Đóng slide"
-              >
-                <X className="w-4 h-4 md:w-5 md:h-5" />
-              </button>
-            </div>
-            <div className="flex-1 p-4 md:p-6 flex items-center justify-center bg-secondary/5 min-h-0">
-              <img 
-                src={`/slides/slide_${activeSlide}.jpg`} 
-                alt={`Slide ${activeSlide}`} 
-                className="max-w-full max-h-full object-contain rounded-xl shadow-lg border-2 border-secondary/10" 
-              />
+      <main className="mx-auto grid min-h-0 w-full max-w-7xl flex-1 gap-4 p-4 md:p-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <section className="study-panel flex min-h-0 flex-col overflow-hidden" aria-label="Cuộc trò chuyện với XiaoZhi">
+          <div className="border-b border-text/10 bg-paper/90 px-4 py-4 md:px-6">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="eyebrow">Đối thoại học tập</p>
+                <h2 className="mt-1 font-serif text-2xl font-bold">Hỏi, phản biện, rồi quay lại nguồn.</h2>
+              </div>
+              <div className="flex items-center gap-2 rounded-full border border-cta/20 bg-cta/10 px-3 py-1.5 text-sm font-semibold text-cta">
+                <Sparkles className="h-4 w-4" aria-hidden="true" />
+                Có trích dẫn slide khi tìm thấy
+              </div>
             </div>
           </div>
-        )}
 
-        {/* RIGHT PANEL - CHAT */}
-        <div className={`w-full ${activeSlide ? 'lg:w-1/3' : 'max-w-4xl mx-auto'} bg-white/50 backdrop-blur-sm rounded-2xl border-2 border-secondary/20 shadow-clay flex flex-col h-full overflow-hidden transition-all duration-500`}>
-          
-          <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
-            {messages.map((msg, idx) => {
-              const slideMatches = msg.text.match(/\[Slide\s*(\d+)\]/gi);
-              const citedSlides = slideMatches 
-                ? [...new Set(slideMatches.map(m => m.replace(/[^0-9]/g, '')))]
-                : [];
-                
-              return (
-                <div key={idx} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm ${msg.role === 'user' ? 'bg-cta text-white' : 'bg-primary text-white'}`}>
-                    {msg.role === 'user' ? <User className="w-6 h-6" /> : <Bot className="w-6 h-6" />}
-                  </div>
-                  <div className={`max-w-[85%] p-4 rounded-2xl shadow-sm border-2 ${msg.role === 'user' ? 'bg-white border-cta/20 rounded-tr-sm' : 'bg-white border-secondary/20 rounded-tl-sm'}`}>
-                    <p className="text-base text-text leading-relaxed whitespace-pre-wrap">{msg.text}</p>
-                    {citedSlides.length > 0 && (
-                      <div className="mt-4 pt-4 border-t-2 border-secondary/10">
-                        <p className="text-sm font-bold text-primary mb-2 flex items-center gap-2">
-                          <Sparkles className="w-4 h-4" /> Nguồn tham khảo:
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          {citedSlides.map(slide => (
-                            <button 
-                              key={slide} 
-                              onClick={() => setActiveSlide(slide)}
-                              className={`block w-24 md:w-32 overflow-hidden rounded-lg border-2 transition-all text-left ${activeSlide === slide ? 'border-cta ring-2 ring-cta/30' : 'border-primary/20 hover:border-primary'}`}
-                            >
-                              <img src={`/slides/slide_${slide}.jpg`} alt={`Slide ${slide}`} className="w-full h-auto object-cover" />
-                              <div className={`text-center text-xs font-semibold py-1 ${activeSlide === slide ? 'bg-cta text-white' : 'bg-primary/5 text-text'}`}>
-                                Xem Slide {slide}
-                              </div>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+          {activeSlide && (
+            <div className="border-b border-text/10 bg-[#2a211a] p-3 lg:hidden">
+              <div className="mb-3 flex items-center justify-between gap-3 text-white">
+                <h2 className="flex items-center gap-2 font-serif text-lg font-bold">
+                  <Presentation className="h-5 w-5" aria-hidden="true" />
+                  Slide {activeSlide}
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => setActiveSlide(null)}
+                  className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-xl border border-white/15 bg-white/10 text-white transition-[background-color,transform] duration-150 hover:bg-white/15 active:scale-[0.98] focus-ring"
+                  aria-label="Đóng slide nguồn"
+                >
+                  <X className="h-5 w-5" aria-hidden="true" />
+                </button>
+              </div>
+              <img
+                src={`/slides/slide_${activeSlide}.jpg`}
+                alt={`Slide nguồn ${activeSlide}`}
+                className="max-h-72 w-full rounded-xl object-contain shadow-paper"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300' fill='none'%3E%3Crect width='400' height='300' fill='%23f1eadf'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='16' fill='%236F6259'%3EHình ảnh slide chưa cập nhật%3C/text%3E%3C/svg%3E";
+                }}
+              />
+            </div>
+          )}
+
+          <div className="flex-1 overflow-y-auto px-4 py-5 md:px-6" aria-live="polite">
+            {messages.length === 1 && (
+              <div className="mb-6 rounded-2xl border border-text/10 bg-white/60 p-4 md:p-5">
+                <div className="flex items-start gap-3">
+                  <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <MessageCircle className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <div>
+                    <h3 className="font-serif text-xl font-bold">Bắt đầu bằng một câu hỏi cụ thể</h3>
+                    <p className="body-pretty mt-1 text-sm leading-6 text-muted">
+                      XiaoZhi trả lời tốt nhất khi bạn hỏi về khái niệm, ví dụ, so sánh hoặc yêu cầu chỉ ra slide nguồn.
+                    </p>
                   </div>
                 </div>
-              );
-            })}
-            
-            {isLoading && (
-              <div className="flex gap-3">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm bg-primary text-white">
-                  <Bot className="w-6 h-6" />
-                </div>
-                <div className="bg-white p-4 rounded-2xl border-2 border-secondary/20 rounded-tl-sm shadow-sm flex items-center gap-3 text-text/60">
-                  <Loader2 className="w-5 h-5 animate-spin" /> XiaoZhi đang suy nghĩ...
+                <div className="mt-4 grid gap-2 md:grid-cols-3">
+                  {quickPrompts.map(({ icon: Icon, label, prompt }) => (
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={() => choosePrompt(prompt)}
+                      className="rounded-xl border border-text/10 bg-paper px-4 py-3 text-left transition-[background-color,border-color,transform] duration-150 hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/5 focus-ring"
+                    >
+                      <Icon className="h-5 w-5 text-primary" aria-hidden="true" />
+                      <span className="mt-3 block text-sm font-bold">{label}</span>
+                      <span className="mt-1 block text-xs leading-5 text-muted">{prompt}</span>
+                    </button>
+                  ))}
                 </div>
               </div>
             )}
-            <div ref={messagesEndRef} />
+
+            <div className="space-y-5">
+              {messages.map((msg, idx) => {
+                const slideMatches = msg.text.match(/\[Slide\s*(\d+)\]/gi)
+                const citedSlides = slideMatches
+                  ? [...new Set(slideMatches.map(m => m.replace(/[^0-9]/g, '')))]
+                  : []
+                  
+                return (
+                  <div key={idx} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-soft ${msg.role === 'user' ? 'bg-cta text-white' : 'bg-primary text-white'}`}>
+                      {msg.role === 'user' ? <User className="h-5 w-5" aria-hidden="true" /> : <Bot className="h-5 w-5" aria-hidden="true" />}
+                    </div>
+                    <article className={`max-w-[86%] rounded-2xl border p-4 shadow-soft ${msg.role === 'user' ? 'rounded-tr-sm border-cta/20 bg-cta/5' : 'rounded-tl-sm border-text/10 bg-paper'}`}>
+                      <p className="whitespace-pre-wrap text-base leading-7 text-text">{msg.text}</p>
+                      {citedSlides.length > 0 && (
+                        <div className="mt-4 border-t border-text/10 pt-4">
+                          <p className="mb-3 flex items-center gap-2 text-sm font-bold text-primary">
+                            <PanelLeft className="h-4 w-4" aria-hidden="true" />
+                            Nguồn tham khảo
+                          </p>
+                          <div className="flex flex-wrap gap-3">
+                            {citedSlides.map(slide => (
+                              <button
+                                key={slide}
+                                type="button"
+                                onClick={() => setActiveSlide(slide)}
+                                aria-label={`Mở slide ${slide}`}
+                                className={`w-28 overflow-hidden rounded-xl border bg-white text-left shadow-soft transition-[border-color,box-shadow,transform] duration-150 hover:-translate-y-0.5 focus-ring ${activeSlide === slide ? 'border-cta shadow-paper' : 'border-text/10 hover:border-primary/30'}`}
+                              >
+                                <img src={`/slides/slide_${slide}.jpg`} alt={`Slide ${slide}`} className="h-16 w-full object-cover" onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300' fill='none'%3E%3Crect width='400' height='300' fill='%23f1eadf'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='12' fill='%236F6259'%3ETrống%3C/text%3E%3C/svg%3E"; }} />
+                                <span className={`block px-2 py-1.5 text-center text-xs font-semibold ${activeSlide === slide ? 'bg-cta text-white' : 'text-text'}`}>
+                                  Slide {slide}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </article>
+                  </div>
+                )
+              })}
+              
+              {isLoading && (
+                <div className="flex gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-white shadow-soft">
+                    <Bot className="h-5 w-5" aria-hidden="true" />
+                  </div>
+                  <div className="flex items-center gap-3 rounded-2xl rounded-tl-sm border border-text/10 bg-paper p-4 text-muted shadow-soft">
+                    <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+                    XiaoZhi đang suy nghĩ...
+                  </div>
+                </div>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
           </div>
 
-          {/* Input Area */}
-          <div className="p-4 bg-white border-t-2 border-secondary/20 shrink-0">
-            <form onSubmit={e => { e.preventDefault(); handleSend(); }} className="flex gap-3">
+          <div className="border-t border-text/10 bg-paper p-4">
+            <form onSubmit={e => { e.preventDefault(); handleSend(); }} className="flex gap-3" aria-label="Gửi câu hỏi cho XiaoZhi">
+              <label htmlFor="chat-input" className="sr-only">Câu hỏi cho XiaoZhi</label>
               <div className="relative flex-1">
                 <input
+                  id="chat-input"
+                  ref={inputRef}
                   type="text"
                   value={input}
                   onChange={e => setInput(e.target.value)}
-                  placeholder="Hỏi XiaoZhi..."
-                  className="w-full px-5 py-3 pr-12 rounded-xl border-2 border-secondary/30 focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all bg-background/50 text-text text-lg"
+                  placeholder="Hỏi XiaoZhi về một khái niệm, ví dụ hoặc slide..."
+                  className="w-full rounded-xl border border-text/15 bg-white px-4 py-3 pr-11 text-base text-text shadow-soft transition-[border-color,box-shadow] duration-150 placeholder:text-muted/60 focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10"
                   disabled={isLoading}
                 />
-                <Sparkles className="absolute right-4 top-1/2 -translate-y-1/2 text-secondary/50 w-5 h-5 pointer-events-none" />
+                <Sparkles className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-secondary/60" aria-hidden="true" />
               </div>
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 disabled={isLoading || !input.trim()}
-                className="clay-btn !px-4 md:!px-6 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-lg"
+                className="clay-btn bg-cta border-cta px-4 hover:bg-cta/95 disabled:cursor-not-allowed disabled:opacity-50 md:px-6"
+                aria-label="Gửi câu hỏi"
               >
-                <Send className="w-5 h-5" />
+                <Send className="h-5 w-5" aria-hidden="true" />
                 <span className="hidden md:inline">Gửi</span>
               </button>
             </form>
           </div>
+        </section>
 
-        </div>
-      </div>
+        <aside className="hidden min-h-0 lg:flex lg:flex-col">
+          {activeSlide ? (
+            <div className="study-panel flex min-h-0 flex-1 flex-col overflow-hidden">
+              <div className="flex items-center justify-between gap-3 border-b border-text/10 bg-paper px-4 py-3">
+                <h2 className="flex items-center gap-2 font-serif text-lg font-bold text-text">
+                  <Presentation className="h-5 w-5 text-primary" aria-hidden="true" />
+                  Slide {activeSlide}
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => setActiveSlide(null)}
+                  className="icon-button"
+                  aria-label="Đóng slide nguồn"
+                >
+                  <X className="h-5 w-5" aria-hidden="true" />
+                </button>
+              </div>
+              <div className="flex min-h-0 flex-1 items-center justify-center bg-[#2a211a] p-4">
+                <img
+                  src={`/slides/slide_${activeSlide}.jpg`}
+                  alt={`Slide nguồn ${activeSlide}`}
+                  className="max-h-full max-w-full rounded-xl object-contain shadow-paper"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300' fill='none'%3E%3Crect width='400' height='300' fill='%232a211a'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='16' fill='%238c8279'%3EHình ảnh slide chưa cập nhật%3C/text%3E%3C/svg%3E";
+                  }}
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="study-panel p-5">
+              <p className="eyebrow">Nguồn học liệu</p>
+              <h2 className="mt-2 font-serif text-2xl font-bold">Slide sẽ mở ở đây khi câu trả lời có trích dẫn.</h2>
+              <p className="body-pretty mt-3 leading-7 text-muted">
+                Hãy yêu cầu XiaoZhi chỉ ra slide nguồn, hoặc hỏi theo số slide để giữ việc học bám vào tài liệu.
+              </p>
+              <div className="mt-5 rounded-2xl border border-text/10 bg-white/60 p-4 text-sm leading-6 text-muted">
+                Gợi ý: “Dựa trên slide, giải thích vì sao đấu tranh giữa các mặt đối lập là động lực phát triển.”
+              </div>
+            </div>
+          )}
+        </aside>
+      </main>
     </div>
   )
 }
