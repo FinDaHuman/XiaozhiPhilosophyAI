@@ -1,0 +1,4 @@
+4,5,6 - Giới thiệu
+8,9,10,12 - Sự đấu tranh của các mặt đối lập
+13,14,15,16,17,18,19,20,21,22,23 - Phân loại mâu thuẫn
+25,26,27,28,29,30 - Bản chất quy luật và ý nghĩa của phương pháp luận

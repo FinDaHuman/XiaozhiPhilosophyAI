@@ -2,7 +2,7 @@
 RAG Pipeline
 
 Orchestrates the full RAG flow:
-  Question → Embed → Retrieve → Build Prompt → Gemini → Answer
+  Question → Embed → Retrieve → Build Prompt → Groq → Answer
 
 Exposes a simple `ask(question)` interface for MCP compatibility.
 """
@@ -10,9 +10,8 @@ Exposes a simple `ask(question)` interface for MCP compatibility.
 import os
 from typing import Optional
 
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 from dotenv import load_dotenv
+from groq import Groq
 
 from app.rag.retriever import PhilosophyRetriever
 from app.rag.prompts import SYSTEM_PROMPT, build_prompt
@@ -20,7 +19,7 @@ from app.rag.ingest import run_ingest_pipeline
 
 load_dotenv()
 
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
 
 
 class RAGPipeline:
@@ -31,20 +30,18 @@ class RAGPipeline:
 
     def __init__(self):
         self.retriever = PhilosophyRetriever()
-        self._llm: Optional[ChatGoogleGenerativeAI] = None
+        self._client: Optional[Groq] = None
         self._conversation_history: list[dict] = []
 
     @property
-    def llm(self) -> ChatGoogleGenerativeAI:
-        """Lazy-initialize the Gemini LLM."""
-        if self._llm is None:
-            self._llm = ChatGoogleGenerativeAI(
-                model=GEMINI_MODEL,
-                google_api_key=os.getenv("GOOGLE_API_KEY"),
-                temperature=0.3,
-                max_output_tokens=2048,
-            )
-        return self._llm
+    def client(self) -> Groq:
+        """Lazy-initialize the Groq client."""
+        if self._client is None:
+            api_key = os.getenv("GROQ_API_KEY")
+            if not api_key:
+                raise ValueError("Missing GROQ_API_KEY in .env")
+            self._client = Groq(api_key=api_key)
+        return self._client
 
     def ask(self, question: str) -> str:
         """
@@ -59,19 +56,24 @@ class RAGPipeline:
 
         # Step 3: Build messages
         messages = [
-            SystemMessage(content=SYSTEM_PROMPT),
+            {"role": "system", "content": SYSTEM_PROMPT},
         ]
 
         # Add conversation history (last 6 exchanges for context)
         for entry in self._conversation_history[-6:]:
-            messages.append(HumanMessage(content=entry["question"]))
-            messages.append(AIMessage(content=entry["answer"]))
+            messages.append({"role": "user", "content": entry["question"]})
+            messages.append({"role": "assistant", "content": entry["answer"]})
 
-        messages.append(HumanMessage(content=user_prompt))
+        messages.append({"role": "user", "content": user_prompt})
 
-        # Step 4: Call Gemini
-        response = self.llm.invoke(messages)
-        answer = response.content
+        # Step 4: Call Groq
+        completion = self.client.chat.completions.create(
+            model=GROQ_MODEL,
+            messages=messages,
+            temperature=0.3,
+            max_tokens=2048,
+        )
+        answer = completion.choices[0].message.content or ""
 
         # Step 5: Store in conversation history
         self._conversation_history.append({
@@ -89,7 +91,7 @@ class RAGPipeline:
         """Get pipeline statistics."""
         retriever_stats = self.retriever.get_collection_stats()
         return {
-            "model": GEMINI_MODEL,
+            "model": GROQ_MODEL,
             "conversation_turns": len(self._conversation_history),
             "knowledge_base": retriever_stats,
         }

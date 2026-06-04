@@ -1,16 +1,43 @@
 # Xiaozhi Philosophy AI (小智哲学) 🤖📖
 
-Xiaozhi (Tiểu Trí) là một trợ lý AI thông minh chuyên về **Triết học Mác - Lênin**, được xây dựng dựa trên công nghệ **RAG (Retrieval-Augmented Generation)**. Hệ thống sử dụng mô hình nhúng (Embeddings) chạy hoàn toàn offline bằng HuggingFace và kết hợp sức mạnh phân tích của mô hình Google Gemini để cung cấp những câu trả lời triết học mạch lạc, chính xác và bám sát giáo trình.
+Xiaozhi (Tiểu Trí) là một trợ lý AI thông minh chuyên về **Triết học Mác - Lênin**, được xây dựng dựa trên công nghệ **RAG (Retrieval-Augmented Generation)**. Hệ thống sử dụng mô hình nhúng (Embeddings) chạy hoàn toàn offline bằng HuggingFace và kết hợp sức mạnh phân tích của **Groq API** (LLaMA) để cung cấp những câu trả lời triết học mạch lạc, chính xác và bám sát giáo trình.
 
 ---
 
 ## 🌟 Tính năng nổi bật
-* **Local Embeddings**: Chạy nhúng văn bản cục bộ (`all-MiniLM-L6-v2` / `multilingual-e5-small`) giúp tiết kiệm chi phí API và không bị giới hạn quota.
+
+* **Local Embeddings**: Chạy nhúng văn bản cục bộ (`multilingual-e5-small`) giúp tiết kiệm chi phí API và không bị giới hạn quota.
 * **Vector Database**: Sử dụng `ChromaDB` lưu trữ cục bộ, truy xuất tốc độ cao.
-* **Fallback thông minh**: Tự động chuyển đổi mô hình dự phòng khi mất kết nối máy chủ tải model.
-* **Terminal UI (TUI) đẹp mắt**: Giao diện dòng lệnh tương tác trực quan bằng thư viện `Rich` và `Textual`.
+* **Groq LLM**: Sử dụng Groq API (`llama-3.1-8b-instant`) với tốc độ phản hồi cực nhanh.
+* **MCP Integration**: Tích hợp sẵn MCP server để kết nối với robot Xiaozhi.
+* **Terminal UI (TUI) đẹp mắt**: Giao diện dòng lệnh tương tác trực quan bằng thư viện `Rich`.
 * **REST API**: Tích hợp sẵn FastAPI, dễ dàng kết nối với Web, App hoặc các nền tảng khác.
-* **Prompt tối ưu**: Trả lời súc tích, đi thẳng vào vấn đề, từ chối những câu hỏi ngoài lề hoặc không có trong giáo trình để tránh "ảo giác" (hallucination).
+* **Prompt tối ưu**: Trả lời súc tích, đi thẳng vào vấn đề, tránh "ảo giác" (hallucination).
+
+---
+
+## 📁 Cấu trúc dự án
+
+```
+XiaozhiPhilosophyAI/
+├── backend/                    # Core backend (ChromaDB + Groq)
+│   ├── app/
+│   │   ├── rag/                # RAG pipeline, retriever, embeddings
+│   │   ├── api/                # FastAPI REST endpoints
+│   │   └── ui/                 # Terminal chat UI
+│   ├── chroma_db/              # Vector database (persistent)
+│   ├── models/                 # HuggingFace embeddings cache
+│   ├── requirements.txt
+│   └── .env
+├── mcp/                        # MCP server (FAISS + Groq)
+│   ├── mcp_rag.py              # MCP tool server (rag_search, rag_answer, etc.)
+│   ├── mcp_pipe.py             # WebSocket ↔ stdio bridge
+│   ├── rag_pipeline_faiss.py   # Lightweight FAISS + TF-IDF pipeline
+│   └── mcp_config.json
+├── data/                       # Source documents for both pipelines
+├── MCP_INTEGRATION.md          # MCP integration guide
+└── README.md
+```
 
 ---
 
@@ -18,7 +45,7 @@ Xiaozhi (Tiểu Trí) là một trợ lý AI thông minh chuyên về **Triết 
 
 ### 1. Yêu cầu hệ thống
 * Python 3.10 trở lên
-* Có kết nối mạng (để tải Model từ HuggingFace lần đầu và gọi Google Gemini API).
+* Có kết nối mạng (để tải Model từ HuggingFace lần đầu và gọi Groq API).
 
 ### 2. Thiết lập dự án
 Clone dự án và di chuyển vào thư mục gốc:
@@ -28,12 +55,11 @@ cd XiaozhiPhilosophyAI/backend
 ```
 
 ### 3. Tạo môi trường ảo (Virtual Environment)
-Khuyến nghị sử dụng môi trường ảo để không xung đột thư viện:
 ```bash
 python -m venv venv
-# Kích hoạt trên Windows:
+# Windows:
 .\venv\Scripts\activate
-# Kích hoạt trên Mac/Linux:
+# Mac/Linux:
 source venv/bin/activate
 ```
 
@@ -43,14 +69,18 @@ pip install -r requirements.txt
 ```
 
 ### 5. Cấu hình biến môi trường (`.env`)
-Trong thư mục `backend/`, tạo file `.env` (hoặc sửa đổi file có sẵn) với nội dung:
+Trong thư mục `backend/`, tạo file `.env`:
 ```ini
-# Google AI API Key (Bắt buộc)
-GOOGLE_API_KEY=your_google_api_key_here
+# Groq API Key (Bắt buộc)
+# Lấy tại: https://console.groq.com/keys
+GROQ_API_KEY=gsk_your_groq_api_key_here
+GROQ_MODEL=llama-3.1-8b-instant
 
-# Model configuration
-GEMINI_MODEL=gemini-2.5-flash-lite
+# Embedding model (chạy local, không cần API key)
 EMBEDDING_MODEL=intfloat/multilingual-e5-small
+
+# HuggingFace Cache
+HF_HOME=./models
 
 # Vector DB & RAG config
 CHROMA_PERSIST_DIR=chroma_db
@@ -58,6 +88,9 @@ CHROMA_COLLECTION=philosophy_docs
 CHUNK_SIZE=1200
 CHUNK_OVERLAP=200
 TOP_K=6
+
+# Data directory
+DATA_DIR=../data
 ```
 
 ---
@@ -65,58 +98,45 @@ TOP_K=6
 ## 🚀 Hướng dẫn sử dụng
 
 ### Bước 1: Nạp dữ liệu (Ingestion)
-Trước khi chat, bạn cần nạp các tài liệu (Giáo trình Triết học) vào Cơ sở dữ liệu Vector:
-1. Đặt các file tài liệu (`.pdf`, `.docx`, `.txt`) vào thư mục `data/` (ngang hàng với `backend/`).
-2. Chạy lệnh nạp dữ liệu:
+Đặt các file tài liệu (`.pdf`, `.docx`, `.txt`) vào thư mục `data/`, sau đó:
 ```bash
-python -m app.main ingest
+python main.py ingest
 ```
-*Lưu ý: Bạn có thể thêm cờ `--resume` nếu muốn tiếp tục quá trình nạp bị lỗi giữa chừng.*
+*Thêm `--resume` để tiếp tục quá trình nạp bị lỗi giữa chừng.*
 
 ### Bước 2: Tương tác với AI
-Hệ thống cung cấp 2 chế độ tương tác:
 
 #### 🖥️ Chế độ Terminal (TUI)
-Dành cho người dùng muốn chat trực tiếp thông qua cửa sổ dòng lệnh có giao diện trực quan:
 ```bash
-python -m app.main terminal
+python main.py terminal
 ```
 
-#### 🌐 Chế độ API Server (REST API)
-Dành cho nhà phát triển muốn tích hợp Xiaozhi vào ứng dụng khác:
+#### 🌐 Chế độ API Server
 ```bash
-python -m app.main api
+python main.py api
 ```
-- Server sẽ chạy tại: `http://localhost:8000`
-- **Tài liệu API (Swagger UI):** Truy cập `http://localhost:8000/docs` để test trực tiếp các endpoint.
-- **Endpoint Chat:** `POST /chat`
+- Server: `http://localhost:8000`
+- Swagger UI: `http://localhost:8000/docs`
+- Chat endpoint: `POST /chat`
   ```json
-  // Request
-  {
-    "message": "Nguyên nhân là gì?"
-  }
-  
-  // Response
-  {
-    "answer": "Nguyên nhân là phạm trù chỉ sự tương tác lẫn nhau..."
-  }
+  { "message": "Mâu thuẫn biện chứng là gì?" }
   ```
 
 ---
 
-## 📝 Cấu trúc thư mục (Tham khảo)
+## 🤖 MCP Integration (Robot Xiaozhi)
+
+Thư mục `mcp/` chứa MCP server dùng pipeline nhẹ (FAISS + TF-IDF + Groq) để kết nối trực tiếp với robot Xiaozhi qua WebSocket.
+
+```bash
+cd mcp
+python rag_pipeline_faiss.py ingest    # Tạo FAISS index
+python mcp_pipe.py                     # Kết nối robot
 ```
-XiaozhiPhilosophyAI/
-├── backend/
-│   ├── app/                # Core logic (RAG pipeline, API, TUI)
-│   ├── models/             # Thư mục lưu cục bộ HuggingFace Embeddings
-│   ├── chroma_db/          # Cơ sở dữ liệu Vector cục bộ
-│   ├── requirements.txt
-│   ├── .env
-│   └── ...
-├── data/                   # Chứa các file tài liệu Triết học để Ingest
-└── README.md
-```
+
+Xem chi tiết tại [MCP_INTEGRATION.md](MCP_INTEGRATION.md).
+
+---
 
 ## 📜 Giấy phép
 Dự án được xây dựng cho mục đích học tập và tra cứu Triết học Mác-Lênin.

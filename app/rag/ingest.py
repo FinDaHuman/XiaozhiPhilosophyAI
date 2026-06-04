@@ -36,7 +36,7 @@ CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", "1000"))
 CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "200"))
 CHROMA_PERSIST_DIR = os.getenv("CHROMA_PERSIST_DIR", "chroma_db")
 CHROMA_COLLECTION = os.getenv("CHROMA_COLLECTION", "philosophy_docs")
-DATA_DIR = os.getenv("DATA_DIR", "../data")
+DATA_DIR = os.getenv("DATA_DIR", "data")
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "models/gemini-embedding-001")
 
 SUPPORTED_EXTENSIONS = {".pdf", ".docx", ".txt", ".md"}

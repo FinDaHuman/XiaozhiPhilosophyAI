@@ -31,7 +31,7 @@ Terminal
  ↓
 RAG
  ↓
-Gemini
+Groq
  ↓
 Answer
 ```
@@ -45,7 +45,7 @@ FastAPI
  ↓
 RAG
  ↓
-Gemini
+Groq
  ↓
 Answer
 ```
@@ -156,7 +156,7 @@ Top 5 Chunks
  ↓
 Prompt Builder
  ↓
-Gemini
+Groq
  ↓
 Answer
 ```
@@ -315,7 +315,7 @@ Python 3.11
 FastAPI
 LangChain
 ChromaDB
-gemini-2.5-flash-lite
+Groq (llama-3.1-8b-instant)
 Textual
 python-dotenv
 ```

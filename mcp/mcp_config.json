@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "local-rag": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["mcp_rag.py"]
+    }
+  }
+}

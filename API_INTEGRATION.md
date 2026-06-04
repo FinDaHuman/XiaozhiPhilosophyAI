@@ -67,7 +67,7 @@ Kiểm tra trạng thái của cơ sở dữ liệu Vector và Embeddings.
     "collection_name": "philosophy_docs",
     "document_count": 798,
     "persist_directory": "chroma_db",
-    "embedding_model": "models/gemini-embedding-001"
+    "embedding_model": "intfloat/multilingual-e5-small"
   }
 }
 ```

@@ -2,9 +2,9 @@
 Xiaozhi Philosophy AI — Main Entry Point
 
 Usage:
-    python -m app.main terminal     Launch the terminal chat UI
-    python -m app.main api          Start the FastAPI server
-    python -m app.main ingest       Run the document ingestion pipeline
+    python main.py terminal     Launch the terminal chat UI
+    python main.py api          Start the FastAPI server
+    python main.py ingest       Run the document ingestion pipeline
 """
 
 import sys
@@ -20,8 +20,8 @@ if sys.stderr and hasattr(sys.stderr, "reconfigure"):
 if sys.stdin and hasattr(sys.stdin, "reconfigure"):
     sys.stdin.reconfigure(encoding="utf-8", errors="replace")
 
-# Ensure the backend directory is in the path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Ensure the root directory is in the path
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from dotenv import load_dotenv
 
@@ -39,6 +39,8 @@ def main():
         run_terminal()
     elif command == "api":
         run_api()
+    elif command == "web":
+        run_web()
     elif command == "ingest":
         run_ingest()
     else:
@@ -73,6 +75,41 @@ def run_api():
     uvicorn.run(app, host="0.0.0.0", port=8000)
 
 
+def run_web():
+    """Start the FastAPI server for the learning website."""
+    import uvicorn
+    from fastapi import FastAPI
+    from fastapi.staticfiles import StaticFiles
+    from app.api.routes import router
+
+    # Pre-extract slides
+    print("📚 Extracting lesson slides from PDF...")
+    try:
+        from app.api.slide_extractor import extract_all_lesson_slides
+        result = extract_all_lesson_slides()
+        total = sum(len(v) for v in result.values())
+        print(f"✅ Extracted {total} slide images")
+    except Exception as e:
+        print(f"⚠️ Slide extraction warning: {e}")
+        print("   Slides will be extracted on-demand when accessed.")
+
+    app = FastAPI(
+        title="Triết học Mác-Lênin — Quy luật Mâu thuẫn",
+        description="Website học Triết học Mác-Lênin với AI",
+        version="1.0.0",
+    )
+    app.include_router(router)
+
+    print("")
+    print("🌐 ═══════════════════════════════════════════")
+    print("   Triết học Mác-Lênin — Learning Website")
+    print("   http://localhost:8000")
+    print("═══════════════════════════════════════════════")
+    print("")
+
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+
 def run_ingest():
     """Run the document ingestion pipeline."""
     from app.rag.ingest import run_ingest_pipeline
@@ -87,9 +124,10 @@ def print_usage():
 ╠══════════════════════════════════════════════╣
 ║                                              ║
 ║  Usage:                                      ║
-║    python -m app.main <command>               ║
+║    python main.py <command>                  ║
 ║                                              ║
 ║  Commands:                                   ║
+║    web       Start learning website          ║
 ║    ingest    Ingest documents into KB         ║
 ║    terminal  Launch terminal chat UI          ║
 ║    api       Start FastAPI server             ║
