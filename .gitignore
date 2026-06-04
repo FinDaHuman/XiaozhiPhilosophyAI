@@ -59,3 +59,7 @@ webcontent/Slide.pdf
 err.json
 extract.py
 extract_vision.py
+
+#temporary files
+temp
+.playwright-mcp
