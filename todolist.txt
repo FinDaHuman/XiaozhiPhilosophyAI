@@ -1,0 +1,38 @@
+# TODO — Lily & Hiro (cập nhật 17/07/2026)
+
+## ĐÃ XONG
+[x] Clone XiaozhiPhilosophyAI về D:\VsCode\LilyAndHiro, venv + deps (thêm langchain-groq), npm install
+[x] Đổi persona Xiaozhi → Lily (prompts backend + FAISS robot + frontend + title web)
+[x] Soạn data/DongAnhCapital_KnowledgeBase.md — Lily biết donganhcapital.com + Hiro
+[x] 3 MCP tool live trong mcp/mcp_rag.py: dac_vnindex, dac_ai_signals_today, dac_market_movers
+[x] Backend chạy local (venv\Scripts\python main.py api, port 8000)
+[x] Tunnel Cloudflare (BẮT BUỘC --protocol http2 vì mạng chặn QUIC/UDP)
+[x] Deploy Vercel project lily-ai; user đã tắt Deployment Protection
+[x] Domain: https://lily-hiro.vercel.app (domain duy nhất; lily-ai-ten đã xóa)
+[x] PRESENTATION.md — kịch bản 3 phần + checklist ngày D + dự phòng
+[x] Thêm giáo trình Kinh tế chính trị Mác-Lênin (data/GiaoTrinh_KinhTeChinhTri_MacLenin.pdf, 262 trang)
+[x] Thêm bộ slide "Cạnh tranh và Độc quyền" MLN122: data/Slide_KTCT_OCR.md (31 slide, trích dẫn [Slide KTCT N]) + ảnh frontend/public/slides_ktct/
+[x] Web viewer hỗ trợ 2 deck slide (triết học [Slide N] + KTCT [Slide KTCT N])
+[x] Re-ingest 2 pipeline (ChromaDB + FAISS) với kiến thức mới
+[x] Website 2 môn học: quiz KTCT 60 câu (/quiz/ktct), 4 bài học KTCT kèm slide (/lesson/ktct/1..4), landing page redesign 2 môn (frontend/src/data/subjects.js là nguồn dữ liệu chung)
+
+## CHỜ USER
+[x] MCP_ENDPOINT: user đã gửi token 17/07 → đã điền .env, mcp_pipe đã kết nối OK (xiaozhi.me đã ListTools)
+[ ] Test robot bằng giọng nói thật: 1 câu triết học + 1 câu KTCT ("Độc quyền nhà nước là gì?") + "VNINDEX hôm nay thế nào?" (tool live) + câu dẫn tới Hiro
+
+## TRƯỚC NGÀY THUYẾT TRÌNH
+[ ] Làm theo GUIDE_KHOI_DONG.md (hướng dẫn từng bước bật backend/tunnel/deploy/robot)
+[ ] Chạy checklist trong PRESENTATION.md (warm-up Render DAC, mở sẵn tab web, login Pro trên donganhcapital.com)
+[ ] Chạy thử toàn bộ kịch bản 1 lần với robot thật
+
+## LỆNH NHANH (từ root repo)
+- Backend:  venv\Scripts\python main.py api
+- Tunnel:   & "C:\Program Files (x86)\cloudflared\cloudflared.exe" tunnel --protocol http2 --url http://localhost:8000
+- Redeploy (build local rồi đẩy prebuilt — KHÔNG dùng --build-env, nó không bake VITE_API_URL):
+    cd frontend
+    vercel pull --yes --environment production
+    $env:VITE_API_URL='<URL tunnel>'; vercel build --prod --yes
+    (kiểm tra: bundle trong .vercel\output\static\assets có chứa URL tunnel)
+    vercel deploy --prebuilt --prod --yes
+- Robot:    cd mcp; ..\venv\Scripts\python mcp_pipe.py
+- Re-ingest khi thêm tài liệu vào data/: XÓA thư mục chroma_db trước, rồi venv\Scripts\python main.py ingest; cd mcp; ..\venv\Scripts\python rag_pipeline_faiss.py ingest
