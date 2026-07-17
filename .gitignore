@@ -65,3 +65,8 @@ extract_vision.py
 #temporary files
 temp
 .playwright-mcp
+
+# Runtime state (start_all.ps1 / robot cache / ngrok binary)
+.run_pids.txt
+mcp/.dac_cache.json
+ngrok.exe
