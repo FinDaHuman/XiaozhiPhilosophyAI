@@ -15,7 +15,7 @@ import {
   User,
   X,
 } from 'lucide-react'
-import { API_BASE } from '../config'
+import { apiFetch } from '../config'
 
 const quickPrompts = [
   {
@@ -72,7 +72,7 @@ const ChatPage = () => {
     setIsLoading(true)
 
     try {
-      const response = await fetch(`${API_BASE}/chat`, {
+      const response = await apiFetch('/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: userMessage })

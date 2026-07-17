@@ -10,7 +10,7 @@ import {
   MessageCircle,
   Quote,
 } from 'lucide-react'
-import { API_BASE } from '../config'
+import { apiFetch } from '../config'
 import { SUBJECTS, SUBJECT_ORDER } from '../data/subjects'
 
 const prompts = [
@@ -78,7 +78,7 @@ const LandingPage = () => {
                 <button 
                   onClick={async () => {
                     try {
-                      await fetch(`${API_BASE}/api/start-mcp`, { method: 'POST' });
+                      await apiFetch('/api/start-mcp', { method: 'POST' });
                     } catch (e) {
                       console.error("Failed to start MCP:", e);
                     }
