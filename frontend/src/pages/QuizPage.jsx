@@ -1,14 +1,30 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, BookOpen, CheckCircle2, HelpCircle, RotateCcw, Target, Trophy, XCircle } from 'lucide-react'
-import quizData from '../data/quiz.json'
+import { getSubject, SUBJECT_ORDER, SUBJECTS } from '../data/subjects'
 
 const QuizPage = () => {
-  const [answers, setAnswers] = useState({})
-  
+  const { subject: subjectParam } = useParams()
+  const subject = getSubject(subjectParam)
+  const quizData = subject.quiz
+
+  const [quizState, setQuizState] = useState(() => ({ subjectId: subject.id, answers: {} }))
+  const answers = useMemo(
+    () => (quizState.subjectId === subject.id ? quizState.answers : {}),
+    [quizState, subject.id]
+  )
+
+  // Answers belong to one subject — start fresh when the user switches subject
+
   const handleSelect = (qIndex, optionId) => {
     if (answers[qIndex]) return
-    setAnswers(prev => ({ ...prev, [qIndex]: optionId }))
+    setQuizState(prev => ({
+      subjectId: subject.id,
+      answers: {
+        ...(prev.subjectId === subject.id ? prev.answers : {}),
+        [qIndex]: optionId,
+      },
+    }))
   }
 
   const answeredCount = Object.keys(answers).length
@@ -20,22 +36,14 @@ const QuizPage = () => {
   const isComplete = answeredCount === quizData.length
 
   const topicProgress = useMemo(() => {
-    const groups = [
-      { label: 'Nền tảng', from: 1, to: 10 },
-      { label: 'Thống nhất', from: 11, to: 18 },
-      { label: 'Đấu tranh', from: 19, to: 26 },
-      { label: 'Phân loại', from: 27, to: 34 },
-      { label: 'Phương pháp', from: 35, to: 40 },
-    ]
-
-    return groups.map(group => {
+    return subject.quizGroups.map(group => {
       const questions = quizData.filter(q => Number(q.id) >= group.from && Number(q.id) <= group.to)
       const answered = questions.filter(q => answers[quizData.indexOf(q)]).length
       return { ...group, answered, total: questions.length }
     })
-  }, [answers])
+  }, [answers, quizData, subject.quizGroups])
 
-  const resetQuiz = () => setAnswers({})
+  const resetQuiz = () => setQuizState({ subjectId: subject.id, answers: {} })
 
   return (
     <div className="min-h-screen bg-background pb-16">
@@ -45,9 +53,9 @@ const QuizPage = () => {
             <ArrowLeft className="h-5 w-5" aria-hidden="true" />
             Trang chủ
           </Link>
-          <div className="text-center">
-            <p className="hidden text-xs font-bold uppercase tracking-[0.18em] text-secondary md:block">Tự kiểm tra</p>
-            <h1 className="font-serif text-lg font-bold text-text md:text-2xl">Kiểm Tra Kiến Thức</h1>
+          <div className="min-w-0 text-center">
+            <p className="hidden text-xs font-bold uppercase tracking-[0.18em] text-secondary md:block">{subject.topic}</p>
+            <h1 className="truncate font-serif text-lg font-bold text-text md:text-2xl">Kiểm Tra Kiến Thức</h1>
           </div>
           <div className="rounded-full border border-cta/20 bg-cta/10 px-3 py-1.5 text-sm font-bold text-cta tabular-nums md:px-4">
             {score} / {quizData.length}
@@ -61,7 +69,28 @@ const QuizPage = () => {
       <main className="mx-auto grid max-w-7xl gap-6 px-4 py-6 md:px-6 lg:grid-cols-[300px_minmax(0,1fr)]">
         <aside className="lg:sticky lg:top-24 lg:self-start">
           <div className="surface-card p-5">
-            <p className="eyebrow">Điểm hiện tại</p>
+            <p className="eyebrow">Môn học</p>
+            <div className="mt-3 grid gap-2" role="tablist" aria-label="Chọn môn ôn tập">
+              {SUBJECT_ORDER.map(sid => {
+                const s = SUBJECTS[sid]
+                const isActive = s.id === subject.id
+                return (
+                  <Link
+                    key={s.id}
+                    to={`/quiz/${s.id}`}
+                    role="tab"
+                    aria-selected={isActive}
+                    className={`rounded-xl border p-3 transition-[background-color,border-color] duration-150 focus-ring ${isActive ? 'border-primary/40 bg-primary/10 text-primary' : 'border-text/10 bg-white/60 hover:border-primary/25 hover:bg-white'}`}
+                  >
+                    <span className="block text-xs font-bold uppercase tracking-[0.14em]">{s.badge}</span>
+                    <span className="mt-1 block text-sm font-semibold leading-5">{s.name}</span>
+                    <span className={`mt-1 block text-xs ${isActive ? 'text-primary/80' : 'text-muted'}`}>{s.quiz.length} câu hỏi</span>
+                  </Link>
+                )
+              })}
+            </div>
+
+            <p className="eyebrow mt-6">Điểm hiện tại</p>
             <div className="mt-4 grid grid-cols-3 gap-3 text-center lg:grid-cols-1 lg:text-left">
               <div className="rounded-xl border border-text/10 bg-white/60 p-3">
                 <Trophy className="mx-auto h-5 w-5 text-cta lg:mx-0" aria-hidden="true" />
@@ -112,12 +141,12 @@ const QuizPage = () => {
           <div className="study-panel p-5 md:p-7">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
-                <p className="eyebrow">Ôn tập có phản hồi</p>
+                <p className="eyebrow">{subject.name}</p>
                 <h2 className="heading-balance mt-2 font-serif text-4xl font-bold">
                   {isComplete ? 'Bạn đã hoàn thành bài kiểm tra.' : 'Chọn đáp án, rồi đọc lại lý do.'}
                 </h2>
                 <p className="body-pretty mt-3 max-w-3xl leading-7 text-muted">
-                  Mỗi câu sẽ khóa sau khi chọn để mô phỏng kiểm tra thật. Phần phản hồi cho bạn biết đáp án đúng để quay lại học sâu hơn.
+                  {subject.quiz.length} câu trắc nghiệm về {subject.topic.toLowerCase().replace('chủ đề 4 — ', '')}. Mỗi câu sẽ khóa sau khi chọn để mô phỏng kiểm tra thật. Phần phản hồi cho bạn biết đáp án đúng để quay lại học sâu hơn.
                 </p>
               </div>
               {isComplete && (
@@ -156,11 +185,11 @@ const QuizPage = () => {
                     )}
                   </div>
                 </div>
-                
+
                 <div className="space-y-3 p-5">
                   {q.options.map((opt) => {
                     let btnClass = "w-full rounded-xl border p-4 text-left shadow-soft transition-[background-color,border-color,box-shadow,transform] duration-150 focus-ring "
-                    
+
                     if (!isAnswered) {
                       btnClass += "border-text/10 bg-white hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/5 hover:shadow-paper"
                     } else if (opt.id === q.correctAnswer) {
@@ -196,10 +225,10 @@ const QuizPage = () => {
                         {isCorrect ? 'Bạn đã nắm đúng ý chính.' : 'Đáp án cần nhớ'}
                       </p>
                       <p className="mt-2 leading-7 text-muted">
-                        Đáp án đúng là <span className="font-bold text-text">{correctOption?.id}. {correctOption?.text}</span>. Nếu còn phân vân, hãy hỏi XiaoZhi giải thích lại bằng ví dụ hoặc quay về bài học liên quan.
+                        Đáp án đúng là <span className="font-bold text-text">{correctOption?.id}. {correctOption?.text}</span>. Nếu còn phân vân, hãy hỏi Lily giải thích lại bằng ví dụ hoặc quay về bài học liên quan.
                       </p>
                       <Link to="/chat" className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-primary focus-ring">
-                        Hỏi XiaoZhi về câu này
+                        Hỏi Lily về câu này
                         <ArrowLeft className="h-4 w-4 rotate-180" aria-hidden="true" />
                       </Link>
                     </div>

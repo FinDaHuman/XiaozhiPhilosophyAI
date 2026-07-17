@@ -130,22 +130,22 @@ def load_documents(data_dir: Optional[str] = None) -> list[Document]:
                 print(f"  ⚠️  Skipped (empty): {file_path.name}")
                 continue
 
-            if file_path.name == "Slide_OCR.md":
-                import re
-                # Split text whenever "## [Slide X]" is encountered
-                slides = re.split(r'(?=## \[Slide \d+\])', cleaned)
+            if file_path.name.startswith("Slide") and file_path.name.endswith("_OCR.md"):
+                # Split slide-OCR files whenever "## [Slide <label>]" is encountered.
+                # The label may be a plain number ("12") or deck-prefixed ("KTCT 5").
+                slides = re.split(r'(?=## \[Slide [^\]]+\])', cleaned)
                 for slide_text in slides:
                     slide_text = slide_text.strip()
                     if not slide_text:
                         continue
-                    
-                    match = re.search(r'## \[Slide (\d+)\]', slide_text)
+
+                    match = re.search(r'## \[Slide ([^\]]+)\]', slide_text)
                     if match:
-                        slide_num = match.group(1)
+                        slide_label = match.group(1).strip()
                         doc = Document(
                             page_content=slide_text,
                             metadata={
-                                "source": f"Slide {slide_num}",
+                                "source": f"Slide {slide_label}",
                                 "file_type": ext,
                                 "file_path": str(file_path.resolve()),
                             },

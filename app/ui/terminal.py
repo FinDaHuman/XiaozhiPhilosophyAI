@@ -1,5 +1,5 @@
 """
-Xiaozhi Philosophy AI — Terminal Interface
+Lily Philosophy AI — Terminal Interface
 
 A standard CLI REPL using `rich`. 
 Supports native terminal input (handles Unikey/Vietnamese perfectly)
@@ -18,12 +18,12 @@ console = Console()
 
 def print_welcome():
     welcome_text = (
-        "🤖 **Xin chào! Tôi là Xiaozhi (小智)**\n\n"
+        "🤖 **Xin chào! Tôi là Lily**\n\n"
         "Trợ lý AI chuyên về Triết học Mác-Lênin.\n"
         "Hãy hỏi tôi bất kỳ câu hỏi nào về triết học!\n\n"
         "💡 Gõ `/help` để xem danh sách lệnh."
     )
-    console.print(Panel(Markdown(welcome_text), title="Xiaozhi Philosophy AI (小智哲学)", border_style="blue"))
+    console.print(Panel(Markdown(welcome_text), title="Lily Philosophy AI", border_style="blue"))
 
 def handle_command(cmd: str, rag: RAGPipeline) -> bool:
     """Handle slash commands. Returns False if we should exit."""
@@ -105,7 +105,7 @@ def run_terminal():
                 continue
             
             # AI response
-            with console.status("[green]🤖 Xiaozhi đang suy nghĩ..."):
+            with console.status("[green]🤖 Lily đang suy nghĩ..."):
                 try:
                     answer = rag.ask(question)
                 except Exception as e:
@@ -113,7 +113,7 @@ def run_terminal():
                     continue
             
             console.print()
-            console.print(Panel(Markdown(answer), title="🤖 Xiaozhi", border_style="green", padding=(1, 2)))
+            console.print(Panel(Markdown(answer), title="🤖 Lily", border_style="green", padding=(1, 2)))
             
         except KeyboardInterrupt:
             console.print("\n[dim]👋 Bấm `/exit` để thoát hoặc gõ câu hỏi mới.[/]")

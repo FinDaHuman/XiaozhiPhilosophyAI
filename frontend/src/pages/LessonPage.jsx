@@ -1,42 +1,15 @@
 import { useParams, Link } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, BookOpen, Bot, CheckCircle2, FileText, MessageCircle } from 'lucide-react'
-
-const lessonData = {
-  "1": {
-    title: "Bài 1: Giới thiệu",
-    shortTitle: "Giới thiệu",
-    summary: "Đặt nền tảng cho quy luật mâu thuẫn trong phép biện chứng duy vật.",
-    concepts: ["Quy luật", "Mâu thuẫn", "Nguồn gốc phát triển"],
-    slides: [4, 5, 6]
-  },
-  "2": {
-    title: "Bài 2: Sự đấu tranh của các mặt đối lập",
-    shortTitle: "Mặt đối lập",
-    summary: "Làm rõ sự thống nhất, đấu tranh và chuyển hóa giữa các mặt đối lập.",
-    concepts: ["Mặt đối lập", "Thống nhất", "Đấu tranh"],
-    slides: [8, 9, 10, 12]
-  },
-  "3": {
-    title: "Bài 3: Phân loại mâu thuẫn",
-    shortTitle: "Phân loại mâu thuẫn",
-    summary: "Phân biệt mâu thuẫn cơ bản, chủ yếu, bên trong, bên ngoài, đối kháng và không đối kháng.",
-    concepts: ["Cơ bản", "Chủ yếu", "Bên trong", "Đối kháng"],
-    slides: [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
-  },
-  "4": {
-    title: "Bài 4: Bản chất quy luật và ý nghĩa phương pháp luận",
-    shortTitle: "Phương pháp luận",
-    summary: "Chuyển từ nắm khái niệm sang cách nhận diện, phân tích và giải quyết mâu thuẫn.",
-    concepts: ["Phân tích cụ thể", "Điều kiện khách quan", "Vận dụng"],
-    slides: [25, 26, 27, 28, 29, 30]
-  }
-}
-
-const lessonOrder = Object.keys(lessonData)
+import { getSubject } from '../data/subjects'
 
 const LessonPage = () => {
-  const { id } = useParams()
+  // Route is either /lesson/:id (legacy, philosophy) or /lesson/:subject/:id
+  const { subject: subjectParam, id } = useParams()
+  const subject = getSubject(subjectParam)
+  const lessonData = subject.lessons
   const lesson = lessonData[id]
+
+  const lessonPath = (lessonId) => `/lesson/${subject.id}/${lessonId}`
 
   if (!lesson) {
     return (
@@ -50,6 +23,7 @@ const LessonPage = () => {
     )
   }
 
+  const lessonOrder = Object.keys(lessonData)
   const activeIndex = lessonOrder.indexOf(id)
   const prevId = activeIndex > 0 ? lessonOrder[activeIndex - 1] : null
   const nextId = activeIndex < lessonOrder.length - 1 ? lessonOrder[activeIndex + 1] : null
@@ -64,17 +38,17 @@ const LessonPage = () => {
             Trang chủ
           </Link>
           <div className="min-w-0 text-center">
-            <p className="hidden text-xs font-bold uppercase tracking-[0.18em] text-secondary md:block">Lộ trình học</p>
+            <p className="hidden text-xs font-bold uppercase tracking-[0.18em] text-secondary md:block">{subject.topic}</p>
             <h1 className="truncate font-serif text-lg font-bold text-text md:text-2xl">{lesson.title}</h1>
           </div>
           <div className="flex gap-2">
             {prevId ? (
-              <Link to={`/lesson/${prevId}`} className="icon-button focus-ring" aria-label="Bài trước">
+              <Link to={lessonPath(prevId)} className="icon-button focus-ring" aria-label="Bài trước">
                 <ArrowLeft className="h-5 w-5" aria-hidden="true" />
               </Link>
             ) : <div className="h-11 w-11" />}
             {nextId ? (
-              <Link to={`/lesson/${nextId}`} className="icon-button focus-ring" aria-label="Bài tiếp theo">
+              <Link to={lessonPath(nextId)} className="icon-button focus-ring" aria-label="Bài tiếp theo">
                 <ArrowRight className="h-5 w-5" aria-hidden="true" />
               </Link>
             ) : <div className="h-11 w-11" />}
@@ -86,7 +60,7 @@ const LessonPage = () => {
         <aside className="lg:sticky lg:top-24 lg:self-start">
           <div className="surface-card overflow-hidden">
             <div className="border-b border-text/10 p-5">
-              <p className="eyebrow">Tiến độ</p>
+              <p className="eyebrow">{subject.badge} · Tiến độ</p>
               <div className="mt-3 flex items-end justify-between gap-4">
                 <span className="font-serif text-4xl font-bold tabular-nums">{progress}%</span>
                 <span className="text-sm font-semibold text-muted">Bài {activeIndex + 1}/{lessonOrder.length}</span>
@@ -102,7 +76,7 @@ const LessonPage = () => {
                 return (
                   <Link
                     key={lessonId}
-                    to={`/lesson/${lessonId}`}
+                    to={lessonPath(lessonId)}
                     className={`flex items-start gap-3 p-4 transition-[background-color,color] duration-150 focus-ring ${isActive ? 'bg-primary/10 text-primary' : 'hover:bg-text/5'}`}
                   >
                     <span className={`mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm font-bold ${isActive ? 'bg-primary text-white' : 'bg-text/5 text-muted'}`}>
@@ -123,7 +97,7 @@ const LessonPage = () => {
           <div className="study-panel overflow-hidden">
             <div className="grid gap-6 p-5 md:p-7 lg:grid-cols-[1fr_260px]">
               <div>
-                <p className="eyebrow">Bài học</p>
+                <p className="eyebrow">{subject.name}</p>
                 <h2 className="heading-balance mt-2 font-serif text-4xl font-bold md:text-5xl">{lesson.shortTitle}</h2>
                 <p className="body-pretty mt-4 max-w-3xl text-lg leading-8 text-muted">{lesson.summary}</p>
                 <div className="mt-5 flex flex-wrap gap-2">
@@ -138,7 +112,7 @@ const LessonPage = () => {
                 <FileText className="h-6 w-6 text-primary" aria-hidden="true" />
                 <p className="mt-3 text-sm font-bold text-text">Cách học gợi ý</p>
                 <p className="mt-2 text-sm leading-6 text-muted">
-                  Xem slide trước, ghi lại khái niệm chưa rõ, rồi hỏi XiaoZhi bằng ngôn ngữ của bạn.
+                  Xem slide trước, ghi lại khái niệm chưa rõ, rồi hỏi Lily bằng ngôn ngữ của bạn.
                 </p>
                 <Link to="/chat" className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-primary focus-ring">
                   <MessageCircle className="h-4 w-4" aria-hidden="true" />
@@ -157,7 +131,9 @@ const LessonPage = () => {
                       <BookOpen className="h-5 w-5" aria-hidden="true" />
                     </span>
                     <div>
-                      <p className="font-serif text-lg font-bold">Slide {slideNum}</p>
+                      <p className="font-serif text-lg font-bold">
+                        {subject.id === 'ktct' ? `Slide KTCT ${slideNum}` : `Slide ${slideNum}`}
+                      </p>
                       <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">Nguồn {index + 1}/{lesson.slides.length}</p>
                     </div>
                   </div>
@@ -167,9 +143,9 @@ const LessonPage = () => {
                   </Link>
                 </figcaption>
                 <div className="bg-[#f1eadf] p-2 md:p-4">
-                  <img 
-                    src={`/slides/slide_${slideNum}.jpg`} 
-                    alt={`Slide ${slideNum} của ${lesson.title}`} 
+                  <img
+                    src={`${subject.slideDir}/slide_${slideNum}.jpg`}
+                    alt={`Slide ${slideNum} của ${lesson.title}`}
                     className="mx-auto h-auto w-full rounded-xl"
                     loading="lazy"
                     onError={(e) => {
@@ -184,18 +160,18 @@ const LessonPage = () => {
 
           <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
             {prevId ? (
-              <Link to={`/lesson/${prevId}`} className="clay-btn bg-paper text-text hover:bg-white">
+              <Link to={lessonPath(prevId)} className="clay-btn bg-paper text-text hover:bg-white">
                 <ArrowLeft className="h-5 w-5" aria-hidden="true" />
                 Bài trước
               </Link>
             ) : <span />}
             {nextId ? (
-              <Link to={`/lesson/${nextId}`} className="clay-btn">
+              <Link to={lessonPath(nextId)} className="clay-btn">
                 Bài tiếp theo
                 <ArrowRight className="h-5 w-5" aria-hidden="true" />
               </Link>
             ) : (
-              <Link to="/quiz" className="clay-btn bg-cta border-cta hover:bg-cta/95">
+              <Link to={`/quiz/${subject.id}`} className="clay-btn bg-cta border-cta hover:bg-cta/95">
                 <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
                 Làm bài ôn tập
               </Link>

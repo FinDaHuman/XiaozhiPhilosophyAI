@@ -1,0 +1,1142 @@
+[
+  {
+    "id": "1",
+    "text": "V.I. Lênin khái quát các đặc điểm của độc quyền tư bản chủ nghĩa từ thực tiễn của giai đoạn nào?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Cuối thế kỷ XIX, đầu thế kỷ XX"
+      },
+      {
+        "id": "B",
+        "text": "Nửa cuối thế kỷ XX"
+      },
+      {
+        "id": "C",
+        "text": "Đầu thế kỷ XXI"
+      }
+    ],
+    "correctAnswer": "A"
+  },
+  {
+    "id": "2",
+    "text": "Theo V.I. Lênin, độc quyền dưới chủ nghĩa tư bản có bao nhiêu đặc điểm kinh tế cơ bản?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Ba đặc điểm"
+      },
+      {
+        "id": "B",
+        "text": "Năm đặc điểm"
+      },
+      {
+        "id": "C",
+        "text": "Bốn đặc điểm"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "3",
+    "text": "Sự tích tụ và tập trung sản xuất đến mức cao trực tiếp dẫn đến điều gì?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Hình thành các doanh nghiệp vừa và nhỏ"
+      },
+      {
+        "id": "B",
+        "text": "Hình thành các liên minh mậu dịch tự do"
+      },
+      {
+        "id": "C",
+        "text": "Hình thành các tổ chức độc quyền"
+      }
+    ],
+    "correctAnswer": "C"
+  },
+  {
+    "id": "4",
+    "text": "Khi mới bắt đầu quá trình độc quyền hóa, các tổ chức độc quyền hình thành chủ yếu theo kiểu liên kết nào?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Liên kết ngang giữa các doanh nghiệp trong cùng một ngành"
+      },
+      {
+        "id": "B",
+        "text": "Liên kết dọc giữa nhiều ngành khác nhau"
+      },
+      {
+        "id": "C",
+        "text": "Liên kết giữa các liên minh kinh tế khu vực"
+      }
+    ],
+    "correctAnswer": "A"
+  },
+  {
+    "id": "5",
+    "text": "Thứ tự các hình thức tổ chức độc quyền cơ bản từ thấp đến cao là gì?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Syndicate, cartel, consortium, trust"
+      },
+      {
+        "id": "B",
+        "text": "Cartel, syndicate, trust, consortium"
+      },
+      {
+        "id": "C",
+        "text": "Trust, cartel, syndicate, consortium"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "6",
+    "text": "Cartel là hình thức tổ chức độc quyền trong đó các xí nghiệp thỏa thuận với nhau chủ yếu về những nội dung nào?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Sản xuất, tiêu thụ và phân chia cổ phần do một ban quản trị chung quản lý"
+      },
+      {
+        "id": "B",
+        "text": "Đầu tư vào các ngành khác nhau và hoàn toàn phụ thuộc về tài chính"
+      },
+      {
+        "id": "C",
+        "text": "Giá cả, sản lượng, thị trường tiêu thụ và kỳ hạn thanh toán"
+      }
+    ],
+    "correctAnswer": "C"
+  },
+  {
+    "id": "7",
+    "text": "Các xí nghiệp tham gia cartel giữ mức độ độc lập như thế nào?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Vẫn độc lập cả về sản xuất và lưu thông hàng hóa"
+      },
+      {
+        "id": "B",
+        "text": "Chỉ độc lập về sản xuất, không độc lập ở khâu lưu thông"
+      },
+      {
+        "id": "C",
+        "text": "Không độc lập cả về sản xuất và lưu thông"
+      }
+    ],
+    "correctAnswer": "A"
+  },
+  {
+    "id": "8",
+    "text": "Đặc điểm nào làm syndicate ổn định hơn cartel?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Các xí nghiệp độc lập cả về sản xuất và lưu thông"
+      },
+      {
+        "id": "B",
+        "text": "Các xí nghiệp còn độc lập về sản xuất nhưng việc mua, bán do ban quản trị chung đảm nhận"
+      },
+      {
+        "id": "C",
+        "text": "Các xí nghiệp thuộc nhiều ngành và hoàn toàn phụ thuộc vào một nhóm tài chính"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "9",
+    "text": "Trong trust, hoạt động sản xuất và tiêu thụ hàng hóa được tổ chức như thế nào?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Do từng xí nghiệp độc lập quản lý"
+      },
+      {
+        "id": "B",
+        "text": "Chỉ khâu mua nguyên liệu do ban quản trị chung quản lý"
+      },
+      {
+        "id": "C",
+        "text": "Do một ban quản trị chung thống nhất quản lý"
+      }
+    ],
+    "correctAnswer": "C"
+  },
+  {
+    "id": "10",
+    "text": "Consortium có đặc điểm nổi bật nào?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Có quy mô lớn, gồm các xí nghiệp, syndicate và trust thuộc nhiều ngành có liên quan"
+      },
+      {
+        "id": "B",
+        "text": "Chỉ gồm các xí nghiệp trong cùng một ngành và độc lập về lưu thông"
+      },
+      {
+        "id": "C",
+        "text": "Chủ yếu gồm các hãng vừa và nhỏ không liên quan trực tiếp về sản xuất"
+      }
+    ],
+    "correctAnswer": "A"
+  },
+  {
+    "id": "11",
+    "text": "Tư bản tài chính ra đời từ quá trình nào?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Sự kết hợp giữa các doanh nghiệp vừa và nhỏ không liên quan trực tiếp về sản xuất"
+      },
+      {
+        "id": "B",
+        "text": "Sự hợp nhất giữa tư bản ngân hàng độc quyền với tư bản của các liên minh độc quyền công nghiệp"
+      },
+      {
+        "id": "C",
+        "text": "Sự kết hợp giữa xuất khẩu hàng hóa với các hợp đồng dịch vụ"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "12",
+    "text": "Tài phiệt hay đầu sỏ tài chính là nhóm người như thế nào?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Các cổ đông nhỏ được ủy nhiệm quyết định hoạt động của công ty"
+      },
+      {
+        "id": "B",
+        "text": "Các doanh nghiệp vừa và nhỏ tham gia hệ thống gia công"
+      },
+      {
+        "id": "C",
+        "text": "Một nhóm nhỏ các nhà tư bản kếch xù chi phối đời sống kinh tế và chính trị của xã hội"
+      }
+    ],
+    "correctAnswer": "C"
+  },
+  {
+    "id": "13",
+    "text": "Thực chất của “chế độ tham dự” là gì?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Dùng cổ phiếu khống chế và hệ thống công ty mẹ, công ty con, công ty cháu để chi phối lượng tư bản lớn"
+      },
+      {
+        "id": "B",
+        "text": "Dùng đầu tư gián tiếp nhưng trực tiếp tham gia quản lý hoạt động đầu tư"
+      },
+      {
+        "id": "C",
+        "text": "Dùng ngân sách nhà nước để mua toàn bộ doanh nghiệp tư nhân"
+      }
+    ],
+    "correctAnswer": "A"
+  },
+  {
+    "id": "14",
+    "text": "Xuất khẩu tư bản được hiểu là gì?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Đưa hàng hóa ra nước ngoài nhằm thống nhất đầu mối mua và bán"
+      },
+      {
+        "id": "B",
+        "text": "Đầu tư giá trị ra nước ngoài nhằm thu giá trị thặng dư và các nguồn lợi nhuận khác"
+      },
+      {
+        "id": "C",
+        "text": "Phân chia thị trường thế giới bằng các liên minh kinh tế khu vực"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "15",
+    "text": "Hai hình thức cơ bản của xuất khẩu tư bản là gì?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Liên kết ngang và liên kết dọc"
+      },
+      {
+        "id": "B",
+        "text": "Quốc hữu hóa và mua sắm công"
+      },
+      {
+        "id": "C",
+        "text": "Đầu tư trực tiếp và đầu tư gián tiếp"
+      }
+    ],
+    "correctAnswer": "C"
+  },
+  {
+    "id": "16",
+    "text": "Đặc điểm của đầu tư trực tiếp là gì?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Xây dựng hoặc mua lại xí nghiệp ở nước nhận đầu tư để trực tiếp kinh doanh"
+      },
+      {
+        "id": "B",
+        "text": "Cho vay, mua cổ phiếu hoặc trái phiếu mà không trực tiếp tham gia quản lý"
+      },
+      {
+        "id": "C",
+        "text": "Chỉ cung cấp hàng hóa, thiết bị và chuyên gia cho nước tiếp nhận"
+      }
+    ],
+    "correctAnswer": "A"
+  },
+  {
+    "id": "17",
+    "text": "Đặc điểm của đầu tư gián tiếp là gì?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Nhà đầu tư trực tiếp biến xí nghiệp thành chi nhánh của công ty mẹ"
+      },
+      {
+        "id": "B",
+        "text": "Nhà đầu tư không trực tiếp tham gia quản lý hoạt động đầu tư"
+      },
+      {
+        "id": "C",
+        "text": "Nhà đầu tư thống nhất cả sản xuất và tiêu thụ bằng một ban quản trị chung"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "18",
+    "text": "Vì sao sự phân chia thế giới về mặt kinh tế giữa các tập đoàn độc quyền trở thành tất yếu?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Do các doanh nghiệp vừa và nhỏ ngày càng linh hoạt trước biến động thị trường"
+      },
+      {
+        "id": "B",
+        "text": "Do chi tiêu ngân sách nhà nước thuộc quyền của giới lập pháp"
+      },
+      {
+        "id": "C",
+        "text": "Do tích tụ, tập trung tư bản và xuất khẩu tư bản tăng về quy mô, phạm vi"
+      }
+    ],
+    "correctAnswer": "C"
+  },
+  {
+    "id": "19",
+    "text": "Các liên minh độc quyền quốc tế có thể hình thành dưới những dạng nào?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Cartel, syndicate và trust quốc tế"
+      },
+      {
+        "id": "B",
+        "text": "Công ty mẹ, công ty con và công ty cháu"
+      },
+      {
+        "id": "C",
+        "text": "Liên minh mậu dịch tự do và liên minh thuế quan"
+      }
+    ],
+    "correctAnswer": "A"
+  },
+  {
+    "id": "20",
+    "text": "Theo giáo trình, một nguyên nhân chính dẫn đến các cuộc chiến tranh, kể cả chiến tranh thế giới, là gì?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Sự phát triển của các doanh nghiệp vừa và nhỏ trong hệ thống gia công"
+      },
+      {
+        "id": "B",
+        "text": "Cuộc đấu tranh đòi chia lại lãnh thổ thế giới do sự phát triển không đều của các cường quốc tư bản"
+      },
+      {
+        "id": "C",
+        "text": "Sự ưu tiên chống lạm phát và chống thất nghiệp trong ngân sách nhà nước"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "21",
+    "text": "Nội dung chủ yếu của chính sách thực dân mới được nêu trong giáo trình là gì?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Dùng hệ thống gia công để phát huy thế mạnh của doanh nghiệp vừa và nhỏ"
+      },
+      {
+        "id": "B",
+        "text": "Dùng chế độ ủy nhiệm để đại cổ đông đại diện cho cổ đông nhỏ"
+      },
+      {
+        "id": "C",
+        "text": "Dùng viện trợ kinh tế, kỹ thuật và quân sự để duy trì sự lệ thuộc của các nước đang phát triển"
+      }
+    ],
+    "correctAnswer": "C"
+  },
+  {
+    "id": "22",
+    "text": "Năm đặc điểm kinh tế cơ bản của độc quyền có quan hệ với nhau như thế nào?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Có quan hệ chặt chẽ và cùng thể hiện sự thống trị của tư bản độc quyền"
+      },
+      {
+        "id": "B",
+        "text": "Tồn tại độc lập và không tác động lẫn nhau"
+      },
+      {
+        "id": "C",
+        "text": "Chỉ liên hệ với nhau trong phạm vi các doanh nghiệp vừa và nhỏ"
+      }
+    ],
+    "correctAnswer": "A"
+  },
+  {
+    "id": "23",
+    "text": "Điều gì thúc đẩy độc quyền tư nhân phát triển lên trạng thái độc quyền nhà nước?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Sự độc lập hoàn toàn của các xí nghiệp trong cartel"
+      },
+      {
+        "id": "B",
+        "text": "Sự phát triển của lực lượng sản xuất cùng yêu cầu ổn định chế độ chính trị"
+      },
+      {
+        "id": "C",
+        "text": "Sự suy giảm vai trò của nhà nước trong điều tiết kinh tế"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "24",
+    "text": "Đâu là ba đặc trưng kinh tế chủ yếu của độc quyền nhà nước trong chủ nghĩa tư bản?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Tích tụ tư bản; xuất khẩu hàng hóa; hình thành doanh nghiệp vừa và nhỏ"
+      },
+      {
+        "id": "B",
+        "text": "Liên kết ngang; liên kết dọc; hình thành liên minh mậu dịch tự do"
+      },
+      {
+        "id": "C",
+        "text": "Kết hợp nhân sự; hình thành, phát triển sở hữu nhà nước; nhà nước dùng độc quyền nhà nước để điều tiết kinh tế"
+      }
+    ],
+    "correctAnswer": "C"
+  },
+  {
+    "id": "25",
+    "text": "Sự kết hợp về nhân sự giữa tổ chức độc quyền và nhà nước được thực hiện chủ yếu thông qua đâu?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Các đảng phái của giai cấp tư sản"
+      },
+      {
+        "id": "B",
+        "text": "Các quỹ đầu tư chứng khoán"
+      },
+      {
+        "id": "C",
+        "text": "Các liên minh thuế quan"
+      }
+    ],
+    "correctAnswer": "A"
+  },
+  {
+    "id": "26",
+    "text": "Các hội chủ xí nghiệp độc quyền được dư luận gọi là gì?",
+    "options": [
+      {
+        "id": "A",
+        "text": "“Công ty mẹ” của các xí nghiệp công nghiệp"
+      },
+      {
+        "id": "B",
+        "text": "“Những chính phủ đằng sau chính phủ”"
+      },
+      {
+        "id": "C",
+        "text": "“Liên minh độc quyền không vững chắc”"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "27",
+    "text": "Sự kết hợp nhân sự giữa tổ chức độc quyền và nhà nước biểu hiện như thế nào?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Các cổ đông nhỏ trực tiếp nắm quyền khống chế công ty mẹ"
+      },
+      {
+        "id": "B",
+        "text": "Các doanh nghiệp nhà nước hoàn toàn tách khỏi sở hữu độc quyền tư nhân"
+      },
+      {
+        "id": "C",
+        "text": "Đại biểu độc quyền tham gia bộ máy nhà nước và quan chức chính phủ tham gia quản trị tổ chức độc quyền"
+      }
+    ],
+    "correctAnswer": "C"
+  },
+  {
+    "id": "28",
+    "text": "Bản chất của sở hữu trong độc quyền nhà nước được giáo trình xác định như thế nào?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Sở hữu tập thể của giai cấp tư sản và tư bản độc quyền, phục vụ lợi ích của tư bản độc quyền"
+      },
+      {
+        "id": "B",
+        "text": "Sở hữu của các cổ đông nhỏ nhằm xóa bỏ sự chi phối của tài phiệt"
+      },
+      {
+        "id": "C",
+        "text": "Sở hữu của các doanh nghiệp vừa và nhỏ nhằm tách khỏi các concern"
+      }
+    ],
+    "correctAnswer": "A"
+  },
+  {
+    "id": "29",
+    "text": "Sở hữu nhà nước trong chủ nghĩa tư bản bao gồm nội dung nào?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Chỉ các đơn đặt hàng quân sự của nhà nước"
+      },
+      {
+        "id": "B",
+        "text": "Tài sản cho bộ máy nhà nước và doanh nghiệp nhà nước trong công nghiệp, kết cấu hạ tầng kinh tế - xã hội"
+      },
+      {
+        "id": "C",
+        "text": "Chỉ cổ phần của các ngân hàng đa quốc gia"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "30",
+    "text": "Hình thức nào góp phần hình thành sở hữu nhà nước?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Chỉ thành lập cartel quốc tế"
+      },
+      {
+        "id": "B",
+        "text": "Chỉ phát hành cổ phiếu mệnh giá nhỏ cho các cổ đông nhỏ"
+      },
+      {
+        "id": "C",
+        "text": "Xây dựng doanh nghiệp bằng ngân sách, quốc hữu hóa hoặc mua cổ phần doanh nghiệp tư nhân"
+      }
+    ],
+    "correctAnswer": "C"
+  },
+  {
+    "id": "31",
+    "text": "Một chức năng cơ bản của sở hữu nhà nước là gì?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Làm chỗ dựa cho sự điều tiết kinh tế của nhà nước theo các chương trình nhất định"
+      },
+      {
+        "id": "B",
+        "text": "Xóa bỏ hoàn toàn cơ chế thị trường và độc quyền tư nhân"
+      },
+      {
+        "id": "C",
+        "text": "Làm cho các xí nghiệp trong cartel mất độc lập về sản xuất"
+      }
+    ],
+    "correctAnswer": "A"
+  },
+  {
+    "id": "32",
+    "text": "Việc nhà nước bao mua sản phẩm của doanh nghiệp độc quyền thông qua hợp đồng có tác dụng gì?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Làm cho doanh nghiệp độc quyền không còn lợi nhuận"
+      },
+      {
+        "id": "B",
+        "text": "Giúp tiêu thụ hàng hóa, ổn định lợi nhuận và góp phần duy trì tái sản xuất"
+      },
+      {
+        "id": "C",
+        "text": "Làm cho đầu tư gián tiếp trở thành đầu tư trực tiếp"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "33",
+    "text": "Nhà nước tư sản sử dụng những công cụ chủ yếu nào để điều tiết kinh tế?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Chỉ cartel, syndicate, trust và consortium"
+      },
+      {
+        "id": "B",
+        "text": "Chỉ đầu tư trực tiếp và đầu tư gián tiếp"
+      },
+      {
+        "id": "C",
+        "text": "Ngân sách, thuế, tiền tệ, tín dụng, doanh nghiệp nhà nước, chương trình hóa và công cụ hành chính - pháp lý"
+      }
+    ],
+    "correctAnswer": "C"
+  },
+  {
+    "id": "34",
+    "text": "Cơ chế điều tiết kinh tế của độc quyền nhà nước là sự dung hợp của ba cơ chế nào?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Thị trường, độc quyền tư nhân và điều tiết của nhà nước"
+      },
+      {
+        "id": "B",
+        "text": "Cartel, syndicate và trust"
+      },
+      {
+        "id": "C",
+        "text": "Công ty mẹ, công ty con và công ty cháu"
+      }
+    ],
+    "correctAnswer": "A"
+  },
+  {
+    "id": "35",
+    "text": "Mục đích của cơ chế thị trường có sự điều tiết của nhà nước trong độc quyền nhà nước là gì?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Xóa bỏ sở hữu độc quyền tư nhân"
+      },
+      {
+        "id": "B",
+        "text": "Phục vụ lợi ích của chủ nghĩa tư bản độc quyền"
+      },
+      {
+        "id": "C",
+        "text": "Chấm dứt hoạt động của các tập đoàn tài chính"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "36",
+    "text": "Biểu hiện mới nổi bật của tích tụ và tập trung tư bản ngày nay là gì?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Cartel trở thành hình thức duy nhất của tổ chức độc quyền"
+      },
+      {
+        "id": "B",
+        "text": "Xuất khẩu tư bản chỉ còn diễn ra từ nước phát triển sang nước kém phát triển"
+      },
+      {
+        "id": "C",
+        "text": "Công ty độc quyền xuyên quốc gia xuất hiện bên cạnh sự phát triển của doanh nghiệp vừa và nhỏ"
+      }
+    ],
+    "correctAnswer": "C"
+  },
+  {
+    "id": "37",
+    "text": "Concern là hình thức tổ chức độc quyền nào?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Tổ chức độc quyền đa ngành gồm hàng trăm xí nghiệp thuộc nhiều ngành và phân bố ở nhiều nước"
+      },
+      {
+        "id": "B",
+        "text": "Sự kết hợp của các hãng vừa và nhỏ không liên quan trực tiếp về sản xuất hoặc dịch vụ"
+      },
+      {
+        "id": "C",
+        "text": "Liên minh trong đó các xí nghiệp vẫn độc lập cả về sản xuất và lưu thông"
+      }
+    ],
+    "correctAnswer": "A"
+  },
+  {
+    "id": "38",
+    "text": "Conglomerate được hiểu là gì?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Tổ chức đa ngành gồm hàng trăm xí nghiệp phân bố ở nhiều nước"
+      },
+      {
+        "id": "B",
+        "text": "Sự kết hợp của hàng chục hãng vừa và nhỏ không liên quan trực tiếp về sản xuất hoặc dịch vụ cho sản xuất"
+      },
+      {
+        "id": "C",
+        "text": "Tổ chức thống nhất đầu mối mua và bán nhưng giữ độc lập về sản xuất"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "39",
+    "text": "Mục đích chủ yếu của conglomerate là gì?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Thống nhất đầu mối mua nguyên liệu và bán hàng hóa"
+      },
+      {
+        "id": "B",
+        "text": "Điều tiết nền kinh tế bằng ngân sách và thuế"
+      },
+      {
+        "id": "C",
+        "text": "Thu lợi nhuận từ kinh doanh chứng khoán"
+      }
+    ],
+    "correctAnswer": "C"
+  },
+  {
+    "id": "40",
+    "text": "Vì sao các doanh nghiệp vừa và nhỏ vẫn có vai trò quan trọng trong nền kinh tế tư bản phát triển?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Chúng linh hoạt, nhạy cảm với biến động, dễ đổi mới kỹ thuật và mạnh dạn đầu tư vào ngành mới"
+      },
+      {
+        "id": "B",
+        "text": "Chúng luôn khống chế trực tiếp các concern và conglomerate"
+      },
+      {
+        "id": "C",
+        "text": "Chúng nắm toàn bộ cổ phiếu khống chế của các ngân hàng đa quốc gia"
+      }
+    ],
+    "correctAnswer": "A"
+  },
+  {
+    "id": "41",
+    "text": "Xu hướng vận động của các tổ chức độc quyền trong điều kiện hiện nay là gì?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Chuyển hoàn toàn thành các doanh nghiệp vừa và nhỏ độc lập"
+      },
+      {
+        "id": "B",
+        "text": "Trở thành công ty xuyên quốc gia và liên minh với nhà nước thành chủ nghĩa tư bản độc quyền nhà nước"
+      },
+      {
+        "id": "C",
+        "text": "Chỉ hoạt động trong phạm vi một ngành và một quốc gia"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "42",
+    "text": "Biểu hiện mới về phạm vi liên kết của tư bản tài chính là gì?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Thu hẹp vào riêng công nghiệp và ngân hàng"
+      },
+      {
+        "id": "B",
+        "text": "Chỉ liên kết với các doanh nghiệp nhà nước trong lĩnh vực kết cấu hạ tầng"
+      },
+      {
+        "id": "C",
+        "text": "Mở rộng sang nhiều ngành theo các tổ hợp công - nông - thương - tín - dịch vụ hoặc công nghiệp - quân sự - dịch vụ quốc phòng"
+      }
+    ],
+    "correctAnswer": "C"
+  },
+  {
+    "id": "43",
+    "text": "“Chế độ ủy nhiệm” bổ sung cho “chế độ tham dự” được hiểu như thế nào?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Đại cổ đông được ủy nhiệm thay mặt nhiều cổ đông nhỏ quyết định phương hướng hoạt động của công ty"
+      },
+      {
+        "id": "B",
+        "text": "Cổ đông nhỏ trực tiếp khống chế toàn bộ tập đoàn tài chính"
+      },
+      {
+        "id": "C",
+        "text": "Nhà nước ủy nhiệm cho doanh nghiệp vừa và nhỏ quản lý ngân sách"
+      }
+    ],
+    "correctAnswer": "A"
+  },
+  {
+    "id": "44",
+    "text": "Để thích ứng với quốc tế hóa đời sống kinh tế, các tập đoàn tư bản tài chính đã làm gì?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Chấm dứt xâm nhập vào nền kinh tế các quốc gia khác"
+      },
+      {
+        "id": "B",
+        "text": "Thành lập các ngân hàng đa quốc gia, xuyên quốc gia và các trung tâm tài chính thế giới"
+      },
+      {
+        "id": "C",
+        "text": "Chuyển toàn bộ đầu tư trực tiếp thành viện trợ không hoàn lại"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "45",
+    "text": "Biểu hiện mới về hướng vận động của dòng xuất khẩu tư bản là gì?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Chỉ chảy từ các nước đang phát triển sang các nước tư bản phát triển"
+      },
+      {
+        "id": "B",
+        "text": "Chỉ chảy từ các nước tư bản phát triển sang các nước kém phát triển như trước kia"
+      },
+      {
+        "id": "C",
+        "text": "Đại bộ phận dòng đầu tư chảy qua lại giữa các nước tư bản phát triển"
+      }
+    ],
+    "correctAnswer": "C"
+  },
+  {
+    "id": "46",
+    "text": "Chủ thể nào ngày càng giữ vai trò lớn trong xuất khẩu tư bản, đặc biệt là FDI?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Các công ty xuyên quốc gia"
+      },
+      {
+        "id": "B",
+        "text": "Các cartel không vững chắc"
+      },
+      {
+        "id": "C",
+        "text": "Các cổ đông nhỏ trong chế độ ủy nhiệm"
+      }
+    ],
+    "correctAnswer": "A"
+  },
+  {
+    "id": "47",
+    "text": "Biểu hiện mới về hình thức xuất khẩu tư bản là gì?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Chỉ còn hình thức cho vay để thu lợi tức"
+      },
+      {
+        "id": "B",
+        "text": "Hình thức ngày càng đa dạng, có BOT, BT và sự đan xen với xuất khẩu hàng hóa, dịch vụ, chất xám"
+      },
+      {
+        "id": "C",
+        "text": "Chỉ còn hình thức xây dựng xí nghiệp toàn bộ bằng vốn nước ngoài"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "48",
+    "text": "Sự phân chia thị trường thế giới giữa các liên minh độc quyền ngày nay chịu tác động của những xu hướng nào?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Chỉ chuyên môn hóa sản xuất trong một quốc gia"
+      },
+      {
+        "id": "B",
+        "text": "Chỉ quốc hữu hóa doanh nghiệp tư nhân"
+      },
+      {
+        "id": "C",
+        "text": "Quốc tế hóa, toàn cầu hóa đi cùng khu vực hóa kinh tế"
+      }
+    ],
+    "correctAnswer": "C"
+  },
+  {
+    "id": "49",
+    "text": "“Chiến lược biên giới mềm” nhằm mục đích gì?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Bành trướng biên giới kinh tế và ràng buộc các nước kém phát triển bằng sự lệ thuộc về vốn, công nghệ rồi đến chính trị"
+      },
+      {
+        "id": "B",
+        "text": "Xây dựng liên minh độc quyền không vững chắc giữa các xí nghiệp cùng ngành"
+      },
+      {
+        "id": "C",
+        "text": "Mở rộng phúc lợi xã hội thông qua luật ngân sách nhà nước"
+      }
+    ],
+    "correctAnswer": "A"
+  },
+  {
+    "id": "50",
+    "text": "Biểu hiện mới về cơ chế quan hệ nhân sự của độc quyền nhà nước là gì?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Một thế lực tư bản được phép độc tôn tuyệt đối trong mọi nước tư bản phát triển"
+      },
+      {
+        "id": "B",
+        "text": "Thể chế đa nguyên và cơ chế thỏa hiệp, phân chia quyền lực giữa các thế lực tư bản độc quyền trở nên phổ biến"
+      },
+      {
+        "id": "C",
+        "text": "Các tổ chức độc quyền hoàn toàn rút khỏi bộ máy nhà nước"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "51",
+    "text": "Biểu hiện mới của sở hữu nhà nước trong các nước tư bản phát triển là gì?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Nhà nước không còn sử dụng ngân sách để ổn định kinh tế vĩ mô"
+      },
+      {
+        "id": "B",
+        "text": "Sở hữu nhà nước chỉ còn gồm tài sản của bộ máy hành chính"
+      },
+      {
+        "id": "C",
+        "text": "Cổ phần nhà nước trong ngân hàng, công ty lớn trở nên phổ biến và đầu tư nhà nước tăng trong nghiên cứu cơ bản, hạ tầng, nhu cầu xã hội"
+      }
+    ],
+    "correctAnswer": "C"
+  },
+  {
+    "id": "52",
+    "text": "Nhà nước tư sản hiện đại góp phần ổn định kinh tế vĩ mô thông qua những công cụ nào?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Thu - chi ngân sách, kiểm soát lãi suất, trợ cấp, trợ giá, tỷ giá và mua sắm công"
+      },
+      {
+        "id": "B",
+        "text": "Chỉ các hiệp nghị về giá cả và sản lượng trong cartel"
+      },
+      {
+        "id": "C",
+        "text": "Chỉ chế độ tham dự và chế độ ủy nhiệm"
+      }
+    ],
+    "correctAnswer": "A"
+  },
+  {
+    "id": "53",
+    "text": "Theo giáo trình, phúc lợi xã hội tương đối cao ở một số nước tư bản phát triển chủ yếu là kết quả của điều gì?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Sự tự giác từ bỏ lợi ích của tư bản độc quyền"
+      },
+      {
+        "id": "B",
+        "text": "Cuộc đấu tranh bền bỉ nhiều năm của nhân dân tiến bộ"
+      },
+      {
+        "id": "C",
+        "text": "Việc các concern chuyển thành conglomerate"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "54",
+    "text": "Ba vai trò tích cực nổi bật của chủ nghĩa tư bản được giáo trình nêu là gì?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Hạn chế sản lượng; áp đặt giá bán cao; áp đặt giá mua thấp"
+      },
+      {
+        "id": "B",
+        "text": "Gây chiến tranh; phân hóa giàu nghèo; duy trì lệ thuộc"
+      },
+      {
+        "id": "C",
+        "text": "Phát triển lực lượng sản xuất; chuyển sản xuất nhỏ thành sản xuất lớn hiện đại; thực hiện xã hội hóa sản xuất"
+      }
+    ],
+    "correctAnswer": "C"
+  },
+  {
+    "id": "55",
+    "text": "Chủ nghĩa tư bản đã thúc đẩy lực lượng sản xuất phát triển theo hướng nào?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Từ lao động thủ công lên cơ khí, tự động hóa, tin học hóa và kinh tế tri thức"
+      },
+      {
+        "id": "B",
+        "text": "Từ sản xuất lớn hiện đại trở lại sản xuất nhỏ phân tán"
+      },
+      {
+        "id": "C",
+        "text": "Từ chuyên môn hóa, hợp tác sang tách biệt hoàn toàn giữa các đơn vị sản xuất"
+      }
+    ],
+    "correctAnswer": "A"
+  },
+  {
+    "id": "56",
+    "text": "Vai trò của chủ nghĩa tư bản trong chuyển đổi quy mô sản xuất được thể hiện như thế nào?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Chuyển sản xuất tập trung thành sản xuất nhỏ tự cấp, tự túc"
+      },
+      {
+        "id": "B",
+        "text": "Chuyển kinh tế hàng hóa giản đơn và sản xuất nhỏ thành sản xuất tập trung, quy mô lớn, hiện đại, năng suất cao"
+      },
+      {
+        "id": "C",
+        "text": "Chuyển các công ty xuyên quốc gia thành các xí nghiệp độc lập về lưu thông"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "57",
+    "text": "Xã hội hóa sản xuất dưới chủ nghĩa tư bản được biểu hiện qua nội dung nào?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Các quá trình sản xuất ngày càng phân tán và không phụ thuộc lẫn nhau"
+      },
+      {
+        "id": "B",
+        "text": "Các doanh nghiệp chỉ hoạt động trong một ngành và một quốc gia"
+      },
+      {
+        "id": "C",
+        "text": "Phân công lao động, chuyên môn hóa, hợp tác và liên hệ kinh tế ngày càng chặt chẽ giữa các đơn vị, ngành và quốc gia"
+      }
+    ],
+    "correctAnswer": "C"
+  },
+  {
+    "id": "58",
+    "text": "Giới hạn lịch sử về mục đích của nền sản xuất tư bản chủ nghĩa là gì?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Chủ yếu phục vụ lợi ích của thiểu số giai cấp tư sản, nhất là tư bản độc quyền và tư bản tài chính"
+      },
+      {
+        "id": "B",
+        "text": "Chủ yếu phục vụ lợi ích của đông đảo quần chúng lao động"
+      },
+      {
+        "id": "C",
+        "text": "Chủ yếu nhằm xóa bỏ chế độ chiếm hữu tư nhân về tư liệu sản xuất"
+      }
+    ],
+    "correctAnswer": "A"
+  },
+  {
+    "id": "59",
+    "text": "Đâu là những giới hạn phát triển của chủ nghĩa tư bản được giáo trình nêu?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Phát triển lực lượng sản xuất; xây dựng sản xuất lớn; xã hội hóa sản xuất"
+      },
+      {
+        "id": "B",
+        "text": "Mục đích vì lợi ích thiểu số; tiếp tục gây chiến tranh, xung đột; phân hóa giàu - nghèo ngày càng sâu sắc"
+      },
+      {
+        "id": "C",
+        "text": "Phát triển khoa học; cải tiến kỹ thuật; nâng cao năng suất lao động"
+      }
+    ],
+    "correctAnswer": "B"
+  },
+  {
+    "id": "60",
+    "text": "Mâu thuẫn cơ bản tạo nên những hạn chế của chủ nghĩa tư bản là gì?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Mâu thuẫn giữa các xí nghiệp độc lập về sản xuất với ban quản trị chung ở khâu lưu thông"
+      },
+      {
+        "id": "B",
+        "text": "Mâu thuẫn giữa đầu tư trực tiếp với đầu tư gián tiếp trong xuất khẩu tư bản"
+      },
+      {
+        "id": "C",
+        "text": "Mâu thuẫn giữa trình độ xã hội hóa ngày càng cao của lực lượng sản xuất với quan hệ chiếm hữu tư nhân tư bản chủ nghĩa về tư liệu sản xuất"
+      }
+    ],
+    "correctAnswer": "C"
+  }
+]

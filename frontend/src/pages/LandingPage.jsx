@@ -10,24 +10,23 @@ import {
   MessageCircle,
   Quote,
 } from 'lucide-react'
-
-const lessons = [
-  { id: '1', title: 'Giới thiệu', meta: 'Nền tảng quy luật mâu thuẫn' },
-  { id: '2', title: 'Mặt đối lập', meta: 'Thống nhất và đấu tranh' },
-  { id: '3', title: 'Phân loại mâu thuẫn', meta: 'Cơ bản, chủ yếu, bên trong' },
-  { id: '4', title: 'Phương pháp luận', meta: 'Cách nhận diện và giải quyết' },
-]
+import { API_BASE } from '../config'
+import { SUBJECTS, SUBJECT_ORDER } from '../data/subjects'
 
 const prompts = [
   'Giải thích mâu thuẫn biện chứng',
+  'Độc quyền nhà nước là gì?',
   'Cho ví dụ đời sống',
-  'So sánh duy vật và duy tâm',
 ]
 
+const totalLessons = SUBJECT_ORDER.reduce((n, sid) => n + Object.keys(SUBJECTS[sid].lessons).length, 0)
+const totalQuestions = SUBJECT_ORDER.reduce((n, sid) => n + SUBJECTS[sid].quiz.length, 0)
+const totalSlides = SUBJECT_ORDER.reduce((n, sid) => n + SUBJECTS[sid].slideCount, 0)
+
 const stats = [
-  { label: 'Bài học trọng tâm', value: '4', icon: BookOpen },
-  { label: 'Câu hỏi ôn tập', value: '40', icon: HelpCircle },
-  { label: 'Slide nguồn', value: '24+', icon: Library },
+  { label: 'Bài học trọng tâm', value: String(totalLessons), icon: BookOpen },
+  { label: 'Câu hỏi ôn tập', value: String(totalQuestions), icon: HelpCircle },
+  { label: 'Slide nguồn', value: `${totalSlides}+`, icon: Library },
 ]
 
 const LandingPage = () => {
@@ -46,7 +45,7 @@ const LandingPage = () => {
               <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 bg-white/10 backdrop-blur">
                 <Bot className="h-5 w-5" aria-hidden="true" />
               </span>
-              <span className="font-serif text-xl font-bold">XiaoZhi</span>
+              <span className="font-serif text-xl font-bold">Lily</span>
             </Link>
             <nav className="hidden items-center gap-1 rounded-2xl border border-white/10 bg-white/10 p-1 backdrop-blur md:flex">
               <a href="#study" className="nav-link text-white/80 hover:bg-white/10 hover:text-white">
@@ -65,21 +64,21 @@ const LandingPage = () => {
             <div className="max-w-3xl text-white">
               <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white/85 backdrop-blur">
                 <Compass className="h-4 w-4" aria-hidden="true" />
-                Trợ lý học triết học Mác - Lênin
+                Trợ lý Triết học & Kinh tế chính trị Mác - Lênin
               </div>
               <h1 className="heading-balance font-serif text-5xl font-bold leading-[1.02] md:text-7xl">
-                Học triết học bằng đối thoại, nguồn rõ ràng, ví dụ gần đời sống.
+                Học lý luận bằng đối thoại, nguồn rõ ràng, ví dụ gần đời sống.
               </h1>
               <p className="body-pretty mt-6 max-w-2xl text-lg leading-8 text-white/80 md:text-xl">
-                XiaoZhi giúp bạn đọc slide, hỏi lại khái niệm khó, kiểm tra mức hiểu và kết nối lý thuyết
-                mâu thuẫn biện chứng với các tình huống cụ thể.
+                Lily giúp bạn đọc slide, hỏi lại khái niệm khó, kiểm tra mức hiểu — từ quy luật mâu thuẫn
+                của phép biện chứng đến lý luận cạnh tranh và độc quyền của Lênin.
               </p>
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <button 
                   onClick={async () => {
                     try {
-                      await fetch('/api/start-mcp', { method: 'POST' });
+                      await fetch(`${API_BASE}/api/start-mcp`, { method: 'POST' });
                     } catch (e) {
                       console.error("Failed to start MCP:", e);
                     }
@@ -88,7 +87,7 @@ const LandingPage = () => {
                   className="clay-btn bg-white text-text hover:bg-white/95"
                 >
                   <MessageCircle className="h-5 w-5" aria-hidden="true" />
-                  Hỏi XiaoZhi ngay
+                  Hỏi Lily ngay
                 </button>
                 <a
                   href="#study"
@@ -133,12 +132,22 @@ const LandingPage = () => {
 
               <div className="mt-6 divide-y divide-text/10 rounded-2xl border border-text/10 bg-white/55">
                 <Link
-                  to="/lesson/1"
+                  to="/lesson/mln111/1"
                   className="flex items-center justify-between gap-4 p-4 transition-[background-color] duration-150 hover:bg-primary/5 focus-ring"
                 >
                   <span>
-                    <span className="block font-semibold">Tiếp tục bài học</span>
+                    <span className="block font-semibold">Triết học: Quy luật mâu thuẫn</span>
                     <span className="mt-1 block text-sm text-muted">Đi từ khái niệm đến vận dụng phương pháp luận.</span>
+                  </span>
+                  <ArrowRight className="h-5 w-5 text-primary" aria-hidden="true" />
+                </Link>
+                <Link
+                  to="/lesson/ktct/1"
+                  className="flex items-center justify-between gap-4 p-4 transition-[background-color] duration-150 hover:bg-primary/5 focus-ring"
+                >
+                  <span>
+                    <span className="block font-semibold">Kinh tế chính trị: Cạnh tranh & Độc quyền</span>
+                    <span className="mt-1 block text-sm text-muted">Lý luận độc quyền của Lênin và biểu hiện mới ngày nay.</span>
                   </span>
                   <ArrowRight className="h-5 w-5 text-primary" aria-hidden="true" />
                 </Link>
@@ -148,7 +157,7 @@ const LandingPage = () => {
                 >
                   <span>
                     <span className="block font-semibold">Kiểm tra kiến thức</span>
-                    <span className="mt-1 block text-sm text-muted">40 câu trắc nghiệm để tìm điểm còn yếu.</span>
+                    <span className="mt-1 block text-sm text-muted">{totalQuestions} câu trắc nghiệm ở cả hai môn học.</span>
                   </span>
                   <CheckCircle2 className="h-5 w-5 text-cta" aria-hidden="true" />
                 </Link>
@@ -158,53 +167,65 @@ const LandingPage = () => {
         </div>
       </section>
 
-      <main id="study" className="mx-auto grid w-full max-w-7xl gap-8 px-5 py-10 md:px-8 lg:grid-cols-[1.15fr_0.85fr]">
-        <section className="surface-card p-5 md:p-7">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="eyebrow">Lộ trình</p>
-              <h2 className="mt-2 font-serif text-3xl font-bold">Bài học trọng tâm</h2>
-            </div>
-            <Link to="/chat" className="nav-link text-primary">
-              Hỏi về bài đang học
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </Link>
-          </div>
-
-          <div className="mt-6 grid gap-3 md:grid-cols-2">
-            {lessons.map((lesson) => (
-              <Link
-                key={lesson.id}
-                to={`/lesson/${lesson.id}`}
-                className="group rounded-2xl border border-text/10 bg-white/60 p-5 transition-[background-color,border-color,transform] duration-150 hover:-translate-y-0.5 hover:border-primary/30 hover:bg-white focus-ring"
-              >
-                <span className="flex items-center justify-between gap-4">
-                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 font-serif text-lg font-bold text-primary">
-                    {lesson.id}
-                  </span>
-                  <ArrowRight className="h-5 w-5 text-muted transition-[color,transform] duration-150 group-hover:translate-x-0.5 group-hover:text-primary" aria-hidden="true" />
-                </span>
-                <span className="mt-4 block font-serif text-2xl font-bold">{lesson.title}</span>
-                <span className="mt-2 block text-sm leading-6 text-muted">{lesson.meta}</span>
-              </Link>
-            ))}
-          </div>
-        </section>
-
-        <section className="surface-card flex flex-col justify-between p-5 md:p-7">
+      <main id="study" className="mx-auto w-full max-w-7xl px-5 py-10 md:px-8">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="eyebrow">Ôn tập</p>
-            <h2 className="mt-2 font-serif text-3xl font-bold">Kiểm tra kiến thức</h2>
-            <p className="body-pretty mt-4 leading-7 text-muted">
-              Làm bài theo nhịp tự học: chọn đáp án, xem phản hồi ngay, rồi quay lại phần slide liên quan nếu còn
-              nhầm lẫn.
-            </p>
+            <p className="eyebrow">Lộ trình</p>
+            <h2 className="mt-2 font-serif text-3xl font-bold">Hai môn học, một trợ lý</h2>
           </div>
-          <Link to="/quiz" className="clay-btn mt-8 bg-cta border-cta hover:bg-cta/95">
-            Bắt đầu làm bài
-            <ArrowRight className="h-5 w-5" aria-hidden="true" />
+          <Link to="/chat" className="nav-link text-primary">
+            Hỏi về bài đang học
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </Link>
-        </section>
+        </div>
+
+        <div className="mt-6 grid gap-8 lg:grid-cols-2">
+          {SUBJECT_ORDER.map((sid) => {
+            const s = SUBJECTS[sid]
+            const lessonIds = Object.keys(s.lessons)
+            return (
+              <section key={s.id} className="surface-card flex flex-col p-5 md:p-7">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <span className="inline-flex rounded-full border border-secondary/20 bg-secondary/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-secondary">
+                      {s.badge}
+                    </span>
+                    <h3 className="mt-3 font-serif text-3xl font-bold">{s.name}</h3>
+                    <p className="mt-1 text-sm font-semibold text-muted">{s.topic}</p>
+                  </div>
+                </div>
+                <p className="body-pretty mt-4 leading-7 text-muted">{s.tagline}</p>
+
+                <div className="mt-6 grid flex-1 gap-3 sm:grid-cols-2">
+                  {lessonIds.map((lessonId) => {
+                    const lesson = s.lessons[lessonId]
+                    return (
+                      <Link
+                        key={lessonId}
+                        to={`/lesson/${s.id}/${lessonId}`}
+                        className="group rounded-2xl border border-text/10 bg-white/60 p-4 transition-[background-color,border-color,transform] duration-150 hover:-translate-y-0.5 hover:border-primary/30 hover:bg-white focus-ring"
+                      >
+                        <span className="flex items-center justify-between gap-4">
+                          <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 font-serif text-lg font-bold text-primary">
+                            {lessonId}
+                          </span>
+                          <ArrowRight className="h-5 w-5 text-muted transition-[color,transform] duration-150 group-hover:translate-x-0.5 group-hover:text-primary" aria-hidden="true" />
+                        </span>
+                        <span className="mt-3 block font-serif text-xl font-bold leading-6">{lesson.shortTitle}</span>
+                        <span className="mt-2 block text-xs leading-5 text-muted">{lesson.slides.length} slide nguồn</span>
+                      </Link>
+                    )
+                  })}
+                </div>
+
+                <Link to={`/quiz/${s.id}`} className="clay-btn mt-6 bg-cta border-cta hover:bg-cta/95">
+                  <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
+                  Làm {s.quiz.length} câu trắc nghiệm
+                </Link>
+              </section>
+            )
+          })}
+        </div>
       </main>
     </div>
   )

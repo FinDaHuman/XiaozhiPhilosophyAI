@@ -1,5 +1,5 @@
 """
-Xiaozhi Philosophy AI — Main Entry Point
+Lily Philosophy AI — Main Entry Point
 
 Usage:
     python main.py terminal     Launch the terminal chat UI
@@ -51,7 +51,7 @@ def main():
 
 def run_terminal():
     """Launch the Textual terminal UI."""
-    print("🚀 Starting Xiaozhi Philosophy AI Terminal...")
+    print("🚀 Starting Lily Philosophy AI Terminal...")
     from app.ui.terminal import run_terminal as start_tui
     start_tui()
 
@@ -65,7 +65,7 @@ def run_api():
     from fastapi.middleware.cors import CORSMiddleware
 
     app = FastAPI(
-        title="Xiaozhi Philosophy AI",
+        title="Lily Philosophy AI",
         description="API cho trợ lý AI Triết học Mác-Lênin",
         version="1.0.0",
     )
@@ -80,7 +80,7 @@ def run_api():
     
     app.include_router(router)
 
-    print("🚀 Starting Xiaozhi Philosophy AI API...")
+    print("🚀 Starting Lily Philosophy AI API...")
     print("📖 Docs: http://localhost:8000/docs")
 
     uvicorn.run(app, host="0.0.0.0", port=8000)
@@ -142,7 +142,7 @@ def run_ingest():
 def print_usage():
     print("""
 ╔══════════════════════════════════════════════╗
-║       Xiaozhi Philosophy AI (小智哲学)        ║
+║       Lily Philosophy AI        ║
 ╠══════════════════════════════════════════════╣
 ║                                              ║
 ║  Usage:                                      ║

@@ -15,6 +15,7 @@ import {
   User,
   X,
 } from 'lucide-react'
+import { API_BASE } from '../config'
 
 const quickPrompts = [
   {
@@ -32,11 +33,16 @@ const quickPrompts = [
     label: 'Ôn theo slide',
     prompt: 'Tóm tắt các ý quan trọng nhất về phân loại mâu thuẫn và chỉ ra slide nguồn.',
   },
+  {
+    icon: Brain,
+    label: 'Kinh tế chính trị',
+    prompt: 'Trình bày các đặc điểm kinh tế của độc quyền theo Lênin và chỉ ra slide nguồn.',
+  },
 ]
 
 const ChatPage = () => {
   const [messages, setMessages] = useState([
-    { role: 'ai', text: 'Xin chào, tôi là XiaoZhi - trợ lý AI triết học của bạn. Bạn muốn khám phá điều gì hôm nay?' }
+    { role: 'ai', text: 'Xin chào, tôi là Lily - trợ lý AI triết học của bạn. Bạn muốn khám phá điều gì hôm nay?' }
   ])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -66,7 +72,7 @@ const ChatPage = () => {
     setIsLoading(true)
 
     try {
-      const response = await fetch('http://localhost:8000/chat', {
+      const response = await fetch(`${API_BASE}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: userMessage })
@@ -76,17 +82,21 @@ const ChatPage = () => {
         const data = await response.json()
         setMessages(prev => [...prev, { role: 'ai', text: data.answer }])
         
-        const slideMatches = data.answer.match(/\[Slide\s*(\d+)\]/gi)
-        if (slideMatches) {
-          const firstSlide = slideMatches[0].replace(/[^0-9]/g, '')
-          setActiveSlide(firstSlide)
+        // Two decks: philosophy "[Slide 12]" and political economy "[Slide KTCT 5]".
+        // Pick whichever citation appears first in the answer.
+        const ktctMatch = data.answer.match(/\[Slide\s*KTCT\s*(\d+)\]/i)
+        const mln111Match = data.answer.match(/\[Slide\s*(\d+)\]/i)
+        if (ktctMatch && (!mln111Match || ktctMatch.index <= mln111Match.index)) {
+          setActiveSlide({ deck: 'ktct', num: ktctMatch[1] })
+        } else if (mln111Match) {
+          setActiveSlide({ deck: 'mln111', num: mln111Match[1] })
         }
       } else {
         setMessages(prev => [...prev, { role: 'ai', text: 'Xin lỗi, tôi gặp lỗi kết nối. Vui lòng thử lại sau.' }])
       }
     } catch (error) {
       console.error(error)
-      setMessages(prev => [...prev, { role: 'ai', text: 'Không thể kết nối với máy chủ XiaoZhi. Vui lòng kiểm tra lại.' }])
+      setMessages(prev => [...prev, { role: 'ai', text: 'Không thể kết nối với máy chủ Lily. Vui lòng kiểm tra lại.' }])
     } finally {
       setIsLoading(false)
     }
@@ -102,7 +112,7 @@ const ChatPage = () => {
           </Link>
           <h1 className="flex items-center gap-2 font-serif text-xl font-bold text-text md:text-2xl">
             <Bot className="h-6 w-6 text-primary" aria-hidden="true" />
-            XiaoZhi AI
+            Lily AI
           </h1>
           <Link to="/quiz" className="hidden nav-link text-primary focus-ring sm:inline-flex">
             Ôn tập
@@ -111,7 +121,7 @@ const ChatPage = () => {
       </header>
 
       <main className="mx-auto grid min-h-0 w-full max-w-7xl flex-1 gap-4 p-4 md:p-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-        <section className="study-panel flex min-h-0 flex-col overflow-hidden" aria-label="Cuộc trò chuyện với XiaoZhi">
+        <section className="study-panel flex min-h-0 flex-col overflow-hidden" aria-label="Cuộc trò chuyện với Lily">
           <div className="border-b border-text/10 bg-paper/90 px-4 py-4 md:px-6">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
@@ -130,7 +140,7 @@ const ChatPage = () => {
               <div className="mb-3 flex items-center justify-between gap-3 text-white">
                 <h2 className="flex items-center gap-2 font-serif text-lg font-bold">
                   <Presentation className="h-5 w-5" aria-hidden="true" />
-                  Slide {activeSlide}
+                  {activeSlide.deck === 'ktct' ? `Slide KTCT ${activeSlide.num}` : `Slide ${activeSlide.num}`}
                 </h2>
                 <button
                   type="button"
@@ -142,8 +152,8 @@ const ChatPage = () => {
                 </button>
               </div>
               <img
-                src={`/slides/slide_${activeSlide}.jpg`}
-                alt={`Slide nguồn ${activeSlide}`}
+                src={`${activeSlide.deck === 'ktct' ? '/slides_ktct' : '/slides'}/slide_${activeSlide.num}.jpg`}
+                alt={`Slide nguồn ${activeSlide.num}`}
                 className="max-h-72 w-full rounded-xl object-contain shadow-paper"
                 onError={(e) => {
                   e.target.onerror = null;
@@ -163,7 +173,7 @@ const ChatPage = () => {
                   <div>
                     <h3 className="font-serif text-xl font-bold">Bắt đầu bằng một câu hỏi cụ thể</h3>
                     <p className="body-pretty mt-1 text-sm leading-6 text-muted">
-                      XiaoZhi trả lời tốt nhất khi bạn hỏi về khái niệm, ví dụ, so sánh hoặc yêu cầu chỉ ra slide nguồn.
+                      Lily trả lời tốt nhất khi bạn hỏi về khái niệm, ví dụ, so sánh hoặc yêu cầu chỉ ra slide nguồn.
                     </p>
                   </div>
                 </div>
@@ -186,10 +196,19 @@ const ChatPage = () => {
 
             <div className="space-y-5">
               {messages.map((msg, idx) => {
-                const slideMatches = msg.text.match(/\[Slide\s*(\d+)\]/gi)
-                const citedSlides = slideMatches
-                  ? [...new Set(slideMatches.map(m => m.replace(/[^0-9]/g, '')))]
-                  : []
+                // Collect citations from both decks, de-duplicated by deck+number
+                const slideMatches = msg.text.match(/\[Slide\s*(?:KTCT\s*)?\d+\]/gi) || []
+                const seen = new Set()
+                const citedSlides = []
+                for (const m of slideMatches) {
+                  const deck = /KTCT/i.test(m) ? 'ktct' : 'mln111'
+                  const num = m.replace(/[^0-9]/g, '')
+                  const key = `${deck}-${num}`
+                  if (!seen.has(key)) {
+                    seen.add(key)
+                    citedSlides.push({ deck, num })
+                  }
+                }
                   
                 return (
                   <div key={idx} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
@@ -205,20 +224,25 @@ const ChatPage = () => {
                             Nguồn tham khảo
                           </p>
                           <div className="flex flex-wrap gap-3">
-                            {citedSlides.map(slide => (
-                              <button
-                                key={slide}
-                                type="button"
-                                onClick={() => setActiveSlide(slide)}
-                                aria-label={`Mở slide ${slide}`}
-                                className={`w-28 overflow-hidden rounded-xl border bg-white text-left shadow-soft transition-[border-color,box-shadow,transform] duration-150 hover:-translate-y-0.5 focus-ring ${activeSlide === slide ? 'border-cta shadow-paper' : 'border-text/10 hover:border-primary/30'}`}
-                              >
-                                <img src={`/slides/slide_${slide}.jpg`} alt={`Slide ${slide}`} className="h-16 w-full object-cover" onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300' fill='none'%3E%3Crect width='400' height='300' fill='%23f1eadf'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='12' fill='%236F6259'%3ETrống%3C/text%3E%3C/svg%3E"; }} />
-                                <span className={`block px-2 py-1.5 text-center text-xs font-semibold ${activeSlide === slide ? 'bg-cta text-white' : 'text-text'}`}>
-                                  Slide {slide}
-                                </span>
-                              </button>
-                            ))}
+                            {citedSlides.map(slide => {
+                              const isActive = activeSlide && activeSlide.deck === slide.deck && activeSlide.num === slide.num
+                              const label = slide.deck === 'ktct' ? `Slide KTCT ${slide.num}` : `Slide ${slide.num}`
+                              const imgDir = slide.deck === 'ktct' ? '/slides_ktct' : '/slides'
+                              return (
+                                <button
+                                  key={`${slide.deck}-${slide.num}`}
+                                  type="button"
+                                  onClick={() => setActiveSlide(slide)}
+                                  aria-label={`Mở ${label}`}
+                                  className={`w-28 overflow-hidden rounded-xl border bg-white text-left shadow-soft transition-[border-color,box-shadow,transform] duration-150 hover:-translate-y-0.5 focus-ring ${isActive ? 'border-cta shadow-paper' : 'border-text/10 hover:border-primary/30'}`}
+                                >
+                                  <img src={`${imgDir}/slide_${slide.num}.jpg`} alt={label} className="h-16 w-full object-cover" onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300' fill='none'%3E%3Crect width='400' height='300' fill='%23f1eadf'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='12' fill='%236F6259'%3ETrống%3C/text%3E%3C/svg%3E"; }} />
+                                  <span className={`block px-2 py-1.5 text-center text-xs font-semibold ${isActive ? 'bg-cta text-white' : 'text-text'}`}>
+                                    {label}
+                                  </span>
+                                </button>
+                              )
+                            })}
                           </div>
                         </div>
                       )}
@@ -234,7 +258,7 @@ const ChatPage = () => {
                   </div>
                   <div className="flex items-center gap-3 rounded-2xl rounded-tl-sm border border-text/10 bg-paper p-4 text-muted shadow-soft">
                     <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
-                    XiaoZhi đang suy nghĩ...
+                    Lily đang suy nghĩ...
                   </div>
                 </div>
               )}
@@ -243,8 +267,8 @@ const ChatPage = () => {
           </div>
 
           <div className="border-t border-text/10 bg-paper p-4">
-            <form onSubmit={e => { e.preventDefault(); handleSend(); }} className="flex gap-3" aria-label="Gửi câu hỏi cho XiaoZhi">
-              <label htmlFor="chat-input" className="sr-only">Câu hỏi cho XiaoZhi</label>
+            <form onSubmit={e => { e.preventDefault(); handleSend(); }} className="flex gap-3" aria-label="Gửi câu hỏi cho Lily">
+              <label htmlFor="chat-input" className="sr-only">Câu hỏi cho Lily</label>
               <div className="relative flex-1">
                 <input
                   id="chat-input"
@@ -252,7 +276,7 @@ const ChatPage = () => {
                   type="text"
                   value={input}
                   onChange={e => setInput(e.target.value)}
-                  placeholder="Hỏi XiaoZhi về một khái niệm, ví dụ hoặc slide..."
+                  placeholder="Hỏi Lily về một khái niệm, ví dụ hoặc slide..."
                   className="w-full rounded-xl border border-text/15 bg-white px-4 py-3 pr-11 text-base text-text shadow-soft transition-[border-color,box-shadow] duration-150 placeholder:text-muted/60 focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10"
                   disabled={isLoading}
                 />
@@ -277,7 +301,7 @@ const ChatPage = () => {
               <div className="flex items-center justify-between gap-3 border-b border-text/10 bg-paper px-4 py-3">
                 <h2 className="flex items-center gap-2 font-serif text-lg font-bold text-text">
                   <Presentation className="h-5 w-5 text-primary" aria-hidden="true" />
-                  Slide {activeSlide}
+                  {activeSlide.deck === 'ktct' ? `Slide KTCT ${activeSlide.num}` : `Slide ${activeSlide.num}`}
                 </h2>
                 <button
                   type="button"
@@ -290,8 +314,8 @@ const ChatPage = () => {
               </div>
               <div className="flex min-h-0 flex-1 items-center justify-center bg-[#2a211a] p-4">
                 <img
-                  src={`/slides/slide_${activeSlide}.jpg`}
-                  alt={`Slide nguồn ${activeSlide}`}
+                  src={`${activeSlide.deck === 'ktct' ? '/slides_ktct' : '/slides'}/slide_${activeSlide.num}.jpg`}
+                  alt={`Slide nguồn ${activeSlide.num}`}
                   className="max-h-full max-w-full rounded-xl object-contain shadow-paper"
                   onError={(e) => {
                     e.target.onerror = null;
@@ -305,7 +329,7 @@ const ChatPage = () => {
               <p className="eyebrow">Nguồn học liệu</p>
               <h2 className="mt-2 font-serif text-2xl font-bold">Slide sẽ mở ở đây khi câu trả lời có trích dẫn.</h2>
               <p className="body-pretty mt-3 leading-7 text-muted">
-                Hãy yêu cầu XiaoZhi chỉ ra slide nguồn, hoặc hỏi theo số slide để giữ việc học bám vào tài liệu.
+                Hãy yêu cầu Lily chỉ ra slide nguồn, hoặc hỏi theo số slide để giữ việc học bám vào tài liệu.
               </p>
               <div className="mt-5 rounded-2xl border border-text/10 bg-white/60 p-4 text-sm leading-6 text-muted">
                 Gợi ý: “Dựa trên slide, giải thích vì sao đấu tranh giữa các mặt đối lập là động lực phát triển.”

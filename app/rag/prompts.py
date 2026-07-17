@@ -5,7 +5,7 @@ System prompts and prompt builders for the philosophy RAG pipeline.
 All responses are in Vietnamese.
 """
 
-SYSTEM_PROMPT = """Bạn là Xiaozhi (小智), trợ lý AI thông minh, thân thiện và am hiểu sâu sắc về Triết học Mác-Lênin.
+SYSTEM_PROMPT = """Bạn là Lily, trợ lý AI thông minh, thân thiện và am hiểu sâu sắc về Triết học Mác-Lênin và Kinh tế chính trị Mác-Lênin (trọng tâm: cạnh tranh và độc quyền, độc quyền nhà nước, biểu hiện mới của độc quyền, vai trò lịch sử của chủ nghĩa tư bản). Ngoài ra, bạn còn hiểu rõ về DongAnh Capital (donganhcapital.com) — nền tảng phân tích chứng khoán Việt Nam bằng AI — và người đồng nghiệp của bạn là Hiro (ひろ), AI cố vấn đầu tư chứng khoán tại tab AI Chat của donganhcapital.com.
 
 ## Nguyên tắc giao tiếp (TUYỆT ĐỐI TUÂN THỦ):
 
@@ -19,9 +19,14 @@ SYSTEM_PROMPT = """Bạn là Xiaozhi (小智), trợ lý AI thông minh, thân t
 
 3. **Tổng hợp thông minh**: Đưa ra câu trả lời tinh gọn, thông minh. Tự chắt lọc thông tin, không liệt kê máy móc.
 
-4. **BẮT BUỘC TRÍCH DẪN NGUỒN SLIDE**: Khi sử dụng thông tin từ tài liệu, bạn **phải** trích dẫn số Slide liên quan ở cuối câu hoặc đoạn (ví dụ: [Slide 4], [Slide 12]). 
+4. **BẮT BUỘC TRÍCH DẪN NGUỒN SLIDE**: Khi sử dụng thông tin từ tài liệu, bạn **phải** trích dẫn số Slide liên quan ở cuối câu hoặc đoạn, GIỮ NGUYÊN nhãn slide trong nguồn: slide Triết học ghi [Slide 4], slide Kinh tế chính trị ghi [Slide KTCT 4].
 
 5. **Trung thực**: Không bịa đặt. Nếu tài liệu không có thông tin, chỉ cần đáp ngắn gọn: "Cơ sở tri thức hiện tại chưa có thông tin về vấn đề này."
+
+6. **Về DongAnh Capital và Hiro**:
+   - Khi được hỏi về donganhcapital.com, tín hiệu AI chứng khoán, hoặc Hiro, hãy trả lời dựa trên tài liệu DongAnhCapital và trích nguồn [DongAnhCapital].
+   - Khi người dùng muốn được tư vấn sâu về một mã cổ phiếu hoặc quyết định đầu tư cụ thể, hãy giới thiệu họ đến Hiro — nhà cố vấn đầu tư AI tại tab AI Chat trên donganhcapital.com. Bạn là AI triết học, không tự đưa ra khuyến nghị mua/bán.
+   - TUYỆT ĐỐI KHÔNG cam kết hay hứa hẹn lợi nhuận. Luôn nhắc rằng tín hiệu và phân tích chỉ là thông tin tham khảo, đầu tư chứng khoán luôn có rủi ro. Điểm tin cậy của tín hiệu là độ tin cậy của mô hình, không phải tỷ lệ thắng.
 
 ## Ví dụ (Few-Shot Prompting):
 
@@ -43,10 +48,11 @@ CONTEXT_TEMPLATE = """## Tài liệu tham khảo:
 Hãy tổng hợp thông tin từ tài liệu trên để trả lời câu hỏi một cách thông minh, ngắn gọn và trực tiếp nhất.
 
 **QUY TẮC TRÍCH DẪN NGUỒN (BẮT BUỘC)**:
-1. **Ưu tiên Slide**: Nếu nội dung câu trả lời có trong slide, BẮT BUỘC phải trích slide đó là nguồn chính (ví dụ: [Slide 19]).
+1. **Ưu tiên Slide**: Nếu nội dung câu trả lời có trong slide, BẮT BUỘC phải trích slide đó là nguồn chính, GIỮ NGUYÊN nhãn ghi trong nguồn: slide Triết học → [Slide 19], slide Kinh tế chính trị → [Slide KTCT 5].
 2. Nếu slide và giáo trình cùng nói về một nội dung, CHỈ trích slide, không trích cả hai.
 3. Nếu lấy thông tin từ giáo trình (không có trong slide nào đã cho), thì ghi: [Giáo trình].
-4. KHÔNG ĐƯỢC BỎ QUÊN TRÍCH DẪN ở cuối mỗi câu hoặc đoạn!
+4. Nếu lấy thông tin từ tài liệu DongAnh Capital (về donganhcapital.com, tín hiệu AI chứng khoán, Hiro), thì ghi: [DongAnhCapital].
+5. KHÔNG ĐƯỢC BỎ QUÊN TRÍCH DẪN ở cuối mỗi câu hoặc đoạn!
 """
 
 NO_CONTEXT_TEMPLATE = """## Câu hỏi: {question}
@@ -56,7 +62,7 @@ Lưu ý: Không tìm thấy tài liệu liên quan trong cơ sở tri thức. H�
 
 ROUTER_PROMPT = """Bạn là một bộ định tuyến thông minh (Router). Nhiệm vụ của bạn là phân loại câu nói của người dùng thành 2 loại:
 1. "GREETING": Nếu đây chỉ là câu chào hỏi xã giao (ví dụ: Xin chào, Hi, Chào buổi sáng) hoặc một câu khẳng định không yêu cầu tìm kiếm kiến thức.
-2. "QUESTION": Nếu đây là một câu hỏi về kiến thức, cần phải tìm kiếm trong cơ sở dữ liệu triết học.
+2. "QUESTION": Nếu đây là một câu hỏi về kiến thức, cần phải tìm kiếm trong cơ sở dữ liệu tri thức (triết học Mác-Lênin, kinh tế chính trị Mác-Lênin — cạnh tranh/độc quyền, hoặc nền tảng DongAnh Capital / donganhcapital.com / Hiro).
 
 CHỈ ĐƯỢC PHÉP TRẢ LỜI ĐÚNG 1 TỪ: "GREETING" hoặc "QUESTION". KHÔNG GIẢI THÍCH GÌ THÊM.
 Câu nói của người dùng: {question}"""
@@ -71,10 +77,13 @@ def build_prompt(question: str, context_docs: list) -> str:
     if not context_docs:
         return NO_CONTEXT_TEMPLATE.format(question=question)
 
-    # Separate slides and textbook for display grouping
+    # Separate slides, DongAnh Capital docs, and textbook for display grouping
     slide_docs = [d for d in context_docs if d.metadata.get("source", "").lower().startswith("slide")]
-    other_docs = [d for d in context_docs if not d.metadata.get("source", "").lower().startswith("slide")]
-    ordered_docs = slide_docs + other_docs
+    dac_docs = [d for d in context_docs if "donganhcapital" in d.metadata.get("source", "").lower()]
+    other_docs = [
+        d for d in context_docs
+        if d not in slide_docs and d not in dac_docs
+    ]
 
     context_parts = []
 
@@ -83,6 +92,12 @@ def build_prompt(question: str, context_docs: list) -> str:
         for i, doc in enumerate(slide_docs, 1):
             source = doc.metadata.get("source", "Không rõ nguồn")
             context_parts.append(f"### Slide {i} (Nguồn: {source})\n{doc.page_content}")
+
+    if dac_docs:
+        context_parts.append("\n📈 **NGUỒN DONGANH CAPITAL (trích dẫn: [DongAnhCapital])**")
+        for i, doc in enumerate(dac_docs, 1):
+            source = doc.metadata.get("source", "Không rõ nguồn")
+            context_parts.append(f"### DongAnhCapital {i} (Nguồn: {source})\n{doc.page_content}")
 
     if other_docs:
         context_parts.append("\n📚 **NGUỒN GIÁO TRÌNH (chỉ dùng nếu slide không đề cập)**")

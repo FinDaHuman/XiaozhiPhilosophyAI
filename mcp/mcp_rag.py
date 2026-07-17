@@ -1,5 +1,7 @@
+import json
 import logging
 import sys
+import urllib.request
 
 from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
@@ -17,6 +19,21 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("RAG_MCP")
 
 mcp = FastMCP("LocalRAG")
+
+DAC_API = "https://donganhcapital.onrender.com/api"
+DAC_TIMEOUT = 12  # giay; Render free co the ngu (cold start ~60s) — khong doi lau de robot khong bi treo
+DAC_OFFLINE_MSG = (
+    "May chu DongAnh Capital dang khoi dong lai, chua co du lieu ngay. "
+    "Ban co the xem truc tiep tai donganhcapital.com hoac hoi lai sau mot phut."
+)
+
+
+def _dac_get(path: str):
+    """GET mot endpoint public cua donganhcapital.com, tra ve JSON da parse."""
+    url = f"{DAC_API}{path}"
+    request = urllib.request.Request(url, headers={"User-Agent": "LilyRobot/1.0"})
+    with urllib.request.urlopen(request, timeout=DAC_TIMEOUT) as response:
+        return json.loads(response.read().decode("utf-8"))
 
 
 @mcp.tool()
@@ -89,6 +106,92 @@ def rag_status() -> str:
             lines.append(f"- Khong doc duoc index: {exc}")
 
     return "\n".join(lines)
+
+
+@mcp.tool()
+def dac_vnindex() -> str:
+    """Lay chi so VNINDEX moi nhat (diem so, thay doi phien gan nhat) tu nen tang chung khoan DongAnh Capital (donganhcapital.com). Dung khi nguoi dung hoi VNINDEX hom nay the nao, thi truong chung khoan Viet Nam ra sao."""
+    try:
+        rows = _dac_get("/vnindex?limit=2")
+    except Exception as exc:
+        logger.warning("dac_vnindex failed: %s", exc)
+        return DAC_OFFLINE_MSG
+
+    if not rows:
+        return "Chua co du lieu VNINDEX."
+
+    latest = rows[-1]
+    close = latest["Close"]
+    date = str(latest["Date"])[:10]
+    line = f"VNINDEX phien {date}: dong cua {close:,.2f} diem"
+    if len(rows) >= 2:
+        prev_close = rows[-2]["Close"]
+        change = close - prev_close
+        pct = change / prev_close * 100 if prev_close else 0
+        direction = "tang" if change >= 0 else "giam"
+        line += f", {direction} {abs(change):,.2f} diem ({pct:+.2f}%) so voi phien truoc"
+    volume = latest.get("Volume")
+    if volume:
+        line += f". Khoi luong {volume / 1_000_000:,.0f} trieu don vi."
+    return line
+
+
+@mcp.tool()
+def dac_ai_signals_today() -> str:
+    """Lay tin hieu AI breakout (dot pha gia) moi nhat tu nen tang chung khoan DongAnh Capital (donganhcapital.com). Dung khi nguoi dung hoi hom nay co tin hieu AI / goi y co phieu nao khong."""
+    try:
+        summary = _dac_get("/ai-signals/summary")
+    except Exception as exc:
+        logger.warning("dac_ai_signals_today failed: %s", exc)
+        return DAC_OFFLINE_MSG
+
+    latest_active = next((row for row in summary if row.get("signal_count", 0) > 0), None)
+    if latest_active is None:
+        return "Gan day mo hinh AI cua DongAnh Capital chua phat tin hieu breakout nao — mo hinh rat chon loc, chi bao khi xac suat du tot."
+
+    date = latest_active["date"]
+    try:
+        detail = _dac_get(f"/ai-signals?date={date}")
+        signals = detail.get("signals", [])
+    except Exception as exc:
+        logger.warning("dac_ai_signals detail failed: %s", exc)
+        signals = []
+
+    count = latest_active.get("signal_count", len(signals))
+    lines = [f"Tin hieu AI breakout gan nhat cua DongAnh Capital: ngay {date}, {count} ma."]
+    for sig in signals[:3]:
+        lines.append(
+            f"Ma {sig['stock_id']}: gia vao {sig['entry_price']:g} nghin dong, "
+            f"muc tieu {sig['tp_price']:g}, cat lo {sig['sl_price']:g}."
+        )
+    lines.append("Luu y: tin hieu chi mang tinh tham khao, khong phai loi khuyen dau tu. Muon phan tich sau hon, hay hoi Hiro tren donganhcapital.com.")
+    return " ".join(lines)
+
+
+@mcp.tool()
+def dac_market_movers() -> str:
+    """Lay top co phieu tang/giam manh nhat phien tu nen tang chung khoan DongAnh Capital (donganhcapital.com). Dung khi nguoi dung hoi co phieu nao tang manh, giam manh, thi truong co gi noi bat."""
+    try:
+        rows = _dac_get("/market-status")
+    except Exception as exc:
+        logger.warning("dac_market_movers failed: %s", exc)
+        return DAC_OFFLINE_MSG
+
+    # Chi xet ma co thanh khoan dang ke de tranh ma tang tran voi vai tram co phieu khop lenh
+    liquid = [r for r in rows if (r.get("trading_value") or 0) >= 1_000_000 and r.get("value") is not None]
+    if not liquid:
+        return "Chua co du lieu thi truong hom nay."
+
+    gainers = sorted(liquid, key=lambda r: r["value"], reverse=True)[:3]
+    losers = sorted(liquid, key=lambda r: r["value"])[:3]
+
+    def fmt(items):
+        return ", ".join(f"{r['ticker']} ({r['value']:+.1f}%)" for r in items)
+
+    return (
+        f"Top tang: {fmt(gainers)}. Top giam: {fmt(losers)}. "
+        "Du lieu tu donganhcapital.com, chi mang tinh tham khao."
+    )
 
 
 if __name__ == "__main__":

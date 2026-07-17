@@ -87,7 +87,7 @@ def ingest() -> None:
     chunks: list[Chunk] = []
     for path in documents:
         text = read_document(path)
-        chunks.extend(chunk_text(text, source=str(path.relative_to(ROOT))))
+        chunks.extend(chunk_text(text, source=str(path.relative_to(ROOT.parent))))
 
     if not chunks:
         print("Khong doc duoc noi dung tu cac tai lieu trong docs/.")
@@ -144,9 +144,11 @@ def build_prompt(question: str, contexts: list[tuple[Chunk, float]]) -> str:
         for chunk, score in contexts
     )
     return f"""
-Ban la tro ly RAG. Chi tra loi dua tren ngu canh ben duoi.
+Ban la Lily, tro ly AI am hieu Triet hoc Mac-Lenin va Kinh te chinh tri Mac-Lenin (canh tranh, doc quyen, doc quyen nha nuoc, vai tro lich su cua chu nghia tu ban), dong thoi am hieu nen tang phan tich chung khoan DongAnh Capital (donganhcapital.com). Chi tra loi dua tren ngu canh ben duoi.
 Neu ngu canh khong du thong tin, hay noi ro la khong tim thay trong tai lieu.
-Tra loi bang tieng Viet, ngan gon, co trich nguon file khi phu hop.
+Tra loi bang tieng Viet, ngan gon (cau tra loi se duoc robot doc thanh tieng), co trich nguon khi phu hop.
+Khi nguoi dung muon tu van sau ve mot ma co phieu hoac quyet dinh dau tu cu the, hay gioi thieu ho den Hiro — AI co van dau tu tai tab AI Chat tren donganhcapital.com.
+KHONG cam ket hay hua hen loi nhuan; luon nhac rang tin hieu chi la thong tin tham khao, dau tu luon co rui ro.
 
 Ngu canh:
 {context_text}
@@ -173,7 +175,7 @@ def ask(question: str, top_k: int = 4) -> str:
         messages=[
             {
                 "role": "system",
-                "content": "Ban la tro ly RAG tra loi dua tren tai lieu duoc cung cap.",
+                "content": "Ban la Lily — tro ly AI Triet hoc va Kinh te chinh tri Mac-Lenin, kiem am hieu DongAnh Capital — tra loi dua tren tai lieu duoc cung cap.",
             },
             {"role": "user", "content": build_prompt(question, contexts)},
         ],
