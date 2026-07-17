@@ -1,7 +1,9 @@
 import json
 import logging
+import os
 import sys
 import urllib.request
+from pathlib import Path
 
 from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
@@ -20,12 +22,41 @@ logger = logging.getLogger("RAG_MCP")
 
 mcp = FastMCP("LocalRAG")
 
-DAC_API = "https://donganhcapital.onrender.com/api"
+DAC_API = os.getenv("DAC_API", "https://donganhcapital.onrender.com/api")
 DAC_TIMEOUT = 12  # giay; Render free co the ngu (cold start ~60s) — khong doi lau de robot khong bi treo
 DAC_OFFLINE_MSG = (
     "May chu DongAnh Capital dang khoi dong lai, chua co du lieu ngay. "
     "Ban co the xem truc tiep tai donganhcapital.com hoac hoi lai sau mot phut."
 )
+DAC_STALE_PREFIX = "May chu DongAnh Capital dang khoi dong lai. So lieu phien gan nhat minh co: "
+DAC_CACHE_FILE = Path(__file__).resolve().parent / ".dac_cache.json"
+
+# Cache ket qua da format cua cac tool dac_* (chuoi chua san ngay phien nen tu mo ta duoc).
+# Giu ca ban tren dia de song sot qua restart process.
+_dac_cache: dict = {}
+
+
+def _dac_cache_load() -> None:
+    global _dac_cache
+    try:
+        _dac_cache = json.loads(DAC_CACHE_FILE.read_text(encoding="utf-8"))
+    except Exception:
+        _dac_cache = {}
+
+
+def _dac_cache_put(tool: str, text: str) -> None:
+    _dac_cache[tool] = text
+    try:
+        DAC_CACHE_FILE.write_text(json.dumps(_dac_cache, ensure_ascii=False), encoding="utf-8")
+    except OSError as exc:
+        logger.warning("Khong ghi duoc DAC cache: %s", exc)
+
+
+def _dac_cache_get(tool: str):
+    return _dac_cache.get(tool)
+
+
+_dac_cache_load()
 
 
 def _dac_get(path: str):
@@ -34,6 +65,14 @@ def _dac_get(path: str):
     request = urllib.request.Request(url, headers={"User-Agent": "LilyRobot/1.0"})
     with urllib.request.urlopen(request, timeout=DAC_TIMEOUT) as response:
         return json.loads(response.read().decode("utf-8"))
+
+
+def _dac_fallback(tool: str) -> str:
+    """Cau tra loi khi API DAC khong phan hoi: uu tien so lieu cache gan nhat."""
+    cached = _dac_cache_get(tool)
+    if cached:
+        return DAC_STALE_PREFIX + cached
+    return DAC_OFFLINE_MSG
 
 
 @mcp.tool()
@@ -115,7 +154,7 @@ def dac_vnindex() -> str:
         rows = _dac_get("/vnindex?limit=2")
     except Exception as exc:
         logger.warning("dac_vnindex failed: %s", exc)
-        return DAC_OFFLINE_MSG
+        return _dac_fallback("dac_vnindex")
 
     if not rows:
         return "Chua co du lieu VNINDEX."
@@ -133,6 +172,7 @@ def dac_vnindex() -> str:
     volume = latest.get("Volume")
     if volume:
         line += f". Khoi luong {volume / 1_000_000:,.0f} trieu don vi."
+    _dac_cache_put("dac_vnindex", line)
     return line
 
 
@@ -143,7 +183,7 @@ def dac_ai_signals_today() -> str:
         summary = _dac_get("/ai-signals/summary")
     except Exception as exc:
         logger.warning("dac_ai_signals_today failed: %s", exc)
-        return DAC_OFFLINE_MSG
+        return _dac_fallback("dac_ai_signals_today")
 
     latest_active = next((row for row in summary if row.get("signal_count", 0) > 0), None)
     if latest_active is None:
@@ -165,7 +205,9 @@ def dac_ai_signals_today() -> str:
             f"muc tieu {sig['tp_price']:g}, cat lo {sig['sl_price']:g}."
         )
     lines.append("Luu y: tin hieu chi mang tinh tham khao, khong phai loi khuyen dau tu. Muon phan tich sau hon, hay hoi Hiro tren donganhcapital.com.")
-    return " ".join(lines)
+    result = " ".join(lines)
+    _dac_cache_put("dac_ai_signals_today", result)
+    return result
 
 
 @mcp.tool()
@@ -175,7 +217,7 @@ def dac_market_movers() -> str:
         rows = _dac_get("/market-status")
     except Exception as exc:
         logger.warning("dac_market_movers failed: %s", exc)
-        return DAC_OFFLINE_MSG
+        return _dac_fallback("dac_market_movers")
 
     # Chi xet ma co thanh khoan dang ke de tranh ma tang tran voi vai tram co phieu khop lenh
     liquid = [r for r in rows if (r.get("trading_value") or 0) >= 1_000_000 and r.get("value") is not None]
@@ -188,10 +230,12 @@ def dac_market_movers() -> str:
     def fmt(items):
         return ", ".join(f"{r['ticker']} ({r['value']:+.1f}%)" for r in items)
 
-    return (
+    result = (
         f"Top tang: {fmt(gainers)}. Top giam: {fmt(losers)}. "
         "Du lieu tu donganhcapital.com, chi mang tinh tham khao."
     )
+    _dac_cache_put("dac_market_movers", result)
+    return result
 
 
 if __name__ == "__main__":
