@@ -63,10 +63,23 @@ const ChatPage = () => {
     window.requestAnimationFrame(() => inputRef.current?.focus())
   }
 
+  // Pair up user->ai turns from the transcript (skipping the seeded greeting)
+  // so each request carries its own conversation context.
+  const buildHistory = (msgs) => {
+    const pairs = []
+    for (let i = 1; i < msgs.length - 1; i++) {
+      if (msgs[i].role === 'user' && msgs[i + 1]?.role === 'ai') {
+        pairs.push({ question: msgs[i].text, answer: msgs[i + 1].text })
+      }
+    }
+    return pairs.slice(-3)
+  }
+
   const handleSend = async () => {
     if (!input.trim() || isLoading) return
 
     const userMessage = input.trim()
+    const history = buildHistory(messages)
     setInput('')
     setMessages(prev => [...prev, { role: 'user', text: userMessage }])
     setIsLoading(true)
@@ -75,7 +88,7 @@ const ChatPage = () => {
       const response = await apiFetch('/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userMessage })
+        body: JSON.stringify({ message: userMessage, history })
       })
       
       if (response.ok) {

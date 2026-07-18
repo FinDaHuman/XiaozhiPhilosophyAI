@@ -37,8 +37,16 @@ MCP_DIR = BASE_DIR / "mcp"
 
 # ─── Request/Response Models ────────────────────────────────────────────────
 
+class HistoryTurn(BaseModel):
+    question: str
+    answer: str
+
+
 class ChatRequest(BaseModel):
     message: str
+    # Client-side conversation history. Absent -> legacy shared server-side
+    # history; [] -> fresh conversation with no context.
+    history: list[HistoryTurn] | None = None
 
 
 class ChatResponse(BaseModel):
@@ -351,10 +359,17 @@ async def chat(request: ChatRequest):
     if not request.message.strip():
         raise HTTPException(status_code=400, detail="Message cannot be empty")
 
+    hist = (
+        [t.model_dump() for t in request.history]
+        if request.history is not None
+        else None
+    )
     try:
         # Threadpool keeps the event loop free so web and robot questions
         # can be answered concurrently during the demo.
-        answer = await run_in_threadpool(lambda: get_rag().ask(request.message))
+        answer = await run_in_threadpool(
+            lambda: get_rag().ask(request.message, history=hist)
+        )
         return ChatResponse(answer=answer)
     except Exception as e:
         import traceback
