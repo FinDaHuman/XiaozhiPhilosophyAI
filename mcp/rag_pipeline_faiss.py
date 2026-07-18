@@ -1,6 +1,7 @@
 import argparse
 import os
 import pickle
+import sys
 import textwrap
 from dataclasses import dataclass
 from pathlib import Path
@@ -8,11 +9,18 @@ from pathlib import Path
 import faiss
 import numpy as np
 from dotenv import load_dotenv
-from groq import Groq
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 
 ROOT = Path(__file__).parent
+REPO_ROOT = ROOT.parent
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from app.rag.llm_provider import LLMProvider
+from app.rag.voice import sanitize_voice_answer
+
+
 DOCS_DIR = ROOT.parent / "data"
 INDEX_DIR = ROOT / ".rag_index"
 INDEX_FILE = INDEX_DIR / "index.pkl"
@@ -162,20 +170,14 @@ Cau hoi: {question}
 
 def ask(question: str, top_k: int = 4) -> str:
     load_dotenv(ROOT.parent / ".env")
-    api_key = os.getenv("GROQ_API_KEY")
     model = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
-
-    if not api_key:
-        raise ValueError("Thieu GROQ_API_KEY trong file .env")
 
     contexts = retrieve(question, top_k=top_k)
     if not contexts:
         return "Khong tim thay ngu canh lien quan trong tai lieu."
 
-    client = Groq(api_key=api_key)
-    completion = client.chat.completions.create(
-        model=model,
-        messages=[
+    answer = LLMProvider().complete(
+        [
             {
                 "role": "system",
                 "content": (
@@ -187,10 +189,11 @@ def ask(question: str, top_k: int = 4) -> str:
             },
             {"role": "user", "content": build_prompt(question, contexts)},
         ],
+        groq_model=model,
         temperature=0.2,
         max_tokens=300,
     )
-    return completion.choices[0].message.content or ""
+    return sanitize_voice_answer(answer)
 
 
 def chat() -> None:

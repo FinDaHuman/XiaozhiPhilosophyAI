@@ -25,10 +25,12 @@ The hardware communicates with the Xiaozhi cloud platform, which in turn communi
 
 ### Step 2: Configure Your Local Environment
 1.  Open the `.env` file in the root directory of the `XiaozhiPhilosophyAI` project.
-2.  Add the copied URL as the `MCP_ENDPOINT` variable. Make sure you also have your Groq API key configured.
+2.  Add the copied URL as the `MCP_ENDPOINT` variable. Configure Groq as primary and Gemini as the fallback provider.
     ```ini
     # .env
     GROQ_API_KEY=gsk_your_groq_api_key_here
+    GEMINI_API_KEY=your_gemini_api_key_here
+    GEMINI_MODEL=gemini-2.5-flash-lite
     MCP_ENDPOINT="wss://api.xiaozhi.me/mcp/your-unique-token-here"
     ```
 
@@ -75,4 +77,4 @@ To ensure ultra-low latency suitable for a voice assistant hardware device, this
 *   **MCP pipe disconnects frequently:** Check if the `MCP_ENDPOINT` token has expired in the console and update your `.env` file. The pipe is designed to auto-reconnect with exponential backoff if the connection drops.
 *   **"Chua co index" (No index) error:** This means the local database hasn't been built. Ensure you ran `python rag_pipeline_faiss.py ingest` inside the `mcp/` folder.
 *   **The robot says it doesn't know how to do that:** The Xiaozhi cloud may not have successfully discovered the tools. Restart the `mcp_pipe.py` script and check the "MCP Logs" inside the xiaozhi.me console to ensure tools like `rag_answer` and `rag_search` are registered.
-*   **No response or errors in terminal:** Check the terminal running `mcp_pipe.py` for any Python exceptions. Ensure your `GROQ_API_KEY` is valid and hasn't hit its rate limit.
+*   **No response or errors in terminal:** Check the terminal running `mcp_pipe.py` for any Python exceptions. Ensure at least one of `GROQ_API_KEY` or `GEMINI_API_KEY` is valid and still has quota.

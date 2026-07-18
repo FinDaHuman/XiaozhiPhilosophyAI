@@ -69,6 +69,10 @@ Tạo file `.env` tại thư mục gốc và điền thông tin sau:
 GROQ_API_KEY=gsk_your_api_key_here
 GROQ_MODEL=llama-3.3-70b-versatile
 
+# Gemini fallback (chỉ dùng khi Groq gặp 429, timeout hoặc lỗi 5xx)
+GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_MODEL=gemini-2.5-flash-lite
+
 # Cấu hình RAG
 EMBEDDING_MODEL=intfloat/multilingual-e5-small
 CHROMA_PERSIST_DIR=chroma_db
@@ -77,6 +81,9 @@ CHROMA_COLLECTION=philosophy_docs
 # Cấu hình kết nối Robot
 MCP_ENDPOINT=wss://api.xiaozhi.me/mcp/?token=YOUR_ROBOT_TOKEN
 ```
+
+Để bảo vệ quota free-tier, ứng dụng tắt retry ngầm của Gemini SDK: lỗi 429 không
+được gọi lại, còn lỗi máy chủ 5xx chỉ được thử lại đúng một lần.
 
 ### 4. Cài đặt Frontend
 Mở một Terminal khác:

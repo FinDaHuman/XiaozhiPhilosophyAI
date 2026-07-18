@@ -1,5 +1,6 @@
 import os
 from typing import List
+
 from langchain_community.embeddings import HuggingFaceEmbeddings
 
 class E5Embeddings(HuggingFaceEmbeddings):
@@ -13,12 +14,22 @@ class E5Embeddings(HuggingFaceEmbeddings):
 def get_embedding_model():
     model_name = os.getenv("EMBEDDING_MODEL", "intfloat/multilingual-e5-small")
     is_e5 = "e5" in model_name.lower()
-    
+
+    embedding_class = E5Embeddings if is_e5 else HuggingFaceEmbeddings
+
+    # Prefer the local cache so a transient Hugging Face outage cannot switch
+    # the query side of an existing Chroma index to a different vector space.
     try:
-        if is_e5:
-            return E5Embeddings(model_name=model_name)
-        else:
-            return HuggingFaceEmbeddings(model_name=model_name)
-    except Exception as e:
-        print(f"⚠️ Failed to load primary model {model_name}. Fallback to all-MiniLM-L6-v2. Error: {e}")
-        return HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+        return embedding_class(
+            model_name=model_name,
+            model_kwargs={"local_files_only": True},
+        )
+    except Exception:
+        try:
+            return embedding_class(model_name=model_name)
+        except Exception as exc:
+            raise RuntimeError(
+                f"Unable to load embedding model {model_name!r}. Refusing to "
+                "fall back to a different model because that would make "
+                "queries incompatible with the existing Chroma index."
+            ) from exc

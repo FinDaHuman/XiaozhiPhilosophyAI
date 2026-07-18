@@ -18,13 +18,13 @@ Quyết định đã chốt với user:
 ## 2. Kiến trúc (repo này — D:\VsCode\LilyAndHiro)
 
 - **2 pipeline RAG độc lập, cùng đọc `data/`**:
-  - `app/rag/` — ChromaDB + e5-small (HuggingFace) + Groq → web/API/terminal (`main.py api|terminal|ingest`). Hiện: **1569 chunks / 67 docs**
-  - `mcp/` — FAISS + TF-IDF + Groq → robot qua `mcp/mcp_pipe.py` (WebSocket bridge → `wss://api.xiaozhi.me`). Hiện: **1462 chunks / 5 docs**
+  - `app/rag/` — ChromaDB + e5-small (HuggingFace) + Groq→Gemini fallback → web/API/terminal (`main.py api|terminal|ingest`). Hiện: **1579 chunks / 67 docs**
+  - `mcp/` — FAISS + TF-IDF + Groq→Gemini fallback → robot qua `mcp/mcp_pipe.py` (WebSocket bridge → `wss://api.xiaozhi.me`). Hiện: **1470 chunks / 5 docs**
 - **Slide-priority**: `retriever.py` + `prompts.py` ưu tiên chunk có `source` bắt đầu bằng `"slide"`. `ingest.py` split mọi file `Slide*_OCR.md` theo header `## [Slide <label>]` → source `"Slide 12"` / `"Slide KTCT 5"`
 - **MCP robot tools** (`mcp/mcp_rag.py`): `rag_search/answer/reindex/status` + 3 tool live DAC: `dac_vnindex`, `dac_ai_signals_today`, `dac_market_movers` (timeout 12s; **có cache**: thành công thì lưu `mcp/.dac_cache.json`, API chết thì trả "so lieu phien gan nhat" thay vì chỉ xin lỗi; `DAC_API` env override được để test outage)
-- **Chuỗi fallback robot (18/07)**: XiaoZhi → mcp_pipe → mcp_rag `rag_answer` → **thử backend web trước** (probe `/health` 2s → POST `/chat/robot` timeout 45s, persona giọng nói, retriever ChromaDB) → lỗi thì rơi về FAISS local (prompt FAISS cũng đã voice-hoá, max_tokens 300). `LILY_WEB_BACKEND` env override được.
+- **Chuỗi fallback robot (18/07)**: XiaoZhi → mcp_pipe → mcp_rag `rag_answer` → **thử backend web trước** (probe `/health` 2s → POST `/chat/robot` timeout 45s, persona giọng nói, retriever ChromaDB) → lỗi thì rơi về FAISS local. Trong cả hai pipeline, generation thử Groq trước rồi chuyển `gemini-2.5-flash-lite` khi Groq gặp 429/timeout/5xx; prompt FAISS cũng đã voice-hoá, max_tokens 300. Để giữ quota free-tier, Groq không tự retry, Gemini 429 không retry và Gemini 5xx chỉ retry một lần. `LILY_WEB_BACKEND` env override được.
 - **Endpoints backend** (`app/api/routes.py`): `POST /chat` (nhận thêm `history` optional — absent = shared history cũ), `POST /chat/stream` (SSE, token JSON-wrapped, frontend tự fallback `/chat`), `POST /chat/robot` (voice mode, stateless), rate limit 20 req/60s/IP cho cả 3 (localhost miễn trừ — robot không bao giờ bị chặn). `/chat` + `/chat/robot` chạy trong threadpool (web + robot song song không nghẽn).
-- **Router**: heuristic trước (marker câu hỏi/chào, >50 ký tự), chỉ câu mơ hồ mới gọi router LLM — tiết kiệm 1 round-trip Groq/câu.
+- **Router/retriever**: heuristic trước (marker câu hỏi/chào, >50 ký tự), chỉ câu mơ hồ mới gọi router LLM. MultiQuery dùng Groq 8B fail-fast; nếu lỗi thì tự hạ xuống vector+BM25 để Gemini vẫn nhận được context.
 - **Frontend** (React/Vite): 2 môn học qua `src/data/subjects.js` (nguồn dữ liệu duy nhất). API base qua `src/config.js`: ưu tiên `localStorage.LILY_API_URL` (khẩn cấp) → `VITE_API_URL` (bake lúc build = ngrok domain cố định) → localhost. Mọi call qua `apiFetch()` (tự gắn header `ngrok-skip-browser-warning`). ChatPage: streaming SSE + gửi 3 cặp history cuối.
 
 ## 3. Đã làm trong session này
@@ -108,10 +108,11 @@ Quyết định đã chốt với user:
 
 | File | Vai trò |
 |---|---|
-| `.env` | GROQ key (thật) + MCP_ENDPOINT (placeholder!) — gitignored |
+| `.env` | GROQ + Gemini key (thật) + MCP_ENDPOINT (placeholder!) — gitignored |
 | `data/DongAnhCapital_KnowledgeBase.md` | Tri thức DAC + Hiro cho Lily |
 | `data/Slide_KTCT_OCR.md` + `data/GiaoTrinh_KinhTeChinhTri_MacLenin.pdf` | Tri thức KTCT |
 | `app/rag/prompts.py` | Persona Lily + rule trích dẫn 4 nguồn |
+| `app/rag/llm_provider.py` | Groq primary + Gemini fallback dùng chung cho web/robot/FAISS |
 | `app/rag/ingest.py` | Split slide generalize (`Slide*_OCR.md`) |
 | `mcp/mcp_rag.py` | MCP server robot + 3 tool live DAC (cache) + backend-first `rag_answer` |
 | `mcp/rag_pipeline_faiss.py` | FAISS pipeline dự phòng + persona giọng nói |

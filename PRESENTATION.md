@@ -34,15 +34,12 @@
 
 **Nói:** "Điều thú vị: Lily giờ cũng đã 'biết' về DongAnh Capital. Kho tri thức của Lily được bổ sung tài liệu về nền tảng, và Lily có thêm tool lấy dữ liệu thị trường trực tiếp từ API của donganhcapital.com."
 
-**Demo 2 (robot) — hỏi lần lượt:**
-1. > "Lily ơi, donganhcapital.com là gì?"
-   → Lily giới thiệu nền tảng (từ docs đã ingest)
-2. > "Tín hiệu AI của DongAnh Capital hoạt động thế nào?"
-   → Lily nói về 3 model Breakout / LTR / BCD + disclaimer
-3. > "VNINDEX hôm nay thế nào?"
-   → Lily gọi tool live `dac_vnindex` đọc số liệu thật ⭐ điểm nhấn
-4. > "Mình muốn được tư vấn sâu về một mã cổ phiếu thì hỏi ai?"
-   → Lily giới thiệu Hiro: "nhà cố vấn đầu tư trên tab AI Chat của donganhcapital.com" — khép vòng câu chuyện
+**Demo 2 (robot) — kịch bản hỏi đáp đầy đủ: xem `KICH_BAN_HOI_DAP_DAC.md`** (15 câu, 5 hồi, ~10-12 phút, kèm lời dẫn + đáp án kỳ vọng + dự phòng từng câu). Tóm tắt mạch:
+1. Mở màn: DAC là gì, có phải quỹ đầu tư không
+2. Tour website: các tab, Dashboard heatmap 226 mã, tin tức sentiment
+3. Ba model AI: tổng quan 15:02 → Breakout → LTR → BCD
+4. ⭐ Demo live 3 tool MCP: VNINDEX, tín hiệu hôm nay, top tăng/giảm
+5. Chốt: giá gói, "không cam kết lợi nhuận", giới thiệu Hiro — khép vòng câu chuyện
 
 **Chốt:** "Một hệ sinh thái hai AI: Lily — người bạn triết học rèn tư duy, Hiro — nhà cố vấn thực chiến trên thị trường. Cùng một triết lý thiết kế: AI phải trả lời dựa trên dữ liệu thật và luôn trung thực về giới hạn của mình."
 

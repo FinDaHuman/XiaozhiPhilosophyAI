@@ -5,6 +5,7 @@ Wraps ChromaDB similarity search, BM25 keyword search, and MultiQueryRetriever
 to retrieve relevant document chunks for a given question.
 """
 
+import logging
 import os
 from typing import Optional
 
@@ -19,12 +20,14 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+logger = logging.getLogger(__name__)
+
 
 CHROMA_PERSIST_DIR = os.getenv("CHROMA_PERSIST_DIR", "chroma_db")
 CHROMA_COLLECTION = os.getenv("CHROMA_COLLECTION", "philosophy_docs")
-EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "models/gemini-embedding-001")
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "intfloat/multilingual-e5-small")
 TOP_K = int(os.getenv("TOP_K", "5"))
-GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+GROQ_QUERY_MODEL = os.getenv("GROQ_QUERY_MODEL", "llama-3.1-8b-instant")
 
 
 class PhilosophyRetriever:
@@ -49,6 +52,7 @@ class PhilosophyRetriever:
         self._bm25_retriever: Optional[BM25Retriever] = None
         self._ensemble_retriever: Optional[EnsembleRetriever] = None
         self._multi_query_retriever: Optional[MultiQueryRetriever] = None
+        self._base_retriever = None
 
     @property
     def embeddings(self):
@@ -111,9 +115,11 @@ class PhilosophyRetriever:
         api_key = os.getenv("GROQ_API_KEY")
         if api_key:
             llm = ChatGroq(
-                temperature=0, 
-                model_name=GROQ_MODEL,
-                api_key=api_key
+                temperature=0,
+                model_name=GROQ_QUERY_MODEL,
+                api_key=api_key,
+                max_retries=0,
+                request_timeout=12,
             )
             self._multi_query_retriever = MultiQueryRetriever.from_llm(
                 retriever=base_retriever,
@@ -121,7 +127,8 @@ class PhilosophyRetriever:
             )
         else:
             self._multi_query_retriever = base_retriever
-            
+
+        self._base_retriever = base_retriever
         return self._multi_query_retriever
 
     def retrieve(self, query: str, top_k: Optional[int] = None) -> list[Document]:
@@ -130,7 +137,17 @@ class PhilosophyRetriever:
         Slides are always re-ranked to the top. Textbook chunks whose content is already
         covered by a retrieved slide chunk are suppressed to prevent duplication.
         """
-        raw_docs = self.retriever_pipeline.invoke(query)
+        pipeline = self.retriever_pipeline
+        try:
+            raw_docs = pipeline.invoke(query)
+        except Exception as exc:
+            if self._base_retriever is None or pipeline is self._base_retriever:
+                raise
+            logger.warning(
+                "MultiQuery retrieval failed with %s; using vector+BM25 base retrieval",
+                type(exc).__name__,
+            )
+            raw_docs = self._base_retriever.invoke(query)
         return self._rerank_slide_priority(raw_docs)
 
     def _rerank_slide_priority(self, docs: list[Document]) -> list[Document]:
@@ -191,4 +208,5 @@ class PhilosophyRetriever:
         self._bm25_retriever = None
         self._ensemble_retriever = None
         self._multi_query_retriever = None
+        self._base_retriever = None
         _ = self.retriever_pipeline  # re-initialize

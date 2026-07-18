@@ -2,8 +2,8 @@
 Knowledge Base Ingestion Pipeline
 
 Loads philosophy documents from the data/ directory (PDF, DOCX, TXT, MD),
-cleans and chunks the text, embeds with Google text-embedding-004,
-and stores in ChromaDB.
+cleans and chunks the text, embeds with the configured local sentence-transformer,
+and stores the vectors in ChromaDB.
 """
 
 import os
@@ -37,7 +37,7 @@ CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "200"))
 CHROMA_PERSIST_DIR = os.getenv("CHROMA_PERSIST_DIR", "chroma_db")
 CHROMA_COLLECTION = os.getenv("CHROMA_COLLECTION", "philosophy_docs")
 DATA_DIR = os.getenv("DATA_DIR", "data")
-EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "models/gemini-embedding-001")
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "intfloat/multilingual-e5-small")
 
 SUPPORTED_EXTENSIONS = {".pdf", ".docx", ".txt", ".md"}
 

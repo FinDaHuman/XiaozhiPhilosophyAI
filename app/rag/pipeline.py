@@ -2,7 +2,7 @@
 RAG Pipeline
 
 Orchestrates the full RAG flow:
-  Question → Embed → Retrieve → Build Prompt → Groq → Answer
+  Question → Embed → Retrieve → Build Prompt → LLM provider → Answer
 
 Exposes a simple `ask(question)` interface for MCP compatibility.
 """
@@ -11,15 +11,16 @@ import os
 from typing import Optional
 
 from dotenv import load_dotenv
-from groq import Groq
 
+from app.rag.llm_provider import DEFAULT_GROQ_MODEL, LLMProvider
 from app.rag.retriever import PhilosophyRetriever
 from app.rag.prompts import SYSTEM_PROMPT, VOICE_SYSTEM_PROMPT, ROUTER_PROMPT, build_prompt
 from app.rag.ingest import run_ingest_pipeline
+from app.rag.voice import sanitize_voice_answer
 
 load_dotenv()
 
-GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+GROQ_MODEL = os.getenv("GROQ_MODEL", DEFAULT_GROQ_MODEL)
 
 # Heuristic routing markers: obvious cases skip the router LLM round-trip.
 # Question markers win over greeting markers ("Chào Lily, độc quyền là gì?"
@@ -50,18 +51,8 @@ class RAGPipeline:
 
     def __init__(self):
         self.retriever = PhilosophyRetriever()
-        self._client: Optional[Groq] = None
+        self.llm = LLMProvider()
         self._conversation_history: list[dict] = []
-
-    @property
-    def client(self) -> Groq:
-        """Lazy-initialize the Groq client."""
-        if self._client is None:
-            api_key = os.getenv("GROQ_API_KEY")
-            if not api_key:
-                raise ValueError("Missing GROQ_API_KEY in .env")
-            self._client = Groq(api_key=api_key)
-        return self._client
 
     @staticmethod
     def _classify_fast(question: str):
@@ -101,13 +92,13 @@ class RAGPipeline:
             router_messages = [
                 {"role": "user", "content": ROUTER_PROMPT.format(question=question)}
             ]
-            router_completion = self.client.chat.completions.create(
-                model="llama-3.1-8b-instant", # Use fast model for routing
-                messages=router_messages,
+            route = self.llm.complete(
+                router_messages,
+                groq_model="llama-3.1-8b-instant",
                 temperature=0,
                 max_tokens=10,
             )
-            route = router_completion.choices[0].message.content.strip().upper()
+            route = route.strip().upper()
 
         if "GREETING" in route:
             # Skip retrieval for greetings
@@ -150,14 +141,15 @@ class RAGPipeline:
         """
         messages = self._prepare_messages(question, history=history, voice=voice)
 
-        # Step 5: Call Groq
-        completion = self.client.chat.completions.create(
-            model=GROQ_MODEL,
-            messages=messages,
+        # Step 5: Call Groq, with Gemini for transient provider failures.
+        answer = self.llm.complete(
+            messages,
+            groq_model=GROQ_MODEL,
             temperature=0.3,
             max_tokens=300 if voice else 2048,
         )
-        answer = completion.choices[0].message.content or ""
+        if voice:
+            answer = sanitize_voice_answer(answer)
 
         # Step 6: Store in shared conversation history — only on the legacy
         # path; when the client sends its own history (or voice mode) the
@@ -177,19 +169,16 @@ class RAGPipeline:
         """
         messages = self._prepare_messages(question, history=history, voice=False)
 
-        stream = self.client.chat.completions.create(
-            model=GROQ_MODEL,
-            messages=messages,
+        stream = self.llm.stream(
+            messages,
+            groq_model=GROQ_MODEL,
             temperature=0.3,
             max_tokens=2048,
-            stream=True,
         )
         parts = []
-        for chunk in stream:
-            delta = chunk.choices[0].delta.content
-            if delta:
-                parts.append(delta)
-                yield delta
+        for token in stream:
+            parts.append(token)
+            yield token
 
         if history is None:
             self._conversation_history.append({

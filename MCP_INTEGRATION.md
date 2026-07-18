@@ -38,6 +38,8 @@ Both pipelines use **local embeddings** (no external embedding API needed).
 | ------------------ | ---------------------------- | -------------------------------- |
 | `GROQ_API_KEY`     | Groq API key                 | `gsk_...`                        |
 | `GROQ_MODEL`       | Groq model name              | `llama-3.1-8b-instant`           |
+| `GEMINI_API_KEY`   | Gemini fallback API key      | `your_gemini_api_key_here`       |
+| `GEMINI_MODEL`     | Gemini fallback model        | `gemini-2.5-flash-lite`          |
 | `MCP_ENDPOINT`     | Xiaozhi MCP WebSocket endpoint | `wss://api.xiaozhi.me/mcp/...` |
 | `EMBEDDING_MODEL`  | HuggingFace embedding model  | `intfloat/multilingual-e5-small` |
 | `CHROMA_PERSIST_DIR` | ChromaDB storage path      | `chroma_db`                      |
@@ -147,10 +149,11 @@ The MCP server (`mcp_rag.py`) exposes 4 tools:
 ## Troubleshooting
 
 **"RESOURCE_EXHAUSTED" / 429 error**
-→ This was the old Gemini API issue. Now using Groq which has much higher rate limits on the free tier (30 req/min for llama-3.1-8b-instant).
+→ Generation automatically switches from Groq to Gemini. If both providers return 429, wait for either quota window to reset.
+Gemini 429 responses are deliberately not retried; server-side 5xx responses are retried once.
 
 **"Missing GROQ_API_KEY"**
-→ Check that `.env` file exists in the correct directory and contains `GROQ_API_KEY=gsk_...`
+→ Gemini can run by itself when `GEMINI_API_KEY` is configured. For the normal primary/fallback chain, configure both keys in the root `.env`.
 
 **"Chua co index" error**
 → Run `python rag_pipeline_faiss.py ingest` (MCP) or `python main.py ingest` (ChromaDB) first.
