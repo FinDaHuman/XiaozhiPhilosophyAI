@@ -24,10 +24,9 @@
 [x] Docs: GUIDE_KHOI_DONG.md (ngrok + start_all + khẩn cấp), PRESENTATION.md, HANDOFF.md
 
 ## CHỜ USER (theo thứ tự)
-[ ] Setup ngrok 1 lần (~10 phút): tài khoản + static domain + authtoken + NGROK_DOMAIN vào .env
-    → từng bước trong GUIDE_KHOI_DONG.md mục "Setup ngrok MỘT LẦN DUY NHẤT"
-[ ] Redeploy Vercel 1 LẦN CUỐI với URL ngrok (lệnh trong GUIDE mục "Deploy lại Vercel")
-    → sau lần này không bao giờ phải redeploy vì tunnel nữa
+[x] Setup ngrok: domain crumpled-exciting-undertow.ngrok-free.dev, authtoken đã lưu, NGROK_DOMAIN trong .env (18/07)
+[x] Redeploy Vercel với URL ngrok cố định — bundle index-u6quE4Xa.js đã live trên lily-hiro.vercel.app (18/07)
+    → từ giờ KHÔNG bao giờ phải redeploy vì tunnel nữa
 [ ] Test robot bằng giọng nói thật: 1 câu triết học + 1 câu KTCT ("Độc quyền nhà nước là gì?")
     + "VNINDEX hôm nay thế nào?" (tool live) + câu dẫn tới Hiro — nghe persona giọng nói mới để chỉnh
 [ ] Verify giao diện web bằng mắt: streaming chữ chạy, slide viewer 2 deck, quiz 2 môn

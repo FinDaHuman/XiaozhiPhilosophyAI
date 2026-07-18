@@ -64,7 +64,7 @@ Write-Host "[OK] Backend: http://localhost:8000" -ForegroundColor Green
 # --- 3) ngrok (domain co dinh - khong can parse URL) ---
 Write-Host "[2/6] Bat ngrok tunnel ($domain)..."
 try {
-    $p = Start-Process ngrok -ArgumentList "http","--domain=$domain","8000" -PassThru
+    $p = Start-Process ngrok -ArgumentList "http","--url=$domain","8000" -PassThru
     $pids["ngrok"] = $p.Id
 } catch {
     Write-Host "[LOI] Khong chay duoc ngrok - da cai va add-authtoken chua? ($_)" -ForegroundColor Red

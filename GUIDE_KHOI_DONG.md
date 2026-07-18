@@ -10,15 +10,17 @@
 
 ## Setup ngrok MỘT LẦN DUY NHẤT (nếu chưa làm)
 
+> **ĐÃ LÀM XONG 18/07/2026** — domain: `crumpled-exciting-undertow.ngrok-free.dev`, authtoken đã lưu,
+> `NGROK_DOMAIN` đã có trong `.env`, Vercel đã bake URL này. Phần dưới chỉ để tham khảo nếu làm lại từ đầu.
+
 1. Tạo tài khoản tại https://dashboard.ngrok.com (miễn phí).
-2. Dashboard → **Domains** → tạo 1 static domain miễn phí (dạng `xxx.ngrok-free.app`). Ghi lại.
-3. Dashboard → **Your Authtoken** → copy token.
-4. Tải ngrok Windows tại https://ngrok.com/download, giải nén `ngrok.exe` vào thư mục gốc repo
-   `D:\VsCode\LilyAndHiro\` (đã có trong `.gitignore`) hoặc nơi nào đó trong PATH.
-5. Chạy 1 lần: `.\ngrok.exe config add-authtoken <TOKEN>`
+2. Dashboard → **Domains** → tạo 1 static domain miễn phí (dạng `xxx.ngrok-free.app` hoặc `xxx.ngrok-free.dev`). Ghi lại.
+3. Dashboard → **Your Authtoken** → copy token (**chỉ copy chuỗi token, ĐỪNG copy cả dấu `$` của dòng lệnh mẫu** — đã dính lỗi này 18/07, ngrok báo ERR_NGROK_105).
+4. Cài ngrok Windows (https://ngrok.com/download hoặc Microsoft Store) — cần gọi được lệnh `ngrok` từ PowerShell.
+5. Chạy 1 lần: `ngrok config add-authtoken <TOKEN>`
 6. Thêm dòng sau vào `D:\VsCode\LilyAndHiro\.env`:
    ```
-   NGROK_DOMAIN=<domain-cua-ban>.ngrok-free.app
+   NGROK_DOMAIN=<domain-cua-ban>
    ```
 7. Deploy lại Vercel 1 LẦN CUỐI với URL cố định (xem mục "Deploy lại Vercel" cuối file).
    Sau lần này, không bao giờ phải redeploy vì tunnel nữa.
@@ -69,14 +71,13 @@ Invoke-WebRequest -Uri "http://localhost:8000/health" -UseBasicParsing
 ### Bước 2 — Tunnel ngrok (cửa sổ 2, GIỮ MỞ)
 
 ```powershell
-cd D:\VsCode\LilyAndHiro
-.\ngrok.exe http --domain=<domain-cua-ban>.ngrok-free.app 8000
+ngrok http --url=crumpled-exciting-undertow.ngrok-free.dev 8000
 ```
 
 URL cố định — không cần copy gì cả. Kiểm tra (cửa sổ 3):
 
 ```powershell
-Invoke-WebRequest -Uri "https://<domain-cua-ban>.ngrok-free.app/health" -Headers @{"ngrok-skip-browser-warning"="true"} -UseBasicParsing
+Invoke-WebRequest -Uri "https://crumpled-exciting-undertow.ngrok-free.dev/health" -Headers @{"ngrok-skip-browser-warning"="true"} -UseBasicParsing
 ```
 
 ### Bước 3 — Robot (cửa sổ 3, GIỮ MỞ)
@@ -126,7 +127,7 @@ Invoke-WebRequest -Uri "https://donganhcapital.onrender.com/api/vnindex?limit=1"
 ```powershell
 cd D:\VsCode\LilyAndHiro\frontend
 vercel pull --yes --environment production
-$env:VITE_API_URL='https://<domain-cua-ban>.ngrok-free.app'
+$env:VITE_API_URL='https://crumpled-exciting-undertow.ngrok-free.dev'
 vercel build --prod --yes
 vercel deploy --prebuilt --prod --yes
 ```
