@@ -17,7 +17,7 @@ REPO_ROOT = ROOT.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from app.rag.llm_provider import LLMProvider
+from app.rag.llm_provider import DEFAULT_GROQ_MODEL, LLMProvider
 from app.rag.voice import sanitize_voice_answer
 
 
@@ -89,7 +89,7 @@ def chunk_text(text: str, source: str, chunk_size: int = 900, overlap: int = 150
 def ingest() -> None:
     documents = iter_documents()
     if not documents:
-        print("Chua co tai lieu nao trong thu muc docs/. Hay them .txt, .md, .pdf hoac .docx.")
+        print("Chua co tai lieu nao trong thu muc data/. Hay them .txt, .md, .pdf hoac .docx.")
         return
 
     chunks: list[Chunk] = []
@@ -98,7 +98,7 @@ def ingest() -> None:
         chunks.extend(chunk_text(text, source=str(path.relative_to(ROOT.parent))))
 
     if not chunks:
-        print("Khong doc duoc noi dung tu cac tai lieu trong docs/.")
+        print("Khong doc duoc noi dung tu cac tai lieu trong data/.")
         return
 
     vectorizer = TfidfVectorizer(strip_accents="unicode", lowercase=True, norm="l2")
@@ -170,7 +170,7 @@ Cau hoi: {question}
 
 def ask(question: str, top_k: int = 4) -> str:
     load_dotenv(ROOT.parent / ".env")
-    model = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
+    model = os.getenv("GROQ_MODEL", DEFAULT_GROQ_MODEL)
 
     contexts = retrieve(question, top_k=top_k)
     if not contexts:
@@ -209,10 +209,10 @@ def chat() -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Mini RAG pipeline dung docs/ va Groq API.")
+    parser = argparse.ArgumentParser(description="Mini RAG pipeline dung data/ va Groq API.")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    subparsers.add_parser("ingest", help="Doc tai lieu trong docs/ va tao index.")
+    subparsers.add_parser("ingest", help="Doc tai lieu trong data/ va tao index.")
 
     ask_parser = subparsers.add_parser("ask", help="Hoi mot cau dua tren index.")
     ask_parser.add_argument("question", help="Cau hoi can hoi.")

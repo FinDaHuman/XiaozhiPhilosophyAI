@@ -2,161 +2,127 @@
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│  Xiaozhi Robot (小智)                                        │
-│  ┌────────────────────────┐                                  │
-│  │  mcp/                  │  ← MCP Integration               │
-│  │  ├── mcp_rag.py        │     MCP tool server (stdio)      │
-│  │  ├── mcp_pipe.py       │     WebSocket ↔ stdio bridge     │
-│  │  └── rag_pipeline_faiss.py Lightweight FAISS + TF-IDF pipeline │
-│  └────────────────────────┘                                  │
-│                                                              │
-│  ┌────────────────────────┐                                  │
-│  │  app/                  │  ← Main backend (FastAPI + CLI)  │
-│  │  ├── rag/              │     ChromaDB + HuggingFace + Groq│
-│  │  ├── api/              │     REST API (POST /chat)        │
-│  │  └── ui/               │     Terminal chat UI             │
-│  └────────────────────────┘                                  │
-│                                                              │
-│  ┌────────────────────────┐                                  │
-│  │  data/                 │  ← Source documents              │
-│  └────────────────────────┘                                  │
-└─────────────────────────────────────────────────────────────┘
+```text
+XiaoZhi hardware
+  -> XiaoZhi cloud WebSocket
+  -> mcp/mcp_pipe.py
+  -> mcp/mcp_rag.py (stdio MCP server, 7 tools)
+       -> local FastAPI /chat/robot (preferred answer path)
+       -> mcp/rag_pipeline_faiss.py (FAISS + TF-IDF fallback)
+       -> DongAnh Capital public APIs (3 live-data tools)
+
+Web / terminal
+  -> app/rag/ (ChromaDB + E5 + BM25 + MultiQuery)
+
+Both RAG stores ingest the root data/ directory.
+Both generation paths use Groq first and Gemini as a transient-error fallback.
 ```
 
-Both pipelines use **Groq API** for LLM generation.
-Both pipelines use **local embeddings** (no external embedding API needed).
+Hiro is an external advisor on `donganhcapital.com`; this repository only
+contains Lily's knowledge and referrals to Hiro.
 
----
+## Environment
 
-## Environment Variables
+The bridge and both pipelines load the root `.env`. Keep it gitignored and do
+not copy secret values into documentation or logs.
 
-### Shared `.env`
+| Variable | Purpose | Default/example |
+| --- | --- | --- |
+| `GROQ_API_KEY` | Primary generation provider | required for normal primary path |
+| `GROQ_MODEL` | Shared Groq model | `llama-3.3-70b-versatile` |
+| `GEMINI_API_KEY` | Fallback generation provider | optional but recommended |
+| `GEMINI_MODEL` | Gemini fallback model | `gemini-2.5-flash-lite` |
+| `MCP_ENDPOINT` | XiaoZhi MCP WebSocket URL | `wss://api.xiaozhi.me/mcp/...` |
+| `LILY_WEB_BACKEND` | Preferred robot answer backend | `http://127.0.0.1:8000` |
+| `DAC_API` | DongAnh Capital API override | production public API |
+| `EMBEDDING_MODEL` | Web embedding model | `intfloat/multilingual-e5-small` |
+| `CHROMA_PERSIST_DIR` | Web vector store | `chroma_db` |
+| `CHROMA_COLLECTION` | Chroma collection | `philosophy_docs` |
+| `TOP_K` | Web retriever result count | code default `5`; root `.env` may override |
 
-| Variable           | Description                  | Example                          |
-| ------------------ | ---------------------------- | -------------------------------- |
-| `GROQ_API_KEY`     | Groq API key                 | `gsk_...`                        |
-| `GROQ_MODEL`       | Groq model name              | `llama-3.1-8b-instant`           |
-| `GEMINI_API_KEY`   | Gemini fallback API key      | `your_gemini_api_key_here`       |
-| `GEMINI_MODEL`     | Gemini fallback model        | `gemini-2.5-flash-lite`          |
-| `MCP_ENDPOINT`     | Xiaozhi MCP WebSocket endpoint | `wss://api.xiaozhi.me/mcp/...` |
-| `EMBEDDING_MODEL`  | HuggingFace embedding model  | `intfloat/multilingual-e5-small` |
-| `CHROMA_PERSIST_DIR` | ChromaDB storage path      | `chroma_db`                      |
-| `CHROMA_COLLECTION`  | ChromaDB collection name   | `philosophy_docs`                |
-| `TOP_K`            | Number of chunks to retrieve | `6`                              |
+MCP tools take their own `top_k` argument with a default of 4. That is separate
+from the web retriever's `TOP_K` environment setting.
 
----
+## Install and ingest
 
-## Startup Commands
+From the repository root with the virtual environment activated:
 
-### 1. Backend — Terminal Chat
+```powershell
+pip install -r requirements.txt
+pip install -r mcp/requirements.txt
 
-```bash
-python main.py terminal
-```
-
-### 2. Backend — FastAPI Server
-
-```bash
-python main.py api
-# Docs at http://localhost:8000/docs
-```
-
-### 3. Backend — Ingest Documents
-
-```bash
+# Chroma web/API store
 python main.py ingest
-```
 
-### 4. MCP — Ingest Documents
-
-```bash
+# FAISS robot fallback store
 cd mcp
-python rag_pipeline_faiss.py ingest
+..\venv\Scripts\python rag_pipeline_faiss.py ingest
 ```
 
-### 5. MCP — Connect to Xiaozhi Robot
+The Chroma chunk configuration is 1000 characters with 200 overlap. The FAISS
+fallback uses 900 characters with 150 overlap. Stored chunk counts are generated
+artifacts and can change after any ingest, so query `/stats` and `rag_status`
+instead of relying on documentation snapshots.
 
-```bash
+## Start services
+
+The normal Windows path starts backend, ngrok, robot bridge, and DAC warm-up:
+
+```powershell
+.\start_all.ps1
+```
+
+For manual operation:
+
+```powershell
+venv\Scripts\python main.py api
 cd mcp
-python mcp_pipe.py
+..\venv\Scripts\python mcp_pipe.py
 ```
 
-This starts the WebSocket bridge that connects `mcp_rag.py` (stdio MCP server) to the Xiaozhi cloud endpoint.
+`mcp_pipe.py` launches `mcp_rag.py` over stdio and reconnects to the configured
+XiaoZhi WebSocket with backoff. See `GUIDE_KHOI_DONG.md` for the full operations
+procedure and `XIAOZHI_HARDWARE_SETUP.md` for device pairing.
 
----
+## MCP tools
 
-## MCP Tools
+`mcp/mcp_rag.py` exposes seven tools:
 
-The MCP server (`mcp_rag.py`) exposes 4 tools:
+| Tool | Behavior | Parameters |
+| --- | --- | --- |
+| `rag_search` | Search relevant FAISS/TF-IDF chunks | `question`, `top_k=4` |
+| `rag_answer` | Try `/chat/robot`; fallback to local FAISS answer | `question`, `top_k=4` |
+| `rag_reindex` | Rebuild FAISS from `data/` | none |
+| `rag_status` | Report files and FAISS index state | none |
+| `dac_vnindex` | Latest VNINDEX session and change | none |
+| `dac_ai_signals_today` | Latest available DAC AI breakout signals | none |
+| `dac_market_movers` | Most active gainers and losers | none |
 
-| Tool           | Description                                      | Parameters                          |
-| -------------- | ------------------------------------------------ | ----------------------------------- |
-| `rag_search`   | Search for relevant chunks in local docs         | `question: str`, `top_k: int = 4`  |
-| `rag_answer`   | Answer a question using RAG + Groq               | `question: str`, `top_k: int = 4`  |
-| `rag_reindex`  | Rebuild FAISS index from `data/` folder          | _(none)_                            |
-| `rag_status`   | Check document count and index status            | _(none)_                            |
+The three DAC tools cache successful responses in `mcp/.dac_cache.json`. When
+the upstream API is unavailable they return the latest cached value when one
+exists. Market output is informational and must not be presented as a promise
+of return or personalized investment advice.
 
-### Example Tool Call (JSON-RPC over stdio)
+## Robot answer fallback
 
-```json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "tools/call",
-  "params": {
-    "name": "rag_answer",
-    "arguments": {
-      "question": "Mâu thuẫn biện chứng là gì?"
-    }
-  }
-}
-```
+`rag_answer` follows this order:
 
-### Expected Response
+1. probe `GET {LILY_WEB_BACKEND}/health` with a short timeout;
+2. call `POST {LILY_WEB_BACKEND}/chat/robot` for the Chroma-backed voice answer;
+3. if either request fails, retrieve from the local FAISS index and generate a
+   short voice-safe answer;
+4. within either generation path, use Groq first and switch to Gemini only for
+   supported transient failures before output begins.
 
-```json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "result": {
-    "content": [
-      {
-        "type": "text",
-        "text": "Mâu thuẫn biện chứng là sự thống nhất và đấu tranh giữa các mặt đối lập..."
-      }
-    ]
-  }
-}
-```
-
----
-
-## Two RAG Pipelines
-
-| Feature          | `app/rag/` (ChromaDB)                | `mcp/` (FAISS)                     |
-| ---------------- | ------------------------------------ | ---------------------------------- |
-| Vector store     | ChromaDB (persistent)                | FAISS (pickle file)                |
-| Embeddings       | HuggingFace E5 (multilingual)        | TF-IDF (scikit-learn)              |
-| LLM              | Groq                                 | Groq                               |
-| Interface        | FastAPI + Terminal UI                | MCP tools (stdio)                  |
-| Documents        | `data/` folder                       | `data/` folder                     |
-| Use case         | Development & API                    | Robot MCP integration              |
-
----
+`rag_search` always searches the local FAISS index directly.
 
 ## Troubleshooting
 
-**"RESOURCE_EXHAUSTED" / 429 error**
-→ Generation automatically switches from Groq to Gemini. If both providers return 429, wait for either quota window to reset.
-Gemini 429 responses are deliberately not retried; server-side 5xx responses are retried once.
-
-**"Missing GROQ_API_KEY"**
-→ Gemini can run by itself when `GEMINI_API_KEY` is configured. For the normal primary/fallback chain, configure both keys in the root `.env`.
-
-**"Chua co index" error**
-→ Run `python rag_pipeline_faiss.py ingest` (MCP) or `python main.py ingest` (ChromaDB) first.
-
-**MCP pipe disconnects**
-→ Check that `MCP_ENDPOINT` JWT token hasn't expired. The pipe auto-reconnects with exponential backoff.
+- **No FAISS index:** run `rag_pipeline_faiss.py ingest` from `mcp/`.
+- **No Chroma store:** run `python main.py ingest` from the repository root.
+- **MCP disconnects:** confirm `MCP_ENDPOINT` is present and current; never paste
+  its token into an issue or log.
+- **Groq 429/timeout/5xx:** generation switches to Gemini when configured.
+  Gemini 429 responses are not retried; eligible Gemini 5xx failures retry once.
+- **Backend unavailable:** robot RAG can still answer through FAISS, but the
+  backend, streaming web chat, and Chroma retrieval remain unavailable.

@@ -1,16 +1,50 @@
-# React + Vite
+# Lily Web Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React/Vite single-page application for Lily's two-subject learning experience:
+landing page, lessons, quizzes, and RAG chat with cited slide previews.
 
-Currently, two official plugins are available:
+## Run locally
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```powershell
+npm install
+npm run dev
+```
 
-## React Compiler
+The development URL is normally `http://localhost:5173`. Start the FastAPI
+backend from the repository root with `venv\Scripts\python main.py api`.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Backend URL resolution
 
-## Expanding the ESLint configuration
+`src/config.js` resolves the API base in this order:
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+1. `localStorage.LILY_API_URL` for an emergency browser-side override;
+2. build-time `VITE_API_URL`;
+3. `http://localhost:8000`.
+
+Example local build:
+
+```powershell
+$env:VITE_API_URL='https://your-static-domain.ngrok-free.dev'
+npm run build
+```
+
+`VITE_API_URL` is baked into the bundle. Verify the built assets before a
+production deploy. Full ngrok/Vercel instructions are in
+`../GUIDE_KHOI_DONG.md`.
+
+## Project data
+
+`src/data/subjects.js` is the frontend source of truth for subject metadata,
+lessons, slide directories, and quiz groupings. Quiz content lives in
+`src/data/quiz.json` (MLN111) and `src/data/quiz_ktct.json` (KTCT). Slide images
+are served from `public/slides/` and `public/slides_ktct/`.
+
+## Checks
+
+```powershell
+npm run lint
+npm run build
+```
+
+See the root `README.md` for product architecture and `API_INTEGRATION.md` for
+the chat and streaming contracts.

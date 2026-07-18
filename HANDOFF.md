@@ -11,15 +11,15 @@ Buổi thuyết trình dùng robot phần cứng **XiaoZhi** chạy AI **"Lily"*
 3. Hỏi Lily về DAC — Lily gọi chatbot của donganhcapital.com là **Hiro (ひろ)**, "nhà cố vấn đầu tư chứng khoán"
 
 Quyết định đã chốt với user:
-- Backend Lily chạy **local + Cloudflare tunnel**; frontend deploy Vercel
+- Backend Lily chạy **local + ngrok static-domain tunnel**; frontend deploy Vercel. Cloudflare quick tunnel chỉ là phương án dự phòng khẩn cấp.
 - Persona đổi Xiaozhi → Lily; **KHÔNG sửa repo DongAnhCapital** (tên Hiro chỉ nằm trong docs/prompt của Lily)
 - Có MCP tool live-data gọi API public DAC
 
 ## 2. Kiến trúc (repo này — D:\VsCode\LilyAndHiro)
 
 - **2 pipeline RAG độc lập, cùng đọc `data/`**:
-  - `app/rag/` — ChromaDB + e5-small (HuggingFace) + Groq→Gemini fallback → web/API/terminal (`main.py api|terminal|ingest`). Hiện: **1579 chunks / 67 docs**
-  - `mcp/` — FAISS + TF-IDF + Groq→Gemini fallback → robot qua `mcp/mcp_pipe.py` (WebSocket bridge → `wss://api.xiaozhi.me`). Hiện: **1470 chunks / 5 docs**
+  - `app/rag/` — ChromaDB + e5-small (HuggingFace) + Groq→Gemini fallback → web/API/terminal (`main.py api|terminal|ingest`). Snapshot 18/07: **1579 indexed chunks / 67 loader document units** (không phải 67 source files)
+  - `mcp/` — FAISS + TF-IDF + Groq→Gemini fallback → robot qua `mcp/mcp_pipe.py` (WebSocket bridge → `wss://api.xiaozhi.me`). Snapshot 18/07: **1470 chunks / 5 source files**
 - **Slide-priority**: `retriever.py` + `prompts.py` ưu tiên chunk có `source` bắt đầu bằng `"slide"`. `ingest.py` split mọi file `Slide*_OCR.md` theo header `## [Slide <label>]` → source `"Slide 12"` / `"Slide KTCT 5"`
 - **MCP robot tools** (`mcp/mcp_rag.py`): `rag_search/answer/reindex/status` + 3 tool live DAC: `dac_vnindex`, `dac_ai_signals_today`, `dac_market_movers` (timeout 12s; **có cache**: thành công thì lưu `mcp/.dac_cache.json`, API chết thì trả "so lieu phien gan nhat" thay vì chỉ xin lỗi; `DAC_API` env override được để test outage)
 - **Chuỗi fallback robot (18/07)**: XiaoZhi → mcp_pipe → mcp_rag `rag_answer` → **thử backend web trước** (probe `/health` 2s → POST `/chat/robot` timeout 45s, persona giọng nói, retriever ChromaDB) → lỗi thì rơi về FAISS local. Trong cả hai pipeline, generation thử Groq trước rồi chuyển `gemini-2.5-flash-lite` khi Groq gặp 429/timeout/5xx; prompt FAISS cũng đã voice-hoá, max_tokens 300. Để giữ quota free-tier, Groq không tự retry, Gemini 429 không retry và Gemini 5xx chỉ retry một lần. `LILY_WEB_BACKEND` env override được.
@@ -35,7 +35,7 @@ Quyết định đã chốt với user:
 - Soạn `data/DongAnhCapital_KnowledgeBase.md` (giới thiệu DAC, các tab, 3 model AI, giá gói, section Hiro, disclaimer, Q&A khớp câu hỏi demo)
 - Prompt rules mới: trích `[DongAnhCapital]`, giới thiệu Hiro khi hỏi tư vấn cổ phiếu, không cam kết lợi nhuận
 - 3 MCP tool live DAC (đã test thật, hoạt động)
-- `.env` tạo từ key Groq tại `C:\Users\namet\Downloads\key.txt` (56 ký tự, không hiển thị ra console); `MCP_ENDPOINT` còn là placeholder
+- `.env` chứa cấu hình Groq/Gemini và `MCP_ENDPOINT` thật; file được gitignore. Không ghi hoặc sao chép giá trị bí mật vào tài liệu/log.
 - Fix frontend hardcode `localhost:8000` → `src/config.js` + `VITE_API_URL`
 - Deploy Vercel project **lily-ai**; user tự tắt Deployment Protection
 
@@ -57,22 +57,21 @@ Quyết định đã chốt với user:
 ### Domain
 - **https://lily-hiro.vercel.app** — domain duy nhất (user yêu cầu). `lily-ai-ten.vercel.app` đã xóa qua API. **`lily-ai.vercel.app` là site của NGƯỜI KHÁC** — đừng nhầm.
 
-## 4. Trạng thái đang chạy (lúc kết thúc session)
+## 4. Trạng thái ghi nhận lúc kết thúc session (không phải live health check)
 
 - Backend Lily: chạy nền local port 8000 (`main.py api`)
-- Tunnel: **đã chuyển sang ngrok static domain** (18/07) — URL cố định trong `NGROK_DOMAIN` của `.env`, không cần redeploy Vercel khi restart. Khởi động cả hệ: `.\start_all.ps1`; tắt: `.\stop_all.ps1`. (Bản build Vercel hiện tại vẫn bake URL cloudflare cũ — cần redeploy 1 lần cuối sau khi user setup ngrok, xem GUIDE mục setup.)
-- Robot bridge: mcp_pipe.py chạy nền, đã kết nối wss://api.xiaozhi.me OK (token thật trong `.env`, hạn tới ~2027). Khởi động lại: xem GUIDE_KHOI_DONG.md Bước 6
+- Tunnel: **đã chuyển sang ngrok static domain** (18/07) — URL cố định trong `NGROK_DOMAIN` của `.env`, không cần redeploy Vercel khi restart. Frontend production đã được build với domain này. Khởi động cả hệ: `.\start_all.ps1`; tắt: `.\stop_all.ps1`.
+- Robot bridge: mcp_pipe.py đã kết nối wss://api.xiaozhi.me OK; `MCP_ENDPOINT` thật nằm trong `.env`. Khởi động lại: xem GUIDE_KHOI_DONG.md Bước 6
 - Vercel: production alias lily-hiro.vercel.app, protection OFF
 - Render DAC: service `DongAnhCapital` (srv-d5rqvl63jp1c73dmttn0, Singapore, free tier — ngủ sau 15p, cold start ~60s)
 - **Lịch sử Git là nguồn sự thật** cho trạng thái thay đổi và các mốc đã commit. Kiểm tra `git status` và `git log` trước khi tiếp tục; không suy luận trạng thái từ handoff này.
 
 ## 5. Chưa làm / chờ user
 
-1. **Setup ngrok (user, 1 lần, ~10 phút)**: tạo tài khoản + claim static domain + authtoken + `NGROK_DOMAIN` vào `.env` (từng bước trong GUIDE_KHOI_DONG.md mục setup). Sau đó **redeploy Vercel 1 lần cuối** với URL ngrok (lệnh trong GUIDE) — từ đó không phải redeploy vì tunnel nữa.
-2. Test robot bằng giọng nói thật (câu triết học + câu KTCT + "VNINDEX hôm nay" + câu dẫn tới Hiro) — persona giọng nói mới cần nghe thật để chỉnh
-3. Chạy thử toàn bộ kịch bản với robot thật trước ngày thuyết trình (checklist trong PRESENTATION.md)
-4. Chưa verify giao diện 2 môn + streaming bằng mắt trên browser — mới verify bằng curl/bundle content
-5. Quay video/screenshot dự phòng (Hiro + robot) như PRESENTATION.md liệt kê
+1. Test robot bằng giọng nói thật (câu triết học + câu KTCT + "VNINDEX hôm nay" + câu dẫn tới Hiro) — persona giọng nói mới cần nghe thật để chỉnh
+2. Chạy thử toàn bộ kịch bản với robot thật trước ngày thuyết trình (checklist trong PRESENTATION.md)
+3. Chưa verify giao diện 2 môn + streaming bằng mắt trên browser — mới verify bằng curl/bundle content
+4. Quay video/screenshot dự phòng (Hiro + robot) như PRESENTATION.md liệt kê
 
 ## 6. BẪY & LƯU Ý (quan trọng nhất file này)
 
@@ -108,7 +107,7 @@ Quyết định đã chốt với user:
 
 | File | Vai trò |
 |---|---|
-| `.env` | GROQ + Gemini key (thật) + MCP_ENDPOINT (placeholder!) — gitignored |
+| `.env` | GROQ + Gemini key + `MCP_ENDPOINT` đã cấu hình — gitignored; không đưa giá trị vào docs/log |
 | `data/DongAnhCapital_KnowledgeBase.md` | Tri thức DAC + Hiro cho Lily |
 | `data/Slide_KTCT_OCR.md` + `data/GiaoTrinh_KinhTeChinhTri_MacLenin.pdf` | Tri thức KTCT |
 | `app/rag/prompts.py` | Persona Lily + rule trích dẫn 4 nguồn |

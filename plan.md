@@ -1,4 +1,9 @@
-# Xiaozhi Philosophy AI Core MVP
+# Xiaozhi Philosophy AI Core MVP (Historical)
+
+> **Status:** Superseded design proposal retained for project history. It does not
+> describe the current Lily & Hiro implementation. Use `README.md` for setup and
+> product scope, `API_INTEGRATION.md` for HTTP contracts, and
+> `MCP_INTEGRATION.md` for the robot architecture.
 
 ## Objective
 

@@ -1,39 +1,47 @@
-# Xiaozhi Philosophy AI (小智哲学) 🤖📖
+# Lily & Hiro
 
-Xiaozhi (Tiểu Trí) là một trợ lý AI thông minh chuyên về **Triết học Mác - Lênin**, được xây dựng dựa trên công nghệ **RAG (Retrieval-Augmented Generation)**. Hệ thống cung cấp câu trả lời triết học mạch lạc, chính xác, bám sát giáo trình và có khả năng trích dẫn trực tiếp nguồn slide. Đặc biệt, hệ thống hỗ trợ tích hợp với Robot vật lý thông qua **Model Context Protocol (MCP)**.
+Lily là trợ giảng AI cho hai môn **Triết học Mác - Lênin (MLN111)** và
+**Kinh tế chính trị Mác - Lênin (MLN122/KTCT)**. Hệ thống dùng RAG để trả lời
+bám sát giáo trình và slide, đồng thời có kiến thức giới thiệu nền tảng
+DongAnh Capital và Hiro. Hiro là cố vấn AI nằm trên `donganhcapital.com`, không
+được triển khai trong repository này.
+
+Repository gồm web app React/Vite, API FastAPI, terminal REPL và cầu nối MCP cho
+robot XiaoZhi. Các câu trả lời liên quan đầu tư chỉ mang tính tham khảo, không
+phải lời khuyên đầu tư.
 
 ---
 
 ## 🌟 Tính năng nổi bật
 
-1. **Giao diện Web Tương Tác Cấp Cao (React/Vite)**
+1. **Web học tập React/Vite**
    - **Chat Split-Screen:** Vừa trò chuyện với AI, vừa xem slide trích dẫn ngay bên cạnh.
-   - **Bài học (Lessons):** Lộ trình học được chia bài bản, liên kết trực tiếp với slide.
-   - **Kiểm tra kiến thức (Quiz):** 40 câu hỏi trắc nghiệm có phản hồi giải thích ngay lập tức.
-2. **Tích hợp Robot Vật Lý (MCP Server)**
-   - Cho phép kết nối phần cứng Robot vật lý với AI thông qua cổng WebSocket bảo mật.
-   - Server MCP chạy ẩn và tự động đồng bộ kho tri thức FAISS.
-3. **Kiến trúc RAG Đa Lớp (Advanced RAG)**
-   - **Local Embeddings:** Sử dụng `multilingual-e5-small` chạy hoàn toàn offline.
-   - **Hybrid Search:** Kết hợp Vector Search (ChromaDB) và Keyword Search (BM25) để tăng độ chính xác.
-4. **Terminal UI (TUI)**
-   - Cung cấp giao diện chat dòng lệnh cực kỳ đẹp mắt và nhanh gọn.
+   - 8 bài học, 64 ảnh slide và 100 câu quiz cho hai môn (40 MLN111 + 60 KTCT).
+   - Chat SSE có history phía client và tự fallback sang response không streaming.
+2. **Hai pipeline RAG dùng chung `data/`**
+   - Web/API: ChromaDB + multilingual E5 + BM25 + MultiQuery.
+   - Robot fallback: FAISS + TF-IDF, dùng khi backend web không sẵn sàng.
+   - Cả hai dùng Groq trước và Gemini làm fallback cho lỗi provider tạm thời.
+3. **Robot XiaoZhi qua MCP**
+   - `rag_answer` ưu tiên endpoint giọng nói của backend rồi mới fallback FAISS.
+   - 7 MCP tools: 4 tools RAG và 3 tools dữ liệu thị trường DongAnh Capital.
+4. **Terminal REPL**
+   - Chat có markdown, history, reload và thống kê hệ thống.
 
 ---
 
 ## 📁 Cấu trúc dự án
 
-```
-XiaozhiPhilosophyAI/
+```text
+LilyAndHiro/
 ├── app/                        # Core backend FastAPI & RAG ChromaDB
 │   ├── rag/                    # RAG pipeline, retriever, prompts
 │   ├── api/                    # FastAPI REST endpoints
 │   └── ui/                     # Terminal chat UI
-├── frontend/                   # React Vite Web Frontend
-├── mcp/                        # MCP server (FAISS) kết nối Robot
-├── data/                       # Chứa tài liệu nguồn (PDF, DOCX)
-├── chroma_db/                  # Vector database chính
-├── models/                     # Thư mục cache cho mô hình Local
+├── mcp/                        # MCP tools, bridge và FAISS fallback
+├── data/                       # Tài liệu nguồn PDF, DOCX và Markdown
+├── frontend/                   # React/Vite SPA
+├── chroma_db/                  # ChromaDB sinh cục bộ, được gitignore
 └── main.py                     # Entry point khởi chạy các dịch vụ
 ```
 
@@ -80,6 +88,8 @@ CHROMA_COLLECTION=philosophy_docs
 
 # Cấu hình kết nối Robot
 MCP_ENDPOINT=wss://api.xiaozhi.me/mcp/?token=YOUR_ROBOT_TOKEN
+NGROK_DOMAIN=your-static-domain.ngrok-free.dev
+TOP_K=6
 ```
 
 Để bảo vệ quota free-tier, ứng dụng tắt retry ngầm của Gemini SDK: lỗi 429 không
@@ -93,17 +103,19 @@ npm install
 ```
 
 ### 5. Nạp dữ liệu (Ingestion)
-Quét toàn bộ tài liệu trong thư mục `data/` vào cơ sở dữ liệu:
+Nạp `data/` cho cả hai store. Chạy lại khi tài liệu nguồn thay đổi:
 ```bash
 .\venv\Scripts\activate
 python main.py ingest
+cd mcp
+python rag_pipeline_faiss.py ingest
 ```
 
 ---
 
 ## 🚀 Hướng dẫn sử dụng chi tiết
 
-Dự án cung cấp 3 cách chính để tương tác với XiaoZhi.
+Dự án cung cấp ba cách chính để tương tác với Lily.
 
 ### Chế độ 1: Sử dụng Giao diện Web (Web UI)
 Đây là chế độ đầy đủ tính năng nhất, bao gồm Học, Thi và Chat.
@@ -124,8 +136,9 @@ npm run dev
 ```
 *(Truy cập trình duyệt tại `http://localhost:5173`)*
 
-**Tương tác với Robot qua Web:**
-Từ trang chủ Web, bạn chỉ cần bấm nút **"Hỏi XiaoZhi ngay"**. Lệnh này sẽ gửi tín hiệu xuống Backend để **tự động khởi chạy kết nối MCP với Robot ở chế độ chạy ngầm**, sau đó chuyển bạn vào giao diện Chat. Bạn có thể vừa chat trên Web, vừa nói chuyện với Robot vật lý cùng một lúc.
+Từ trang chủ, chọn **"Hỏi Lily ngay"** để mở chat. Khởi động robot bridge bằng
+`.\start_all.ps1`, `POST /api/start-mcp`, hoặc lệnh thủ công ở phần tiếp theo;
+nút chat không tự khởi động robot.
 
 ---
 
@@ -136,7 +149,7 @@ Nếu bạn chỉ muốn bật kết nối cho Robot vật lý mà không cần 
 ```bash
 .\venv\Scripts\activate
 cd mcp
-python mcp_rag.py --ingest
+python rag_pipeline_faiss.py ingest
 ```
 
 **Bước 2: Mở cầu nối (Pipe) kết nối Robot lên mạng**
@@ -157,8 +170,8 @@ Một giao diện Chat cực nhanh và đẹp mắt ngay trong màn hình Termin
 python main.py terminal
 ```
 - Gõ câu hỏi trực tiếp để chat.
-- Gõ `clear` để xóa lịch sử trò chuyện.
-- Gõ `quit` hoặc `exit` để thoát chương trình.
+- Gõ `/help` để xem lệnh.
+- Dùng `/clear`, `/reload`, `/stats` và `/exit` để điều khiển phiên.
 
 ---
 
@@ -177,4 +190,12 @@ python main.py terminal
    - Đảm bảo các ảnh slide `.jpg` đã được bỏ vào thư mục `frontend/public/slides/`. Nếu thiếu, Web sẽ hiển thị khung hình mờ thông báo "Chưa cập nhật" thay vì lỗi vỡ ảnh.
 
 ---
-*Dự án phát triển nội bộ cho môn học Triết học Mác-Lênin.*
+## Tài liệu liên quan
+
+- `GUIDE_KHOI_DONG.md`: vận hành local, ngrok và Vercel.
+- `API_INTEGRATION.md`: contract HTTP, SSE và WebSocket.
+- `MCP_INTEGRATION.md`: kiến trúc robot và 7 MCP tools.
+- `XIAOZHI_HARDWARE_SETUP.md`: ghép nối phần cứng.
+- `PRESENTATION.md`: checklist và kịch bản demo.
+
+*Dự án demo giáo dục nội bộ; dữ liệu thị trường không phải lời khuyên đầu tư.*

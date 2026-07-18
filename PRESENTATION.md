@@ -10,7 +10,7 @@
 - RAG 2 tầng: ChromaDB + embeddings đa ngôn ngữ (web) và FAISS + TF-IDF (robot, nhẹ để phản hồi nhanh)
 - LLM: Groq (llama-3.3-70b) — miễn phí, tốc độ cao
 - Robot kết nối qua Model Context Protocol (MCP) — chuẩn mở của Anthropic
-- Website học tập: chat split-screen xem slide, bài học, quiz 40 câu
+- Website học tập: chat split-screen xem slide, bài học, quiz 100 câu (40 MLN111 + 60 KTCT)
 
 **Demo 1 (robot):** bấm nút, hỏi Lily:
 > "Lily ơi, mâu thuẫn biện chứng là gì?"

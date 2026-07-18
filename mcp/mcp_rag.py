@@ -146,7 +146,7 @@ def rag_answer(question: str, top_k: int = 4) -> str:
 
 @mcp.tool()
 def rag_reindex() -> str:
-    """Tao lai FAISS index tu cac file trong thu muc docs."""
+    """Tao lai FAISS index tu cac file trong thu muc data."""
     try:
         ingest()
     except Exception as exc:
@@ -154,7 +154,7 @@ def rag_reindex() -> str:
         return f"Loi khi tao lai index RAG: {exc}"
 
     logger.info("RAG index rebuilt")
-    return "Da tao lai FAISS index tu thu muc docs/."
+    return "Da tao lai FAISS index tu thu muc data/."
 
 
 @mcp.tool()
@@ -163,7 +163,7 @@ def rag_status() -> str:
     documents = iter_documents()
     lines = [
         "Trang thai RAG local:",
-        f"- So file tai lieu trong docs/: {len(documents)}",
+        f"- So file tai lieu trong data/: {len(documents)}",
         f"- FAISS index ton tai: {'co' if INDEX_FILE.exists() else 'khong'}",
     ]
 

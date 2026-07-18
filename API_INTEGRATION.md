@@ -1,95 +1,148 @@
-# Tích hợp API Xiaozhi Philosophy AI
+# Lily API Integration
 
-Tài liệu này cung cấp hướng dẫn nhanh các Endpoints (điểm cuối) REST API của hệ thống Xiaozhi để đội ngũ Front-end/Leader có thể tích hợp robot vào Web, App hoặc bất kỳ nền tảng nào một cách nhanh chóng.
+FastAPI serves the RAG chat API at `http://localhost:8000`. Interactive OpenAPI
+documentation is available at `/docs` while the backend is running.
 
----
+## Chat request model
 
-## 1. Chat với AI (Đặt câu hỏi Triết học)
+`POST /chat`, `POST /chat/stream`, and `POST /chat/robot` accept:
 
-**Endpoint:** `POST /chat`
-
-Gửi câu hỏi của người dùng tới hệ thống RAG để AI xử lý và trả về câu trả lời.
-
-### Request Body (JSON)
 ```json
 {
-  "message": "Nguyên nhân là gì?"
+  "message": "Mâu thuẫn biện chứng là gì?",
+  "history": [
+    { "role": "user", "content": "Câu hỏi trước" },
+    { "role": "assistant", "content": "Câu trả lời trước" }
+  ]
 }
 ```
 
-### Response Thành công (200 OK)
+`message` must contain non-whitespace text. `history` is optional:
+
+- omitted: preserve the legacy shared backend conversation history;
+- `[]`: start a fresh request with no prior turns;
+- populated: use the supplied `user`/`assistant` turns as context.
+
+## Chat endpoints
+
+### `POST /chat`
+
+Returns a normal web answer:
+
 ```json
-{
-  "answer": "Nguyên nhân là phạm trù chỉ sự tương tác lẫn nhau giữa các mặt trong một sự vật, hiện tượng hoặc giữa các sự vật, hiện tượng với nhau gây nên những biến đổi nhất định."
-}
+{ "answer": "..." }
 ```
 
-### Response Lỗi (Ví dụ 400 Bad Request)
-```json
-{
-  "detail": "Message cannot be empty"
-}
+### `POST /chat/stream`
+
+Returns `text/event-stream`. Each token is JSON-wrapped so embedded newlines do
+not break SSE framing:
+
+```text
+data: {"token":"Mâu thuẫn"}
+
+data: {"token":" biện chứng..."}
+
+data: {"done":true}
 ```
 
----
+If generation fails after the stream opens, the final event contains
+`{"error":"..."}`. The bundled frontend falls back to `POST /chat` when the
+stream request fails.
 
-## 2. Kiểm tra trạng thái máy chủ (Health Check)
+### `POST /chat/robot`
 
-**Endpoint:** `GET /health`
+Returns the same `{ "answer": "..." }` envelope, but uses a short spoken
+persona without markdown or citation brackets. It is stateless and ignores
+`history`.
 
-Sử dụng để ping xem API server có đang hoạt động bình thường hay không (thích hợp cho cơ chế load balancing hoặc health monitor).
+### Rate limiting
 
-### Request
-```http
-GET /health HTTP/1.1
-Host: localhost:8000
+All three chat endpoints share a sliding-window limit of 20 requests per 60
+seconds per client IP. Loopback clients (`127.0.0.1`, `::1`, `localhost`) are
+exempt so the local robot bridge is not throttled. A rejected request returns
+HTTP 429.
+
+## Operations endpoints
+
+### `GET /health`
+
+```json
+{ "status": "ok" }
 ```
 
-### Response Thành công (200 OK)
+### `GET /stats`
+
+The values are runtime-dependent; do not hard-code document counts. The example
+below matches the local store snapshot verified on 2026-07-18.
+
 ```json
 {
-  "status": "ok"
-}
-```
-
----
-
-## 3. Xem thống kê (Stats)
-
-**Endpoint:** `GET /stats`
-
-Kiểm tra trạng thái của cơ sở dữ liệu Vector và Embeddings.
-
-### Response Thành công (200 OK)
-```json
-{
-  "vector_store": {
+  "model": "llama-3.3-70b-versatile",
+  "conversation_turns": 0,
+  "knowledge_base": {
     "collection_name": "philosophy_docs",
-    "document_count": 798,
+    "document_count": 1579,
     "persist_directory": "chroma_db",
-    "embedding_model": "intfloat/multilingual-e5-small"
+    "embedding_model": "intfloat/multilingual-e5-small",
+    "hybrid_search": true,
+    "multi_query": true
   }
 }
 ```
 
----
+### `POST /reload`
 
-## 4. Cập nhật lại Cơ sở tri thức (Reload)
+Re-ingests the root `data/` directory and reloads the Chroma retriever. This can
+be expensive; do not expose it to untrusted callers without authentication.
 
-**Endpoint:** `POST /reload`
-
-Nếu có tài liệu mới được thêm vào thư mục `data/` và bạn đã chạy xong lệnh ingest, có thể gọi API này để server tải lại bộ dữ liệu mới mà không cần tắt/bật lại server.
-
-### Response Thành công (200 OK)
 ```json
 {
-  "status": "success",
+  "status": "reloaded",
   "stats": {
-    "document_count": 800
+    "collection_name": "philosophy_docs",
+    "document_count": 1579,
+    "persist_directory": "chroma_db",
+    "embedding_model": "intfloat/multilingual-e5-small",
+    "hybrid_search": true,
+    "multi_query": true
   }
 }
 ```
 
----
+## Robot bridge endpoints
 
-*Lưu ý: Bạn có thể xem và test thử giao diện API tương tác chuẩn OpenAPI (Swagger) tại địa chỉ: `http://localhost:8000/docs` khi server đang chạy.*
+### `POST /api/start-mcp`
+
+Starts `mcp/mcp_pipe.py` as a child process when it is not already running.
+Possible success payloads are:
+
+```json
+{ "status": "started", "pid": 12345 }
+```
+
+```json
+{ "status": "already_running" }
+```
+
+### `WS /ws/mcp`
+
+WebSocket bridge used by the browser/robot integration. It is not a REST
+endpoint; clients must speak the message protocol implemented in
+`app/api/routes.py`.
+
+## Legacy content endpoints
+
+`GET /api/lessons`, `GET /api/slides/{page}`, and `GET /api/quiz` serve the
+older `webcontent/` assets. The current React app primarily uses its bundled
+two-subject data in `frontend/src/data/subjects.js`.
+
+## Production access
+
+The frontend resolves its backend in this order:
+
+1. `localStorage.LILY_API_URL` emergency override;
+2. build-time `VITE_API_URL`;
+3. `http://localhost:8000`.
+
+See `GUIDE_KHOI_DONG.md` for ngrok and deployment operations.
