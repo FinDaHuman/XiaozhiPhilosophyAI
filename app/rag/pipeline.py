@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 from groq import Groq
 
 from app.rag.retriever import PhilosophyRetriever
-from app.rag.prompts import SYSTEM_PROMPT, ROUTER_PROMPT, build_prompt
+from app.rag.prompts import SYSTEM_PROMPT, VOICE_SYSTEM_PROMPT, ROUTER_PROMPT, build_prompt
 from app.rag.ingest import run_ingest_pipeline
 
 load_dotenv()
@@ -43,12 +43,19 @@ class RAGPipeline:
             self._client = Groq(api_key=api_key)
         return self._client
 
-    def ask(self, question: str) -> str:
+    def _prepare_messages(
+        self,
+        question: str,
+        *,
+        history: Optional[list] = None,
+        voice: bool = False,
+    ) -> list:
         """
-        Ask a philosophy question. Returns the answer as a string.
-        This is the MCP-compatible interface.
+        Build the message list for generation: routing, retrieval, prompt
+        construction and history splicing. `history` (list of dicts with
+        "question"/"answer") overrides the server-side shared history;
+        `voice` selects the spoken-style persona for the robot.
         """
-        
         # Step 1: Agentic Routing (GREETING vs QUESTION)
         router_messages = [
             {"role": "user", "content": ROUTER_PROMPT.format(question=question)}
@@ -60,7 +67,7 @@ class RAGPipeline:
             max_tokens=10,
         )
         route = router_completion.choices[0].message.content.strip().upper()
-        
+
         if "GREETING" in route:
             # Skip retrieval for greetings
             user_prompt = question
@@ -73,30 +80,52 @@ class RAGPipeline:
 
         # Step 4: Build messages for generation
         messages = [
-            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "system", "content": VOICE_SYSTEM_PROMPT if voice else SYSTEM_PROMPT},
         ]
 
-        # Add conversation history (last 6 exchanges for context)
-        for entry in self._conversation_history[-6:]:
+        # Voice mode is stateless per question (the robot cloud manages its
+        # own conversation); otherwise use the provided or shared history.
+        effective_history = [] if voice else (
+            history if history is not None else self._conversation_history
+        )
+        for entry in effective_history[-6:]:
             messages.append({"role": "user", "content": entry["question"]})
             messages.append({"role": "assistant", "content": entry["answer"]})
 
         messages.append({"role": "user", "content": user_prompt})
+        return messages
+
+    def ask(
+        self,
+        question: str,
+        *,
+        history: Optional[list] = None,
+        voice: bool = False,
+    ) -> str:
+        """
+        Ask a philosophy question. Returns the answer as a string.
+        This is the MCP-compatible interface. Called with no kwargs it
+        behaves exactly as before (shared server-side history).
+        """
+        messages = self._prepare_messages(question, history=history, voice=voice)
 
         # Step 5: Call Groq
         completion = self.client.chat.completions.create(
             model=GROQ_MODEL,
             messages=messages,
             temperature=0.3,
-            max_tokens=2048,
+            max_tokens=300 if voice else 2048,
         )
         answer = completion.choices[0].message.content or ""
 
-        # Step 6: Store in conversation history
-        self._conversation_history.append({
-            "question": question,
-            "answer": answer,
-        })
+        # Step 6: Store in shared conversation history — only on the legacy
+        # path; when the client sends its own history (or voice mode) the
+        # server keeps no state.
+        if history is None and not voice:
+            self._conversation_history.append({
+                "question": question,
+                "answer": answer,
+            })
 
         return answer
 

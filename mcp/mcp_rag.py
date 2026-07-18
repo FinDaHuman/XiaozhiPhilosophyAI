@@ -75,6 +75,34 @@ def _dac_fallback(tool: str) -> str:
     return DAC_OFFLINE_MSG
 
 
+# Backend web Lily (cung may): bo nao RAG manh hon (ChromaDB + e5 + Groq 70B)
+# voi persona giong noi rieng. Neu backend tat thi rag_answer tu fallback FAISS.
+WEB_BACKEND = os.getenv("LILY_WEB_BACKEND", "http://127.0.0.1:8000")
+WEB_PROBE_TIMEOUT = 2    # giay — chi de biet backend co bat khong
+WEB_ANSWER_TIMEOUT = 45  # giay — retrieval + LLM can thoi gian that
+
+
+def _ask_web_backend(question: str):
+    """Tra ve cau tra loi tu backend web local, hoac None de caller fallback FAISS."""
+    try:
+        probe = urllib.request.Request(f"{WEB_BACKEND}/health")
+        with urllib.request.urlopen(probe, timeout=WEB_PROBE_TIMEOUT):
+            pass
+        payload = json.dumps({"message": question}).encode("utf-8")
+        request = urllib.request.Request(
+            f"{WEB_BACKEND}/chat/robot",
+            data=payload,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(request, timeout=WEB_ANSWER_TIMEOUT) as response:
+            answer = json.loads(response.read().decode("utf-8")).get("answer", "").strip()
+            return answer or None
+    except Exception as exc:
+        logger.warning("Web backend unavailable, falling back to FAISS: %s", exc)
+        return None
+
+
 @mcp.tool()
 def rag_search(question: str, top_k: int = 4) -> str:
     """Tim cac doan lien quan trong kho tai lieu local."""
@@ -101,13 +129,18 @@ def rag_search(question: str, top_k: int = 4) -> str:
 @mcp.tool()
 def rag_answer(question: str, top_k: int = 4) -> str:
     """Tra loi cau hoi dua tren kho tai lieu local va Groq."""
+    answer = _ask_web_backend(question)
+    if answer:
+        logger.info("RAG answer (web backend): %s", question)
+        return answer
+
     try:
         answer = ask(question, top_k=top_k)
     except Exception as exc:
         logger.exception("RAG answer failed")
         return f"Loi khi tra loi RAG: {exc}"
 
-    logger.info("RAG answer: %s", question)
+    logger.info("RAG answer (FAISS): %s", question)
     return answer
 
 

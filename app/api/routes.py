@@ -19,6 +19,7 @@ import sys
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, HTMLResponse
 from pydantic import BaseModel
 
@@ -351,7 +352,29 @@ async def chat(request: ChatRequest):
         raise HTTPException(status_code=400, detail="Message cannot be empty")
 
     try:
-        answer = get_rag().ask(request.message)
+        # Threadpool keeps the event loop free so web and robot questions
+        # can be answered concurrently during the demo.
+        answer = await run_in_threadpool(lambda: get_rag().ask(request.message))
+        return ChatResponse(answer=answer)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error generating answer: {str(e)}")
+
+
+@router.post("/chat/robot", response_model=ChatResponse)
+async def chat_robot(request: ChatRequest):
+    """
+    Voice-mode answer for the XiaoZhi robot: same retriever, spoken-style
+    persona (short, no markdown/brackets), stateless per question.
+    """
+    if not request.message.strip():
+        raise HTTPException(status_code=400, detail="Message cannot be empty")
+
+    try:
+        answer = await run_in_threadpool(
+            lambda: get_rag().ask(request.message, voice=True)
+        )
         return ChatResponse(answer=answer)
     except Exception as e:
         import traceback
