@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
 
 from rag_pipeline_faiss import INDEX_FILE, ask, ingest, iter_documents, load_index, retrieve
+from app.rag.voice import dedupe_voice_sources, sanitize_voice_answer
 
 
 if sys.platform == "win32":
@@ -23,44 +24,62 @@ logger = logging.getLogger("RAG_MCP")
 mcp = FastMCP("LocalRAG")
 
 DAC_API = os.getenv("DAC_API", "https://donganhcapital.onrender.com/api")
-DAC_TIMEOUT = 12  # giay; Render free co the ngu (cold start ~60s) — khong doi lau de robot khong bi treo
+DAC_TIMEOUT = 12  # giây; Render free có thể ngủ (cold start ~60s) — không đợi lâu để robot không bị treo
 DAC_OFFLINE_MSG = (
-    "May chu DongAnh Capital dang khoi dong lai, chua co du lieu ngay. "
-    "Ban co the xem truc tiep tai donganhcapital.com hoac hoi lai sau mot phut."
+    "Máy chủ Đông Anh Capital đang khởi động lại, chưa có dữ liệu ngay. "
+    "Bạn có thể xem trực tiếp tại Đông Anh Capital chấm com hoặc hỏi lại sau một phút."
 )
-DAC_STALE_PREFIX = "May chu DongAnh Capital dang khoi dong lai. So lieu phien gan nhat minh co: "
+DAC_STALE_PREFIX = "Máy chủ Đông Anh Capital đang khởi động lại. Số liệu phiên gần nhất mình có: "
 DAC_CACHE_FILE = Path(__file__).resolve().parent / ".dac_cache.json"
+DAC_CACHE_VERSION = 2
 
-# Cache ket qua da format cua cac tool dac_* (chuoi chua san ngay phien nen tu mo ta duoc).
-# Giu ca ban tren dia de song sot qua restart process.
+# Cache kết quả đã format của các tool dac_* (chuỗi chứa sẵn ngày phiên nên tự mô tả được).
+# Giữ cả bản trên đĩa để sống sót qua restart process.
 _dac_cache: dict = {}
+
+
+def _voice_output(text: str) -> str:
+    """Final plain-text gate for every answer that XiaoZhi may speak."""
+    return dedupe_voice_sources(sanitize_voice_answer(text))
 
 
 def _dac_cache_load() -> None:
     global _dac_cache
     try:
-        _dac_cache = json.loads(DAC_CACHE_FILE.read_text(encoding="utf-8"))
+        payload = json.loads(DAC_CACHE_FILE.read_text(encoding="utf-8"))
+        if not isinstance(payload, dict) or payload.get("version") != DAC_CACHE_VERSION:
+            raise ValueError("DAC cache is missing the current voice-text version")
+        raw_cache = payload.get("responses")
+        if not isinstance(raw_cache, dict):
+            raise ValueError("DAC cache responses must be a JSON object")
+        _dac_cache = {
+            str(tool): _voice_output(text)
+            for tool, text in raw_cache.items()
+            if isinstance(text, str)
+        }
     except Exception:
         _dac_cache = {}
 
 
 def _dac_cache_put(tool: str, text: str) -> None:
-    _dac_cache[tool] = text
+    _dac_cache[tool] = _voice_output(text)
     try:
-        DAC_CACHE_FILE.write_text(json.dumps(_dac_cache, ensure_ascii=False), encoding="utf-8")
+        payload = {"version": DAC_CACHE_VERSION, "responses": _dac_cache}
+        DAC_CACHE_FILE.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
     except OSError as exc:
-        logger.warning("Khong ghi duoc DAC cache: %s", exc)
+        logger.warning("Không ghi được DAC cache: %s", exc)
 
 
 def _dac_cache_get(tool: str):
-    return _dac_cache.get(tool)
+    cached = _dac_cache.get(tool)
+    return _voice_output(cached) if isinstance(cached, str) else None
 
 
 _dac_cache_load()
 
 
 def _dac_get(path: str):
-    """GET mot endpoint public cua donganhcapital.com, tra ve JSON da parse."""
+    """GET một endpoint public của donganhcapital.com, trả về JSON đã parse."""
     url = f"{DAC_API}{path}"
     request = urllib.request.Request(url, headers={"User-Agent": "LilyRobot/1.0"})
     with urllib.request.urlopen(request, timeout=DAC_TIMEOUT) as response:
@@ -68,22 +87,22 @@ def _dac_get(path: str):
 
 
 def _dac_fallback(tool: str) -> str:
-    """Cau tra loi khi API DAC khong phan hoi: uu tien so lieu cache gan nhat."""
+    """Câu trả lời khi API DAC không phản hồi: ưu tiên số liệu cache gần nhất."""
     cached = _dac_cache_get(tool)
     if cached:
-        return DAC_STALE_PREFIX + cached
-    return DAC_OFFLINE_MSG
+        return _voice_output(DAC_STALE_PREFIX + cached)
+    return _voice_output(DAC_OFFLINE_MSG)
 
 
-# Backend web Lily (cung may): bo nao RAG manh hon (ChromaDB + e5 + Groq 70B)
-# voi persona giong noi rieng. Neu backend tat thi rag_answer tu fallback FAISS.
+# Backend web Lily (cùng máy): bộ não RAG mạnh hơn (ChromaDB + e5 + Groq 70B)
+# với persona giọng nói riêng. Nếu backend tắt thì rag_answer tự fallback FAISS.
 WEB_BACKEND = os.getenv("LILY_WEB_BACKEND", "http://127.0.0.1:8000")
-WEB_PROBE_TIMEOUT = 2    # giay — chi de biet backend co bat khong
-WEB_ANSWER_TIMEOUT = 45  # giay — retrieval + LLM can thoi gian that
+WEB_PROBE_TIMEOUT = 2    # giây — chỉ để biết backend có bật không
+WEB_ANSWER_TIMEOUT = 45  # giây — retrieval + LLM cần thời gian thật
 
 
 def _ask_web_backend(question: str):
-    """Tra ve cau tra loi tu backend web local, hoac None de caller fallback FAISS."""
+    """Trả về câu trả lời từ backend web local, hoặc None để caller fallback FAISS."""
     try:
         probe = urllib.request.Request(f"{WEB_BACKEND}/health")
         with urllib.request.urlopen(probe, timeout=WEB_PROBE_TIMEOUT):
@@ -105,84 +124,84 @@ def _ask_web_backend(question: str):
 
 @mcp.tool()
 def rag_search(question: str, top_k: int = 4) -> str:
-    """Tim cac doan lien quan trong kho tai lieu local."""
+    """Tìm các đoạn liên quan trong kho tài liệu local."""
     try:
         contexts = retrieve(question, top_k=top_k)
     except Exception as exc:
         logger.exception("RAG search failed")
-        return f"Loi khi tim kiem RAG: {exc}"
+        return f"Lỗi khi tìm kiếm RAG: {exc}"
 
     logger.info("RAG search: %s | results=%s", question, len(contexts))
     if not contexts:
-        return "Khong tim thay doan nao lien quan trong kho tai lieu local."
+        return "Không tìm thấy đoạn nào liên quan trong kho tài liệu local."
 
-    lines = ["Ket qua tim kiem RAG:"]
+    lines = ["Kết quả tìm kiếm RAG:"]
     for idx, (chunk, score) in enumerate(contexts, start=1):
         lines.append(
-            f"\n{idx}. Nguon: {chunk.source}\n"
-            f"Do lien quan: {score:.3f}\n"
-            f"Noi dung: {chunk.text}"
+            f"\n{idx}. Nguồn: {chunk.source}\n"
+            f"Độ liên quan: {score:.3f}\n"
+            f"Nội dung: {chunk.text}"
         )
     return "\n".join(lines)
 
 
 @mcp.tool()
 def rag_answer(question: str, top_k: int = 4) -> str:
-    """Tra loi cau hoi dua tren kho tai lieu local va Groq."""
+    """Trả lời câu hỏi từ kho tri thức cho robot; giữ nguyên câu trả lời khi đọc thành tiếng và luôn đọc tên thương hiệu là Đông Anh Capital."""
     answer = _ask_web_backend(question)
     if answer:
         logger.info("RAG answer (web backend): %s", question)
-        return answer
+        return _voice_output(answer)
 
     try:
         answer = ask(question, top_k=top_k)
     except Exception as exc:
         logger.exception("RAG answer failed")
-        return f"Loi khi tra loi RAG: {exc}"
+        return _voice_output(f"Lỗi khi trả lời RAG: {exc}")
 
     logger.info("RAG answer (FAISS): %s", question)
-    return answer
+    return _voice_output(answer)
 
 
 @mcp.tool()
 def rag_reindex() -> str:
-    """Tao lai FAISS index tu cac file trong thu muc data."""
+    """Tạo lại FAISS index từ các file trong thư mục data."""
     try:
         ingest()
     except Exception as exc:
         logger.exception("RAG reindex failed")
-        return f"Loi khi tao lai index RAG: {exc}"
+        return f"Lỗi khi tạo lại index RAG: {exc}"
 
     logger.info("RAG index rebuilt")
-    return "Da tao lai FAISS index tu thu muc data/."
+    return "Đã tạo lại FAISS index từ thư mục data/."
 
 
 @mcp.tool()
 def rag_status() -> str:
-    """Kiem tra tai lieu va FAISS index hien co cua RAG local."""
+    """Kiểm tra tài liệu và FAISS index hiện có của RAG local."""
     documents = iter_documents()
     lines = [
-        "Trang thai RAG local:",
-        f"- So file tai lieu trong data/: {len(documents)}",
-        f"- FAISS index ton tai: {'co' if INDEX_FILE.exists() else 'khong'}",
+        "Trạng thái RAG local:",
+        f"- Số file tài liệu trong data/: {len(documents)}",
+        f"- FAISS index tồn tại: {'có' if INDEX_FILE.exists() else 'không'}",
     ]
 
     for path in documents[:20]:
-        lines.append(f"- Tai lieu: {path.name}")
+        lines.append(f"- Tài liệu: {path.name}")
 
     if INDEX_FILE.exists():
         try:
             index = load_index()
-            lines.append(f"- So chunk trong index: {len(index.get('chunks', []))}")
+            lines.append(f"- Số chunk trong index: {len(index.get('chunks', []))}")
         except Exception as exc:
-            lines.append(f"- Khong doc duoc index: {exc}")
+            lines.append(f"- Không đọc được index: {exc}")
 
     return "\n".join(lines)
 
 
 @mcp.tool()
 def dac_vnindex() -> str:
-    """Lay chi so VNINDEX moi nhat (diem so, thay doi phien gan nhat) tu nen tang chung khoan DongAnh Capital (donganhcapital.com). Dung khi nguoi dung hoi VNINDEX hom nay the nao, thi truong chung khoan Viet Nam ra sao."""
+    """Lấy chỉ số VNINDEX mới nhất từ Đông Anh Capital. Dùng khi người dùng hỏi VNINDEX hôm nay thế nào hoặc thị trường chứng khoán Việt Nam ra sao. Kết quả đã là câu hoàn chỉnh cho TTS; giữ nguyên khi đọc."""
     try:
         rows = _dac_get("/vnindex?limit=2")
     except Exception as exc:
@@ -190,28 +209,29 @@ def dac_vnindex() -> str:
         return _dac_fallback("dac_vnindex")
 
     if not rows:
-        return "Chua co du lieu VNINDEX."
+        return _voice_output("Chưa có dữ liệu VNINDEX.")
 
     latest = rows[-1]
     close = latest["Close"]
     date = str(latest["Date"])[:10]
-    line = f"VNINDEX phien {date}: dong cua {close:,.2f} diem"
+    line = f"VNINDEX phiên {date}: đóng cửa {close:,.2f} điểm"
     if len(rows) >= 2:
         prev_close = rows[-2]["Close"]
         change = close - prev_close
         pct = change / prev_close * 100 if prev_close else 0
-        direction = "tang" if change >= 0 else "giam"
-        line += f", {direction} {abs(change):,.2f} diem ({pct:+.2f}%) so voi phien truoc"
+        direction = "tăng" if change >= 0 else "giảm"
+        line += f", {direction} {abs(change):,.2f} điểm ({pct:+.2f}%) so với phiên trước"
     volume = latest.get("Volume")
     if volume:
-        line += f". Khoi luong {volume / 1_000_000:,.0f} trieu don vi."
+        line += f". Khối lượng {volume / 1_000_000:,.0f} triệu đơn vị."
+    line = _voice_output(line)
     _dac_cache_put("dac_vnindex", line)
     return line
 
 
 @mcp.tool()
 def dac_ai_signals_today() -> str:
-    """Lay tin hieu AI breakout (dot pha gia) moi nhat tu nen tang chung khoan DongAnh Capital (donganhcapital.com). Dung khi nguoi dung hoi hom nay co tin hieu AI / goi y co phieu nao khong."""
+    """Lấy tín hiệu AI breakout mới nhất từ Đông Anh Capital. Dùng khi người dùng hỏi hôm nay AI có tín hiệu hoặc gợi ý cổ phiếu nào. Kết quả đã là câu hoàn chỉnh cho TTS; giữ nguyên khi đọc."""
     try:
         summary = _dac_get("/ai-signals/summary")
     except Exception as exc:
@@ -220,7 +240,10 @@ def dac_ai_signals_today() -> str:
 
     latest_active = next((row for row in summary if row.get("signal_count", 0) > 0), None)
     if latest_active is None:
-        return "Gan day mo hinh AI cua DongAnh Capital chua phat tin hieu breakout nao — mo hinh rat chon loc, chi bao khi xac suat du tot."
+        return _voice_output(
+            "Gần đây mô hình AI của Đông Anh Capital chưa phát tín hiệu breakout nào — "
+            "mô hình rất chọn lọc, chỉ báo khi xác suất đủ tốt."
+        )
 
     date = latest_active["date"]
     try:
@@ -231,31 +254,34 @@ def dac_ai_signals_today() -> str:
         signals = []
 
     count = latest_active.get("signal_count", len(signals))
-    lines = [f"Tin hieu AI breakout gan nhat cua DongAnh Capital: ngay {date}, {count} ma."]
+    lines = [f"Tín hiệu AI breakout gần nhất của Đông Anh Capital: ngày {date}, {count} mã."]
     for sig in signals[:3]:
         lines.append(
-            f"Ma {sig['stock_id']}: gia vao {sig['entry_price']:g} nghin dong, "
-            f"muc tieu {sig['tp_price']:g}, cat lo {sig['sl_price']:g}."
+            f"Mã {sig['stock_id']}: giá vào {sig['entry_price']:g} nghìn đồng, "
+            f"mục tiêu {sig['tp_price']:g}, cắt lỗ {sig['sl_price']:g}."
         )
-    lines.append("Luu y: tin hieu chi mang tinh tham khao, khong phai loi khuyen dau tu. Muon phan tich sau hon, hay hoi Hiro tren donganhcapital.com.")
-    result = " ".join(lines)
+    lines.append(
+        "Lưu ý: tín hiệu chỉ mang tính tham khảo, không phải lời khuyên đầu tư. "
+        "Muốn phân tích sâu hơn, hãy hỏi Hiro trên Đông Anh Capital chấm com."
+    )
+    result = _voice_output(" ".join(lines))
     _dac_cache_put("dac_ai_signals_today", result)
     return result
 
 
 @mcp.tool()
 def dac_market_movers() -> str:
-    """Lay top co phieu tang/giam manh nhat phien tu nen tang chung khoan DongAnh Capital (donganhcapital.com). Dung khi nguoi dung hoi co phieu nao tang manh, giam manh, thi truong co gi noi bat."""
+    """Lấy top cổ phiếu tăng/giảm mạnh nhất phiên từ Đông Anh Capital. Dùng khi người dùng hỏi mã nào tăng mạnh, giảm mạnh hoặc thị trường có gì nổi bật. Kết quả đã là câu hoàn chỉnh cho TTS; giữ nguyên khi đọc."""
     try:
         rows = _dac_get("/market-status")
     except Exception as exc:
         logger.warning("dac_market_movers failed: %s", exc)
         return _dac_fallback("dac_market_movers")
 
-    # Chi xet ma co thanh khoan dang ke de tranh ma tang tran voi vai tram co phieu khop lenh
+    # Chỉ xét mã có thanh khoản đáng kể để tránh mã tăng trần với vài trăm cổ phiếu khớp lệnh
     liquid = [r for r in rows if (r.get("trading_value") or 0) >= 1_000_000 and r.get("value") is not None]
     if not liquid:
-        return "Chua co du lieu thi truong hom nay."
+        return _voice_output("Chưa có dữ liệu thị trường hôm nay.")
 
     gainers = sorted(liquid, key=lambda r: r["value"], reverse=True)[:3]
     losers = sorted(liquid, key=lambda r: r["value"])[:3]
@@ -264,9 +290,10 @@ def dac_market_movers() -> str:
         return ", ".join(f"{r['ticker']} ({r['value']:+.1f}%)" for r in items)
 
     result = (
-        f"Top tang: {fmt(gainers)}. Top giam: {fmt(losers)}. "
-        "Du lieu tu donganhcapital.com, chi mang tinh tham khao."
+        f"Top tăng: {fmt(gainers)}. Top giảm: {fmt(losers)}. "
+        "Dữ liệu từ Đông Anh Capital chấm com, chỉ mang tính tham khảo."
     )
+    result = _voice_output(result)
     _dac_cache_put("dac_market_movers", result)
     return result
 

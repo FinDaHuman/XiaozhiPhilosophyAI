@@ -16,6 +16,7 @@ from langchain_community.retrievers import BM25Retriever
 from langchain_groq import ChatGroq
 
 from app.rag.embeddings import get_embedding_model
+from app.rag.source_priority import DAC_SOURCE, classify_query_domain, source_domain
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -133,10 +134,21 @@ class PhilosophyRetriever:
 
     def retrieve(self, query: str, top_k: Optional[int] = None) -> list[Document]:
         """
-        Retrieve the most relevant document chunks for a query using the advanced pipeline.
-        Slides are always re-ranked to the top. Textbook chunks whose content is already
-        covered by a retrieved slide chunk are suppressed to prevent duplication.
+        Retrieve relevant chunks from exactly one presentation domain.
+
+        Đông Anh Capital is the default and is filtered at the vector-store
+        level. Course slides/textbooks are considered only for explicit
+        MLN111 or KTCT questions.
         """
+        limit = top_k or getattr(self, "top_k", TOP_K)
+        domain = classify_query_domain(query)
+        if domain == "dac":
+            return self.vectorstore.similarity_search(
+                f"Đông Anh Capital {query}",
+                k=limit,
+                filter={"source": DAC_SOURCE},
+            )
+
         pipeline = self.retriever_pipeline
         try:
             raw_docs = pipeline.invoke(query)
@@ -148,42 +160,77 @@ class PhilosophyRetriever:
                 type(exc).__name__,
             )
             raw_docs = self._base_retriever.invoke(query)
-        return self._rerank_slide_priority(raw_docs)
+        return self._rerank_source_priority(raw_docs, query=query)[:limit]
 
-    def _rerank_slide_priority(self, docs: list[Document]) -> list[Document]:
+    def _rerank_source_priority(self, docs: list[Document], query: str) -> list[Document]:
         """
-        Re-rank retrieved documents so that Slide chunks come first.
-        Also deduplicates: if a textbook chunk overlaps >50% with an included
-        slide chunk (by shared word tokens), the textbook chunk is dropped.
+        Keep only the explicitly selected course domain. Within that domain,
+        slides precede textbook chunks and substantially duplicated textbook
+        text is dropped.
         """
-        slides = []
-        textbook = []
-
+        unique_docs = []
+        seen = set()
         for doc in docs:
-            source = doc.metadata.get("source", "")
-            # Slides are tagged with source like "Slide 19"
-            if source.lower().startswith("slide"):
-                slides.append(doc)
-            else:
-                textbook.append(doc)
+            key = (doc.metadata.get("source", ""), doc.page_content)
+            if key not in seen:
+                seen.add(key)
+                unique_docs.append(doc)
 
-        # Build a combined token set from all slide content for overlap check
+        groups = {
+            "dac": [],
+            "ktct_slide": [],
+            "mln_slide": [],
+            "ktct_textbook": [],
+            "mln_textbook": [],
+            "other": [],
+        }
+        for doc in unique_docs:
+            source = doc.metadata.get("source", "")
+            domain = source_domain(source)
+            if domain == "dac":
+                groups["dac"].append(doc)
+            elif domain == "ktct" and source.casefold().startswith("slide ktct"):
+                groups["ktct_slide"].append(doc)
+            elif domain == "mln111" and source.casefold().startswith("slide"):
+                groups["mln_slide"].append(doc)
+            elif domain == "ktct":
+                groups["ktct_textbook"].append(doc)
+            elif domain == "mln111":
+                groups["mln_textbook"].append(doc)
+            else:
+                groups["other"].append(doc)
+
+        domain = classify_query_domain(query)
+        if domain == "ktct":
+            return self._slides_then_unique_textbook(
+                groups["ktct_slide"], groups["ktct_textbook"]
+            )
+
+        if domain == "mln111":
+            return self._slides_then_unique_textbook(
+                groups["mln_slide"], groups["mln_textbook"]
+            )
+
+        return groups["dac"]
+
+    @staticmethod
+    def _slides_then_unique_textbook(
+        slides: list[Document], textbook: list[Document]
+    ) -> list[Document]:
+        """Put slides first and drop textbook chunks mostly duplicated by them."""
         slide_tokens = set()
         for slide_doc in slides:
             slide_tokens.update(slide_doc.page_content.lower().split())
 
-        # Keep a textbook chunk only if it adds unique information
-        # (less than 50% of its words already appear in slide chunks)
         filtered_textbook = []
-        for tb_doc in textbook:
-            tb_words = tb_doc.page_content.lower().split()
-            if not tb_words:
+        for textbook_doc in textbook:
+            words = textbook_doc.page_content.lower().split()
+            if not words:
                 continue
-            overlap_ratio = sum(1 for w in tb_words if w in slide_tokens) / len(tb_words)
+            overlap_ratio = sum(1 for word in words if word in slide_tokens) / len(words)
             if overlap_ratio < 0.5:
-                filtered_textbook.append(tb_doc)
+                filtered_textbook.append(textbook_doc)
 
-        # Slides first, then non-overlapping textbook chunks
         return slides + filtered_textbook
 
     def get_collection_stats(self) -> dict:

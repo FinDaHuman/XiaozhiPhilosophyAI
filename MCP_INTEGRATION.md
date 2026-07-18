@@ -18,6 +18,25 @@ Both RAG stores ingest the root data/ directory.
 Both generation paths use Groq first and Gemini as a transient-error fallback.
 ```
 
+## Spoken-output contract
+
+Every hardware-facing answer passes through `app/rag/voice.py` before it leaves
+the local MCP server. The contract is deterministic:
+
+- `DongAnh Capital`, `DongAnhCapital`, `DonganhCapital` and spacing/case
+  variants become `Đông Anh Capital`;
+- `donganhcapital.com`, including `http(s)` and `www` forms, becomes
+  `Đông Anh Capital chấm com`;
+- the transformation is idempotent and also applies to disk-cached DAC output;
+- prompts and direct tool responses use Vietnamese diacritics so TTS does not
+  have to infer Vietnamese words from ASCII text.
+
+The XiaoZhi Agent prompt must repeat this pronunciation contract because the
+cloud Agent sits after MCP and may paraphrase a tool result. See section 2 of
+`XIAOZHI_HARDWARE_SETUP.md` for the exact prompt block and hardware acceptance
+steps. SSML is intentionally not emitted because this integration sends plain
+text and does not control which cloud TTS provider is selected.
+
 Hiro is an external advisor on `donganhcapital.com`; this repository only
 contains Lily's knowledge and referrals to Hiro.
 
@@ -102,6 +121,20 @@ The three DAC tools cache successful responses in `mcp/.dac_cache.json`. When
 the upstream API is unavailable they return the latest cached value when one
 exists. Market output is informational and must not be presented as a promise
 of return or personalized investment advice.
+
+Cache values are normalized both when loaded and when written. The cache format
+is versioned; an old unversioned ASCII cache is rejected instead of being read
+aloud without Vietnamese diacritics. Restart the MCP bridge after upgrading,
+then prime all three DAC tools before the presentation.
+
+## Knowledge-source priority
+
+The upcoming presentation treats Đông Anh Capital as the active knowledge
+domain. Ambiguous questions, including generic references to "the
+presentation", are retrieved only from `DongAnhCapital_KnowledgeBase.md`.
+MLN111, KTCT, slides, and legacy textbooks are selected only when the question
+contains an explicit subject marker. This routing is shared by the preferred
+ChromaDB backend and the local FAISS fallback.
 
 ## Robot answer fallback
 

@@ -20,7 +20,7 @@ Quyết định đã chốt với user:
 - **2 pipeline RAG độc lập, cùng đọc `data/`**:
   - `app/rag/` — ChromaDB + e5-small (HuggingFace) + Groq→Gemini fallback → web/API/terminal (`main.py api|terminal|ingest`). Snapshot 18/07: **1579 indexed chunks / 67 loader document units** (không phải 67 source files)
   - `mcp/` — FAISS + TF-IDF + Groq→Gemini fallback → robot qua `mcp/mcp_pipe.py` (WebSocket bridge → `wss://api.xiaozhi.me`). Snapshot 18/07: **1470 chunks / 5 source files**
-- **Slide-priority**: `retriever.py` + `prompts.py` ưu tiên chunk có `source` bắt đầu bằng `"slide"`. `ingest.py` split mọi file `Slide*_OCR.md` theo header `## [Slide <label>]` → source `"Slide 12"` / `"Slide KTCT 5"`
+- **Source-priority cho buổi thuyết trình (19/07)**: `app/rag/source_priority.py` mặc định mọi câu hỏi mơ hồ/bài thuyết trình sang Knowledge Base **Đông Anh Capital** và ChromaDB lọc trực tiếp đúng nguồn này. MLN111/KTCT, slide và giáo trình cũ chỉ được truy xuất khi câu hỏi có marker nội dung môn học rõ ràng; trong riêng nhánh môn học, slide đứng trước giáo trình để giảm trùng lặp. FAISS dự phòng áp dụng cùng quy tắc.
 - **MCP robot tools** (`mcp/mcp_rag.py`): `rag_search/answer/reindex/status` + 3 tool live DAC: `dac_vnindex`, `dac_ai_signals_today`, `dac_market_movers` (timeout 12s; **có cache**: thành công thì lưu `mcp/.dac_cache.json`, API chết thì trả "so lieu phien gan nhat" thay vì chỉ xin lỗi; `DAC_API` env override được để test outage)
 - **Chuỗi fallback robot (18/07)**: XiaoZhi → mcp_pipe → mcp_rag `rag_answer` → **thử backend web trước** (probe `/health` 2s → POST `/chat/robot` timeout 45s, persona giọng nói, retriever ChromaDB) → lỗi thì rơi về FAISS local. Trong cả hai pipeline, generation thử Groq trước rồi chuyển `gemini-2.5-flash-lite` khi Groq gặp 429/timeout/5xx; prompt FAISS cũng đã voice-hoá, max_tokens 300. Để giữ quota free-tier, Groq không tự retry, Gemini 429 không retry và Gemini 5xx chỉ retry một lần. `LILY_WEB_BACKEND` env override được.
 - **Endpoints backend** (`app/api/routes.py`): `POST /chat` (nhận thêm `history` optional — absent = shared history cũ), `POST /chat/stream` (SSE, token JSON-wrapped, frontend tự fallback `/chat`), `POST /chat/robot` (voice mode, stateless), rate limit 20 req/60s/IP cho cả 3 (localhost miễn trừ — robot không bao giờ bị chặn). `/chat` + `/chat/robot` chạy trong threadpool (web + robot song song không nghẽn).
@@ -102,6 +102,8 @@ Quyết định đã chốt với user:
 **Nội dung:**
 - Không bao giờ cam kết/hứa lợi nhuận trong bất kỳ nội dung nào liên quan DAC (rule cứng của DAC); confidence = độ tin cậy model, không phải tỷ lệ thắng
 - Robot đọc to câu trả lời → output tool/prompt phía MCP phải NGẮN
+- **Hợp đồng phát âm (19/07)**: mọi output phần cứng đi qua `app/rag/voice.py`; các biến thể `DongAnh Capital`/`DongAnhCapital` được đổi xác định thành **"Đông Anh Capital"**, domain được đọc **"Đông Anh Capital chấm com"**. Backend voice, FAISS fallback, ba tool DAC và cache đều áp dụng cùng quy tắc; prompt/chuỗi tiếng Việt của nhánh robot đã chuyển sang có dấu.
+- XiaoZhi cloud Agent nằm sau MCP và có thể diễn đạt lại tool result, nên phải thêm block **QUY TẮC PHÁT ÂM BẮT BUỘC** trong `XIAOZHI_HARDWARE_SETUP.md` mục 2 vào Agent/Character prompt. Chỉ test trên robot thật mới xác nhận được waveform của TTS đã chọn.
 
 ## 7. Bản đồ file quan trọng
 

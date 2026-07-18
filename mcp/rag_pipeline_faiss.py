@@ -12,13 +12,19 @@ from dotenv import load_dotenv
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 
+if sys.platform == "win32":
+    sys.stderr.reconfigure(encoding="utf-8")
+    sys.stdout.reconfigure(encoding="utf-8")
+
+
 ROOT = Path(__file__).parent
 REPO_ROOT = ROOT.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from app.rag.llm_provider import DEFAULT_GROQ_MODEL, LLMProvider
-from app.rag.voice import sanitize_voice_answer
+from app.rag.source_priority import classify_query_domain, source_domain
+from app.rag.voice import finalize_voice_answer
 
 
 DOCS_DIR = ROOT.parent / "data"
@@ -89,7 +95,7 @@ def chunk_text(text: str, source: str, chunk_size: int = 900, overlap: int = 150
 def ingest() -> None:
     documents = iter_documents()
     if not documents:
-        print("Chua co tai lieu nao trong thu muc data/. Hay them .txt, .md, .pdf hoac .docx.")
+        print("Chưa có tài liệu nào trong thư mục data/. Hãy thêm .txt, .md, .pdf hoặc .docx.")
         return
 
     chunks: list[Chunk] = []
@@ -98,7 +104,7 @@ def ingest() -> None:
         chunks.extend(chunk_text(text, source=str(path.relative_to(ROOT.parent))))
 
     if not chunks:
-        print("Khong doc duoc noi dung tu cac tai lieu trong data/.")
+        print("Không đọc được nội dung từ các tài liệu trong data/.")
         return
 
     vectorizer = TfidfVectorizer(strip_accents="unicode", lowercase=True, norm="l2")
@@ -119,12 +125,12 @@ def ingest() -> None:
             file,
         )
 
-    print(f"Da tao FAISS index: {len(chunks)} chunks tu {len(documents)} tai lieu.")
+    print(f"Đã tạo FAISS index: {len(chunks)} chunks từ {len(documents)} tài liệu.")
 
 
 def load_index():
     if not INDEX_FILE.exists():
-        raise FileNotFoundError("Chua co index. Hay chay: python rag_pipeline.py ingest")
+        raise FileNotFoundError("Chưa có index. Hãy chạy: python rag_pipeline_faiss.py ingest")
     with INDEX_FILE.open("rb") as file:
         index = pickle.load(file)
 
@@ -137,34 +143,41 @@ def load_index():
 
 def retrieve(question: str, top_k: int = 4) -> list[tuple[Chunk, float]]:
     index = load_index()
-    query_vector = index["vectorizer"].transform([question]).astype(np.float32).toarray()
-    scores, indices = index["faiss_index"].search(query_vector, top_k)
-    return [
+    domain = classify_query_domain(question)
+    search_query = f"Đông Anh Capital {question}" if domain == "dac" else question
+    query_vector = index["vectorizer"].transform([search_query]).astype(np.float32).toarray()
+    candidate_count = index["faiss_index"].ntotal
+    scores, indices = index["faiss_index"].search(query_vector, candidate_count)
+    matches = [
         (index["chunks"][chunk_index], float(score))
         for chunk_index, score in zip(indices[0], scores[0])
-        if chunk_index >= 0 and score > 0
+        if chunk_index >= 0
+        and score > 0
+        and source_domain(index["chunks"][chunk_index].source) == domain
     ]
+    return matches[:top_k]
 
 
 def build_prompt(question: str, contexts: list[tuple[Chunk, float]]) -> str:
     context_text = "\n\n".join(
-        f"[Nguon: {chunk.source} | score={score:.3f}]\n{chunk.text}"
+        f"[Nguồn: {chunk.source} | score={score:.3f}]\n{chunk.text}"
         for chunk, score in contexts
     )
     return f"""
-Ban la Lily, robot tro giang am hieu Triet hoc Mac-Lenin va Kinh te chinh tri Mac-Lenin (canh tranh, doc quyen, doc quyen nha nuoc, vai tro lich su cua chu nghia tu ban), dong thoi am hieu nen tang phan tich chung khoan DongAnh Capital (donganhcapital.com). Chi tra loi dua tren ngu canh ben duoi.
-CAU TRA LOI CUA BAN DUOC DOC THANH TIENG, vi vay:
-- Tra loi toi da 2-3 cau van noi tu nhien, di thang vao trong tam.
-- TUYET DOI KHONG dung markdown, gach dau dong, ngoac vuong, ky hieu hay bang bieu.
-- Trich nguon theo van noi: "theo slide 5", "theo slide kinh te chinh tri 5", "theo giao trinh", "theo tai lieu DongAnh Capital" — khong bao gio viet kieu [Slide 5].
-Neu ngu canh khong du thong tin, hay noi ngan gon la khong tim thay trong tai lieu.
-Khi nguoi dung muon tu van sau ve mot ma co phieu hoac quyet dinh dau tu cu the, hay gioi thieu ho den Hiro — AI co van dau tu tai tab AI Chat tren donganhcapital.com.
-KHONG cam ket hay hua hen loi nhuan; luon nhac rang tin hieu chi la thong tin tham khao, dau tu luon co rui ro.
+Bạn là Lily, robot trợ giảng am hiểu Triết học Mác-Lênin và Kinh tế chính trị Mác-Lênin (cạnh tranh, độc quyền, độc quyền nhà nước, vai trò lịch sử của chủ nghĩa tư bản), đồng thời am hiểu nền tảng phân tích chứng khoán Đông Anh Capital. Chỉ trả lời dựa trên ngữ cảnh bên dưới.
+CÂU TRẢ LỜI CỦA BẠN ĐƯỢC ĐỌC THÀNH TIẾNG, vì vậy:
+- Trả lời tối đa 2-3 câu văn nói tự nhiên, đi thẳng vào trọng tâm.
+- TUYỆT ĐỐI KHÔNG dùng markdown, gạch đầu dòng, ngoặc vuông, ký hiệu hay bảng biểu.
+- Trích nguồn theo văn nói: "theo slide 5", "theo slide kinh tế chính trị 5", "theo giáo trình", "theo tài liệu Đông Anh Capital". Chỉ nói "theo slide" khi ngữ cảnh thật sự ghi nguồn Slide; với mọi câu về Đông Anh Capital hoặc Hiro, phải nói "theo tài liệu Đông Anh Capital". Không bao giờ viết kiểu [Slide 5].
+- Trong mọi câu trả lời, tên thương hiệu phải viết chính xác "Đông Anh Capital"; website phải viết "Đông Anh Capital chấm com". Không xuất "DongAnh Capital", "DongAnhCapital", "DonganhCapital" hay "donganhcapital.com".
+Nếu ngữ cảnh không đủ thông tin, hãy nói ngắn gọn là không tìm thấy trong tài liệu.
+Khi người dùng muốn tư vấn sâu về một mã cổ phiếu hoặc quyết định đầu tư cụ thể, hãy giới thiệu họ đến Hiro — AI cố vấn đầu tư tại tab AI Chat trên Đông Anh Capital chấm com.
+KHÔNG cam kết hay hứa hẹn lợi nhuận; luôn nhắc rằng tín hiệu chỉ là thông tin tham khảo, đầu tư luôn có rủi ro.
 
-Ngu canh:
+Ngữ cảnh:
 {context_text}
 
-Cau hoi: {question}
+Câu hỏi: {question}
 """.strip()
 
 
@@ -174,17 +187,18 @@ def ask(question: str, top_k: int = 4) -> str:
 
     contexts = retrieve(question, top_k=top_k)
     if not contexts:
-        return "Khong tim thay ngu canh lien quan trong tai lieu."
+        return "Không tìm thấy ngữ cảnh liên quan trong tài liệu."
 
     answer = LLMProvider().complete(
         [
             {
                 "role": "system",
                 "content": (
-                    "Ban la Lily — robot tro giang Triet hoc va Kinh te chinh tri Mac-Lenin, "
-                    "kiem am hieu DongAnh Capital — tra loi dua tren tai lieu duoc cung cap. "
-                    "Cau tra loi duoc doc thanh tieng: toi da 2-3 cau van noi, khong markdown, "
-                    "khong gach dau dong, khong ngoac vuong; trich nguon theo van noi nhu 'theo slide 5'."
+                    "Bạn là Lily — robot trợ giảng Triết học và Kinh tế chính trị Mác-Lênin, "
+                    "kiêm am hiểu Đông Anh Capital — trả lời dựa trên tài liệu được cung cấp. "
+                    "Câu trả lời được đọc thành tiếng: tối đa 2-3 câu văn nói, không markdown, "
+                    "không gạch đầu dòng, không ngoặc vuông; trích nguồn theo văn nói như 'theo slide 5'. "
+                    "Tên thương hiệu luôn viết 'Đông Anh Capital'; website viết 'Đông Anh Capital chấm com'."
                 ),
             },
             {"role": "user", "content": build_prompt(question, contexts)},
@@ -193,13 +207,13 @@ def ask(question: str, top_k: int = 4) -> str:
         temperature=0.2,
         max_tokens=300,
     )
-    return sanitize_voice_answer(answer)
+    return finalize_voice_answer(answer, question)
 
 
 def chat() -> None:
-    print("Mini RAG chat. Go 'exit' de thoat.")
+    print("Mini RAG chat. Gõ 'exit' để thoát.")
     while True:
-        question = input("\nBan: ").strip()
+        question = input("\nBạn: ").strip()
         if question.lower() in {"exit", "quit"}:
             break
         if not question:
@@ -209,16 +223,16 @@ def chat() -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Mini RAG pipeline dung data/ va Groq API.")
+    parser = argparse.ArgumentParser(description="Mini RAG pipeline dùng data/ và Groq API.")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    subparsers.add_parser("ingest", help="Doc tai lieu trong data/ va tao index.")
+    subparsers.add_parser("ingest", help="Đọc tài liệu trong data/ và tạo index.")
 
-    ask_parser = subparsers.add_parser("ask", help="Hoi mot cau dua tren index.")
-    ask_parser.add_argument("question", help="Cau hoi can hoi.")
-    ask_parser.add_argument("--top-k", type=int, default=4, help="So chunk lay ra lam ngu canh.")
+    ask_parser = subparsers.add_parser("ask", help="Hỏi một câu dựa trên index.")
+    ask_parser.add_argument("question", help="Câu hỏi cần hỏi.")
+    ask_parser.add_argument("--top-k", type=int, default=4, help="Số chunk lấy ra làm ngữ cảnh.")
 
-    subparsers.add_parser("chat", help="Hoi dap lien tuc trong terminal.")
+    subparsers.add_parser("chat", help="Hỏi đáp liên tục trong terminal.")
 
     args = parser.parse_args()
     if args.command == "ingest":

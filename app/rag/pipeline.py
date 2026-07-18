@@ -16,7 +16,7 @@ from app.rag.llm_provider import DEFAULT_GROQ_MODEL, LLMProvider
 from app.rag.retriever import PhilosophyRetriever
 from app.rag.prompts import SYSTEM_PROMPT, VOICE_SYSTEM_PROMPT, ROUTER_PROMPT, build_prompt
 from app.rag.ingest import run_ingest_pipeline
-from app.rag.voice import sanitize_voice_answer
+from app.rag.voice import finalize_voice_answer
 
 load_dotenv()
 
@@ -149,7 +149,7 @@ class RAGPipeline:
             max_tokens=300 if voice else 2048,
         )
         if voice:
-            answer = sanitize_voice_answer(answer)
+            answer = finalize_voice_answer(answer, question)
 
         # Step 6: Store in shared conversation history — only on the legacy
         # path; when the client sends its own history (or voice mode) the

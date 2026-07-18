@@ -19,7 +19,7 @@
 
 ## Phần 2 — Giới thiệu donganhcapital.com (4–5 phút)
 
-**Nói:** "Từ nền tảng đó, dự án mới của mình là DongAnh Capital — nền tảng phân tích chứng khoán Việt Nam bằng AI, đang chạy thật tại donganhcapital.com."
+**Nói:** "Từ nền tảng đó, dự án mới của mình là Đông Anh Capital — nền tảng phân tích chứng khoán Việt Nam bằng AI, đang chạy thật tại Đông Anh Capital chấm com."
 
 **Demo web theo thứ tự (mở sẵn tab):**
 1. **Dashboard** — VNINDEX + VN30F1M realtime
@@ -30,9 +30,9 @@
 
 **Demo Hiro (tùy thời gian):** gõ "Nhận định về FPT hôm nay?" → chỉ cho khán giả thấy Hiro trích giá + tín hiệu thật.
 
-## Phần 3 — Lily nói về Hiro và DongAnh Capital (4–5 phút)
+## Phần 3 — Lily nói về Hiro và Đông Anh Capital (4–5 phút)
 
-**Nói:** "Điều thú vị: Lily giờ cũng đã 'biết' về DongAnh Capital. Kho tri thức của Lily được bổ sung tài liệu về nền tảng, và Lily có thêm tool lấy dữ liệu thị trường trực tiếp từ API của donganhcapital.com."
+**Nói:** "Điều thú vị: Lily giờ cũng đã 'biết' về Đông Anh Capital. Kho tri thức của Lily được bổ sung tài liệu về nền tảng, và Lily có thêm tool lấy dữ liệu thị trường trực tiếp từ API của Đông Anh Capital chấm com."
 
 **Demo 2 (robot) — kịch bản hỏi đáp đầy đủ: xem `KICH_BAN_HOI_DAP_DAC.md`** (15 câu, 5 hồi, ~10-12 phút, kèm lời dẫn + đáp án kỳ vọng + dự phòng từng câu). Tóm tắt mạch:
 1. Mở màn: DAC là gì, có phải quỹ đầu tư không
@@ -59,6 +59,7 @@
    (script tự lo: backend + tunnel ngrok + robot + đánh thức DAC + keep-alive DAC)
 2. [ ] Mở https://lily-hiro.vercel.app (Ctrl+F5), chat thử 1 câu triết học + 1 câu KTCT → có trích dẫn slide + ảnh hiện đúng
 3. [ ] Test robot bằng giọng nói: 1 câu triết học + `"VNINDEX hôm nay thế nào?"` (câu này đồng thời prime cache số liệu cho robot)
+   + `"Lily ơi, giới thiệu về Đông Anh Capital đi."` → nghe đúng "Đông Anh" tiếng Việt + "Capital" tiếng Anh; subtitle không được hiện `DongAnhCapital`
 4. [ ] Mở sẵn các tab web: donganhcapital.com (Dashboard, AI Analyst, AI Chat) + website Lily trên Vercel
 5. [ ] Đăng nhập sẵn tài khoản Pro/Premium trên donganhcapital.com để demo Hiro
 6. [ ] **KHÔNG chạy dev server DongAnhCapital local trong buổi demo** (nó chiếm port 8000, cướp request của Lily — start_all sẽ tự phát hiện và cảnh báo)

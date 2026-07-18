@@ -16,6 +16,8 @@
 [x] start_all.ps1 / stop_all.ps1 / keepalive_dac.ps1 — khởi động 1 lệnh, tự phát hiện port 8000 bị chiếm
 [x] Cache tool DAC (mcp/.dac_cache.json) — Render ngủ vẫn đọc được số liệu phiên gần nhất
 [x] Persona giọng nói: VOICE_SYSTEM_PROMPT + /chat/robot; FAISS prompts voice-hoá + max_tokens 300
+[x] Chuẩn hóa phát âm phần cứng: mọi output MCP đọc "Đông Anh Capital" / "Đông Anh Capital chấm com"; prompt + tool/cache dùng tiếng Việt có dấu; có unit test hồi quy
+[x] Khóa source priority: câu mơ hồ/bài thuyết trình lấy Đông Anh Capital; MLN111/KTCT/slide/giáo trình chỉ dùng khi hỏi rõ môn; áp dụng cả ChromaDB và FAISS
 [x] Robot backend-first: rag_answer thử backend web (não ChromaDB) → fallback FAISS khi backend tắt
 [x] History theo phiên: ChatRequest.history optional; 2 browser không lẫn hội thoại nữa
 [x] SSE streaming /chat/stream + ChatPage stream token, tự fallback /chat khi lỗi
@@ -29,6 +31,7 @@
     → từ giờ KHÔNG bao giờ phải redeploy vì tunnel nữa
 [ ] Test robot bằng giọng nói thật: 1 câu triết học + 1 câu KTCT ("Độc quyền nhà nước là gì?")
     + "VNINDEX hôm nay thế nào?" (tool live) + câu dẫn tới Hiro — nghe persona giọng nói mới để chỉnh
+[ ] Dán block QUY TẮC PHÁT ÂM trong XIAOZHI_HARDWARE_SETUP.md mục 2 vào Agent/Character prompt, rồi nghe robot nói 3 câu acceptance "Đông Anh Capital" (RAG + website + tool live)
 [ ] Verify giao diện web bằng mắt: streaming chữ chạy, slide viewer 2 deck, quiz 2 môn
 [ ] Quay video/screenshot dự phòng (hội thoại Hiro + demo robot)
 

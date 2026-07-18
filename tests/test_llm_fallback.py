@@ -7,7 +7,9 @@ from google.genai import errors as genai_errors
 from groq import APITimeoutError, AuthenticationError, RateLimitError
 
 from app.rag.llm_provider import LLMConfigurationError, LLMProvider
-from app.rag.voice import sanitize_voice_answer
+from app.rag.pipeline import RAGPipeline
+from app.rag.prompts import VOICE_SYSTEM_PROMPT
+from app.rag.voice import normalize_dac_pronunciation, sanitize_voice_answer
 
 
 MESSAGES = [
@@ -180,6 +182,25 @@ class LLMProviderTests(unittest.TestCase):
 
 
 class VoiceSanitizerTests(unittest.TestCase):
+    def test_backend_voice_pipeline_normalizes_llm_output(self):
+        pipeline = RAGPipeline.__new__(RAGPipeline)
+        pipeline.llm = MagicMock()
+        pipeline.llm.complete.return_value = (
+            "Theo [Slide 5], DongAnhCapital là nền tảng AI tại donganhcapital.com."
+        )
+        pipeline.retriever = MagicMock()
+        pipeline.retriever.retrieve.return_value = []
+        pipeline._conversation_history = []
+
+        answer = pipeline.ask("Đông Anh Capital là gì?", voice=True)
+
+        self.assertEqual(
+            answer,
+            "Theo tài liệu Đông Anh Capital, Đông Anh Capital là nền tảng AI tại Đông Anh Capital chấm com.",
+        )
+        messages = pipeline.llm.complete.call_args.args[0]
+        self.assertEqual(messages[0]["content"], VOICE_SYSTEM_PROMPT)
+
     def test_written_citations_and_markdown_become_spoken_text(self):
         answer = sanitize_voice_answer(
             "**Ý chính:** Theo [DongAnhCapital]. Nguồn [Slide KTCT 12]."
@@ -187,7 +208,7 @@ class VoiceSanitizerTests(unittest.TestCase):
 
         self.assertEqual(
             answer,
-            "Ý chính: theo tài liệu DongAnh Capital. Nguồn theo slide kinh tế chính trị 12.",
+            "Ý chính: theo tài liệu Đông Anh Capital. Nguồn theo slide kinh tế chính trị 12.",
         )
         self.assertNotIn("[", answer)
         self.assertNotIn("**", answer)
@@ -197,7 +218,7 @@ class VoiceSanitizerTests(unittest.TestCase):
 
         self.assertEqual(
             answer,
-            "Theo tài liệu DongAnh Capital, nền tảng miễn phí.",
+            "Theo tài liệu Đông Anh Capital, nền tảng miễn phí.",
         )
 
     def test_terminal_citation_is_attached_to_previous_sentence(self):
@@ -207,8 +228,76 @@ class VoiceSanitizerTests(unittest.TestCase):
 
         self.assertEqual(
             answer,
-            "Hiro trả lời bằng dữ liệu thật theo tài liệu DongAnh Capital.",
+            "Hiro trả lời bằng dữ liệu thật theo tài liệu Đông Anh Capital.",
         )
+
+    def test_all_brand_spellings_become_the_spoken_name(self):
+        variants = (
+            "DongAnh Capital",
+            "Donganh Capital",
+            "Dong Anh Capital",
+            "DongAnhCapital",
+            "DonganhCapital",
+            "donganhcapital",
+            "ĐôngAnh Capital",
+            "Đông Anh Capital",
+        )
+
+        for variant in variants:
+            with self.subTest(variant=variant):
+                self.assertEqual(
+                    normalize_dac_pronunciation(variant),
+                    "Đông Anh Capital",
+                )
+
+    def test_public_domain_becomes_spoken_words(self):
+        variants = (
+            "donganhcapital.com",
+            "DongAnhCapital.com",
+            "https://donganhcapital.com",
+            "https://www.donganhcapital.com",
+            "https://donganhcapital.com/pricing",
+        )
+
+        for variant in variants:
+            with self.subTest(variant=variant):
+                self.assertEqual(
+                    sanitize_voice_answer(f"Xem tại {variant}."),
+                    "Xem tại Đông Anh Capital chấm com.",
+                )
+
+    def test_brand_normalization_is_idempotent(self):
+        once = sanitize_voice_answer(
+            "Theo [DongAnhCapital], xem tại donganhcapital.com."
+        )
+        twice = sanitize_voice_answer(once)
+
+        self.assertEqual(
+            once,
+            "Theo tài liệu Đông Anh Capital, xem tại Đông Anh Capital chấm com.",
+        )
+        self.assertEqual(twice, once)
+
+    def test_voice_prompt_requires_the_same_spoken_contract(self):
+        self.assertIn('luôn viết chính xác "Đông Anh Capital"', VOICE_SYSTEM_PROMPT)
+        self.assertIn('viết "Đông Anh Capital chấm com"', VOICE_SYSTEM_PROMPT)
+
+    def test_backend_voice_pipeline_removes_duplicate_dac_citations(self):
+        pipeline = RAGPipeline.__new__(RAGPipeline)
+        pipeline.llm = MagicMock()
+        pipeline.llm.complete.return_value = (
+            "Đông Anh Capital không phải quỹ, theo tài liệu Đông Anh Capital, "
+            "quyết định thuộc về nhà đầu tư, theo tài liệu Đông Anh Capital."
+        )
+        pipeline.retriever = MagicMock()
+        pipeline.retriever.retrieve.return_value = []
+        pipeline._conversation_history = []
+
+        answer = pipeline.ask("Đông Anh Capital có phải quỹ không?", voice=True)
+
+        self.assertEqual(answer.lower().count("theo tài liệu đông anh capital"), 1)
+        self.assertNotIn(", .", answer)
+        self.assertNotIn(". ,", answer)
 
 
 if __name__ == "__main__":

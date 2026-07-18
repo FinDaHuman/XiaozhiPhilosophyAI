@@ -22,20 +22,20 @@ from app.api.routes import router
 
 
 CASES = [
-    ("Lily ơi, giới thiệu về donganhcapital.com đi.", r"nền tảng.*chứng khoán|phân tích chứng khoán"),
-    ("DongAnh Capital có phải là quỹ đầu tư không?", r"không phải.*quỹ"),
-    ("Website donganhcapital.com có những tab chính nào?", r"Dashboard|AI Analyst|AI Chat"),
-    ("Tab Dashboard của DongAnh Capital cho xem gì?", r"226|bản đồ nhiệt"),
-    ("Tin tức trên DongAnh Capital có gì đặc biệt?", r"CafeF|cảm xúc"),
+    ("Lily ơi, giới thiệu về Đông Anh Capital đi.", r"nền tảng.*chứng khoán|phân tích chứng khoán"),
+    ("Đông Anh Capital có phải là quỹ đầu tư không?", r"không phải.*quỹ"),
+    ("Website Đông Anh Capital có những tab chính nào?", r"Dashboard|AI Analyst|AI Chat"),
+    ("Tab Dashboard của Đông Anh Capital cho xem gì?", r"226|bản đồ nhiệt"),
+    ("Tin tức trên Đông Anh Capital có gì đặc biệt?", r"CafeF|cảm xúc"),
     (
-        "Tín hiệu AI của DongAnh Capital hoạt động thế nào?",
+        "Tín hiệu AI của Đông Anh Capital hoạt động thế nào?",
         r"ba mô hình|Breakout.*LTR.*BCD|15 giờ 02",
     ),
-    ("Mô hình Breakout của DongAnh Capital làm gì?", r"đột phá|Breakout"),
-    ("Mô hình LTR của DongAnh Capital là gì?", r"Learning to Rank|học xếp hạng"),
-    ("Mô hình BCD của DongAnh Capital là gì?", r"BCD|bắt đáy"),
-    ("Dùng DongAnh Capital có mất phí không?", r"miễn phí|Free"),
-    ("DongAnh Capital có cam kết lợi nhuận không?", r"không.*cam kết|không phải lời khuyên"),
+    ("Mô hình Breakout của Đông Anh Capital làm gì?", r"đột phá|Breakout"),
+    ("Mô hình LTR của Đông Anh Capital là gì?", r"Learning to Rank|học xếp hạng"),
+    ("Mô hình BCD của Đông Anh Capital là gì?", r"BCD|bắt đáy"),
+    ("Dùng Đông Anh Capital có mất phí không?", r"miễn phí|Free"),
+    ("Đông Anh Capital có cam kết lợi nhuận không?", r"không.*cam kết|không phải lời khuyên"),
     ("Muốn được tư vấn sâu về một mã cổ phiếu thì hỏi ai?", r"Hiro"),
 ]
 SMOKE_CASE_INDEXES = (0, 5, 11)
@@ -93,10 +93,15 @@ def main() -> int:
             content_ok = re.search(expected, answer, flags=re.IGNORECASE) is not None
             format_ok = re.search(r"[\[\]`*]", answer) is None
             length_ok = sentence_count(answer) <= 3
-            ok = content_ok and format_ok and length_ok
+            pronunciation_ok = (
+                re.search(r"\bdong\s*anh\s*capital\b", answer, flags=re.IGNORECASE) is None
+                and "donganhcapital.com" not in answer.lower()
+            )
+            ok = content_ok and format_ok and length_ok and pronunciation_ok
             print(
                 f"Q{index}: {'PASS' if ok else 'FAIL'} "
-                f"sentences={sentence_count(answer)} content={content_ok} format={format_ok}"
+                f"sentences={sentence_count(answer)} content={content_ok} "
+                f"format={format_ok} pronunciation={pronunciation_ok}"
             )
             print(answer)
             if not ok:

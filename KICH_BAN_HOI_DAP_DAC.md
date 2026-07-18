@@ -1,28 +1,29 @@
-# Kịch bản hỏi đáp với Lily — Giới thiệu donganhcapital.com
+# Kịch bản hỏi đáp với Lily — Giới thiệu Đông Anh Capital
 
 > Robot XiaoZhi (Lily) trả lời từng câu ngắn 2–3 câu nói. Người thuyết trình (MC) hỏi **lần lượt từng câu**, chờ Lily nói xong hẳn rồi mới hỏi câu tiếp theo.
 > Tổng: **15 câu, 5 hồi, ~10–12 phút** (tính cả lời dẫn). Bản tóm tắt toàn buổi: `PRESENTATION.md`.
 
 ## Nguyên tắc khi hỏi robot (đọc kỹ trước buổi)
 
-1. **Đọc câu hỏi đúng nguyên văn** in đậm bên dưới — mỗi câu đã được thiết kế chứa từ khóa ("DongAnh Capital" / "donganhcapital") để hệ thống định tuyến và tìm đúng tài liệu. Đổi cách hỏi tùy hứng có thể làm Lily trả lời lệch.
+1. **Đọc câu hỏi đúng nguyên văn** in đậm bên dưới — mỗi câu đã được thiết kế chứa tên nói "Đông Anh Capital" để ASR ghi nhận đúng và hệ thống định tuyến vào tài liệu DongAnh Capital. Đổi cách hỏi tùy hứng có thể làm Lily trả lời lệch.
 2. **Nói chậm, rõ, gọn** — micro robot bắt câu ngắn tốt hơn câu dài có nhiều vế.
 3. **Chờ Lily nói xong hẳn** (im lặng ~2 giây) rồi mới hỏi tiếp; hỏi chen ngang sẽ cắt câu trả lời.
 4. Nếu Lily trả lời lệch hoặc nghe nhầm: bình tĩnh nói *"Mình hỏi lại nhé"* rồi đọc lại nguyên văn câu hỏi — khán giả coi đó là chuyện bình thường của demo giọng nói.
-5. Ba câu ở Hồi 4 là **dữ liệu thật qua API** — đã có cơ chế cache: nếu máy chủ DongAnh Capital đang ngủ, Lily tự nói "số liệu phiên gần nhất mình có là..." — vẫn là điểm cộng, cứ để Lily nói.
+5. Ba câu ở Hồi 4 là **dữ liệu thật qua API** — đã có cơ chế cache: nếu máy chủ Đông Anh Capital đang ngủ, Lily tự nói "số liệu phiên gần nhất mình có là..." — vẫn là điểm cộng, cứ để Lily nói.
+6. **Phát âm thương hiệu:** MC và Lily đều nói **"Đông Anh Capital"** — "Đông Anh" bằng tiếng Việt, "Capital" bằng tiếng Anh. Khi đọc website, nói **"Đông Anh Capital chấm com"**, không đánh vần chuỗi `donganhcapital.com`.
 
 ---
 
-## HỒI 1 — Mở màn: DongAnh Capital là gì? (2 câu, ~1,5 phút)
+## HỒI 1 — Mở màn: Đông Anh Capital là gì? (2 câu, ~1,5 phút)
 
 ### Câu 1
 
 **Lời dẫn (MC):** "Học kỳ trước Lily chỉ biết triết học. Bây giờ kho tri thức của Lily đã được bổ sung tài liệu về một dự án đang chạy thật trên Internet. Để Lily tự giới thiệu nhé."
 
 **Hỏi robot:**
-> **"Lily ơi, giới thiệu về donganhcapital.com đi."**
+> **"Lily ơi, giới thiệu về Đông Anh Capital đi."**
 
-**Đáp án kỳ vọng (Lily):** donganhcapital.com là nền tảng phân tích chứng khoán Việt Nam dùng trí tuệ nhân tạo, cung cấp tín hiệu giao dịch máy học hằng ngày, dữ liệu VNINDEX thời gian thực, tin tức, báo cáo và trợ lý AI tư vấn đầu tư tên là Hiro — theo tài liệu DongAnh Capital.
+**Đáp án kỳ vọng (Lily):** Đông Anh Capital là nền tảng phân tích chứng khoán Việt Nam dùng trí tuệ nhân tạo, cung cấp tín hiệu giao dịch máy học hằng ngày, dữ liệu VNINDEX thời gian thực, tin tức, báo cáo và trợ lý AI tư vấn đầu tư tên là Hiro — theo tài liệu Đông Anh Capital.
 
 **Nguồn:** KB tĩnh (`data/DongAnhCapital_KnowledgeBase.md`, mục "donganhcapital.com là gì").
 **Dự phòng:** nếu Lily im lặng/lỗi → hỏi lại y nguyên; nếu vẫn lỗi → MC tự giới thiệu 1 câu rồi nhảy sang Câu 2.
@@ -32,7 +33,7 @@
 **Lời dẫn:** "Nghe 'Capital' nhiều người sẽ tưởng đây là quỹ đầu tư. Hỏi Lily cho rõ."
 
 **Hỏi robot:**
-> **"DongAnh Capital có phải là quỹ đầu tư không?"**
+> **"Đông Anh Capital có phải là quỹ đầu tư không?"**
 
 **Đáp án kỳ vọng:** Không — không quản lý tiền, không giao dịch thay ai; chỉ cung cấp dữ liệu, phân tích và tín hiệu tham khảo, quyết định cuối thuộc về nhà đầu tư. Sứ mệnh: đưa công cụ phân tích cấp tổ chức đến nhà đầu tư cá nhân.
 
@@ -50,7 +51,7 @@
 **Lời dẫn:** "Vậy trên website có những gì? Nhờ Lily dẫn tour."
 
 **Hỏi robot:**
-> **"Website donganhcapital.com có những tab chính nào?"**
+> **"Website Đông Anh Capital có những tab chính nào?"**
 
 **Đáp án kỳ vọng:** Khoảng mười tab — nổi bật là Dashboard, AI Analyst, Pro Signals, BCD Signals, News, Reports và AI Chat nơi trò chuyện với Hiro.
 
@@ -62,7 +63,7 @@
 **Lời dẫn:** "Bắt đầu từ tab đầu tiên mà ai vào cũng thấy — Dashboard." *(mở tab Dashboard)*
 
 **Hỏi robot:**
-> **"Tab Dashboard của DongAnh Capital cho xem gì?"**
+> **"Tab Dashboard của Đông Anh Capital cho xem gì?"**
 
 **Đáp án kỳ vọng:** Bản đồ nhiệt 226 mã cổ phiếu trên ba sàn HOSE, HNX, UPCoM — ô xanh tăng, ô đỏ giảm, nhìn một cái thấy sức khỏe cả thị trường; kèm VNINDEX và phái sinh VN30F1M trong phiên.
 
@@ -74,7 +75,7 @@
 **Lời dẫn:** "Ngoài số liệu, nhà đầu tư còn cần tin tức. Tab News có gì hay?" *(mở tab News)*
 
 **Hỏi robot:**
-> **"Tin tức trên DongAnh Capital có gì đặc biệt?"**
+> **"Tin tức trên Đông Anh Capital có gì đặc biệt?"**
 
 **Đáp án kỳ vọng:** Gom tin CafeF Việt Nam + tin vĩ mô thế giới; AI tự gắn nhãn cảm xúc từng tin — Tích cực, Tiêu cực, Trung lập — lướt qua là biết tin nào đáng chú ý.
 
@@ -90,7 +91,7 @@
 **Lời dẫn:** "Trái tim của nền tảng là các mô hình máy học. Hỏi Lily bức tranh tổng thể trước."
 
 **Hỏi robot:**
-> **"Tín hiệu AI của DongAnh Capital hoạt động thế nào?"**
+> **"Tín hiệu AI của Đông Anh Capital hoạt động thế nào?"**
 
 **Đáp án kỳ vọng:** Ba mô hình độc lập — Breakout, LTR, BCD — tự chạy sau mỗi phiên lúc 15 giờ 02, quét toàn thị trường, ra tín hiệu kèm điểm tin cậy; điểm tin cậy là độ tin cậy của mô hình, **không phải tỷ lệ thắng**.
 
@@ -100,7 +101,7 @@
 ### Câu 7
 
 **Hỏi robot:**
-> **"Mô hình Breakout của DongAnh Capital làm gì?"**
+> **"Mô hình Breakout của Đông Anh Capital làm gì?"**
 
 **Đáp án kỳ vọng:** Quét 226 mã sau mỗi phiên tìm cổ phiếu sắp đột phá giá; tín hiệu kèm giá vào lệnh, chốt lời, cắt lỗ, điểm tin cậy. Rất chọn lọc — có ngày không phát tín hiệu nào.
 
@@ -109,7 +110,7 @@
 ### Câu 8
 
 **Hỏi robot:**
-> **"Mô hình LTR của DongAnh Capital là gì?"**
+> **"Mô hình LTR của Đông Anh Capital là gì?"**
 
 **Đáp án kỳ vọng:** Learning to Rank — học xếp hạng: chấm điểm và xếp hạng toàn bộ cổ phiếu theo tiềm năng tăng giá tương đối, mỗi ngày chọn tốp 5 mã triển vọng nhất ở tab Pro Signals.
 
@@ -118,7 +119,7 @@
 ### Câu 9
 
 **Hỏi robot:**
-> **"Mô hình BCD của DongAnh Capital là gì?"**
+> **"Mô hình BCD của Đông Anh Capital là gì?"**
 
 **Đáp án kỳ vọng:** Mô hình bắt đáy: nhận diện mẫu hình đáy B — đáy C thấp hơn — thủng đáy C, rồi ước tính xác suất phục hồi ít nhất 15% trong 60 phiên tiếp theo.
 
@@ -141,12 +142,12 @@
 **Đáp án kỳ vọng (dạng):** "VNINDEX phiên [ngày]: đóng cửa [X] điểm, tăng/giảm [Y] điểm ([Z]%) so với phiên trước. Khối lượng [N] triệu đơn vị."
 
 **Nguồn:** tool live `dac_vnindex` (API `/vnindex`).
-**Dự phòng:** máy chủ ngủ → Lily tự nói "số liệu phiên gần nhất mình có là..." (cache) — vẫn hợp lệ. Nếu hoàn toàn không có số → Lily mời xem trực tiếp donganhcapital.com; MC mở Dashboard chỉ số thật.
+**Dự phòng:** máy chủ ngủ → Lily tự nói "số liệu phiên gần nhất mình có là..." (cache) — vẫn hợp lệ. Nếu hoàn toàn không có số → Lily mời xem trực tiếp Đông Anh Capital chấm com; MC mở Dashboard chỉ số thật.
 
 ### Câu 11
 
 **Hỏi robot:**
-> **"Hôm nay AI của DongAnh Capital có tín hiệu gì?"**
+> **"Hôm nay AI của Đông Anh Capital có tín hiệu gì?"**
 
 **Đáp án kỳ vọng (dạng):** "Tín hiệu AI breakout gần nhất: ngày [D], [N] mã. Mã [ABC]: giá vào [x] nghìn đồng, mục tiêu [y], cắt lỗ [z]... Lưu ý tín hiệu chỉ mang tính tham khảo, muốn phân tích sâu hơn hãy hỏi Hiro."
 Nếu gần đây không có tín hiệu: "Mô hình rất chọn lọc, chỉ báo khi xác suất đủ tốt" — **cũng là câu trả lời đẹp**, minh họa tính kỷ luật của mô hình.
@@ -159,10 +160,10 @@ Nếu gần đây không có tín hiệu: "Mô hình rất chọn lọc, chỉ b
 **Hỏi robot:**
 > **"Mã nào tăng giảm mạnh nhất hôm nay?"**
 
-**Đáp án kỳ vọng (dạng):** "Top tăng: [A], [B], [C]. Top giảm: [D], [E], [F]. Dữ liệu từ donganhcapital.com, chỉ mang tính tham khảo."
+**Đáp án kỳ vọng (dạng):** "Top tăng: [A], [B], [C]. Top giảm: [D], [E], [F]. Dữ liệu từ Đông Anh Capital chấm com, chỉ mang tính tham khảo."
 
 **Nguồn:** tool live `dac_market_movers` (API `/market-status`, đã lọc mã thanh khoản thấp).
-**Chốt hồi (MC):** "Các bạn vừa nghe một con robot đọc số liệu thật của thị trường chứng khoán Việt Nam, lấy trực tiếp từ API của donganhcapital.com — không phải kịch bản thu sẵn."
+**Chốt hồi (MC):** "Các bạn vừa nghe một con robot đọc số liệu thật của thị trường chứng khoán Việt Nam, lấy trực tiếp từ API của Đông Anh Capital chấm com — không phải kịch bản thu sẵn."
 
 ---
 
@@ -173,7 +174,7 @@ Nếu gần đây không có tín hiệu: "Mô hình rất chọn lọc, chỉ b
 **Lời dẫn:** "Chắc nhiều bạn đang hỏi: dùng thì tốn bao nhiêu?"
 
 **Hỏi robot:**
-> **"Dùng DongAnh Capital có mất phí không?"**
+> **"Dùng Đông Anh Capital có mất phí không?"**
 
 **Đáp án kỳ vọng:** Gói Free miễn phí trọn đời, không cần thẻ. Pro 199 nghìn/tháng mở tín hiệu nâng cao và Hiro, có dùng thử miễn phí 1 tuần; Premium 499 nghìn/tháng thêm báo cáo PDF và Hiro không giới hạn.
 
@@ -184,7 +185,7 @@ Nếu gần đây không có tín hiệu: "Mô hình rất chọn lọc, chỉ b
 **Lời dẫn:** "Câu hỏi mà mọi nền tảng tài chính đều phải trả lời thẳng."
 
 **Hỏi robot:**
-> **"DongAnh Capital có cam kết lợi nhuận không?"**
+> **"Đông Anh Capital có cam kết lợi nhuận không?"**
 
 **Đáp án kỳ vọng:** Không. Mọi tín hiệu chỉ mang tính tham khảo, không phải lời khuyên đầu tư; đầu tư luôn có rủi ro, nhà đầu tư tự chịu trách nhiệm.
 
@@ -198,7 +199,7 @@ Nếu gần đây không có tín hiệu: "Mô hình rất chọn lọc, chỉ b
 **Hỏi robot:**
 > **"Muốn được tư vấn sâu về một mã cổ phiếu thì hỏi ai?"**
 
-**Đáp án kỳ vọng:** Hãy hỏi Hiro — AI cố vấn đầu tư tại tab AI Chat trên donganhcapital.com; Hiro tra giá, tín hiệu, tin tức thật để tư vấn từng mã cụ thể; cần gói Pro trở lên.
+**Đáp án kỳ vọng:** Hãy hỏi Hiro — AI cố vấn đầu tư tại tab AI Chat trên Đông Anh Capital chấm com; Hiro tra giá, tín hiệu, tin tức thật để tư vấn từng mã cụ thể; cần gói Pro trở lên.
 
 **Nguồn:** KB tĩnh (mục Hiro).
 **Kịch bản chốt (MC):** *(mở tab AI Chat, gõ cho Hiro: "Nhận định về FPT hôm nay?")* — "Lily vừa giới thiệu các bạn với đồng nghiệp của mình. Một hệ sinh thái hai AI: Lily rèn tư duy, Hiro thực chiến thị trường. Cùng một triết lý: trả lời bằng dữ liệu thật và trung thực về giới hạn của mình."
@@ -211,11 +212,11 @@ Kho tri thức của Lily đã phủ sẵn các câu sau — nếu khán giả h
 
 | Câu hỏi | Ý trả lời có trong KB |
 |---|---|
-| "Ai xây dựng DongAnh Capital?" / "Trụ sở ở đâu?" | Đội 6 kỹ sư + chuyên viên phân tích; Khu CNC Hòa Lạc, Hà Nội |
-| "AI Agent của DongAnh Capital là gì?" | Sắp ra mắt quý 4/2026: đọc tin, học phong cách, gợi ý lệnh, chỉ thực hiện khi được duyệt — **luôn nói "đang phát triển"** |
+| "Ai xây dựng Đông Anh Capital?" / "Trụ sở ở đâu?" | Đội 6 kỹ sư + chuyên viên phân tích; Khu CNC Hòa Lạc, Hà Nội |
+| "AI Agent của Đông Anh Capital là gì?" | Sắp ra mắt quý 4/2026: đọc tin, học phong cách, gợi ý lệnh, chỉ thực hiện khi được duyệt — **luôn nói "đang phát triển"** |
 | "Hiro khác gì Lily?" | Lily: triết học, rèn tư duy; Hiro: cố vấn chứng khoán, dữ liệu thật |
 | "Điểm tin cậy 87% có phải tỷ lệ thắng không?" | Không — là độ tự tin của mô hình; hiệu suất công khai ở tab Data Analyst |
-| "DongAnh Capital dùng công nghệ gì?" | React + FastAPI + PostgreSQL/MongoDB; model LightGBM, XGBoost; Hiro chạy Gemini có grounding |
+| "Đông Anh Capital dùng công nghệ gì?" | React + FastAPI + PostgreSQL/MongoDB; model LightGBM, XGBoost; Hiro chạy Gemini có grounding |
 | "Mua gói bằng cách nào?" | Chuyển khoản VietQR (SePay), xác nhận tự động vài giây |
 
 ## Điều Lily (và MC) KHÔNG được nói
@@ -229,7 +230,7 @@ Kho tri thức của Lily đã phủ sẵn các câu sau — nếu khán giả h
 ## Checklist trước giờ G (bổ sung cho checklist trong PRESENTATION.md)
 
 1. [ ] Chạy `.\start_all.ps1` → chờ khối **READY** (backend + ngrok + robot + đánh thức DAC).
-2. [ ] **Prime cache số liệu live**: hỏi robot lần lượt cả 3 câu Hồi 4 ("VNINDEX hôm nay thế nào?", "Hôm nay AI của DongAnh Capital có tín hiệu gì?", "Mã nào tăng giảm mạnh nhất hôm nay?") — vừa test vừa ghi cache `.dac_cache.json` phòng Render ngủ giữa buổi.
+2. [ ] **Prime cache số liệu live**: hỏi robot lần lượt cả 3 câu Hồi 4 ("VNINDEX hôm nay thế nào?", "Hôm nay AI của Đông Anh Capital có tín hiệu gì?", "Mã nào tăng giảm mạnh nhất hôm nay?") — vừa test vừa ghi cache `.dac_cache.json` phòng Render ngủ giữa buổi.
 3. [ ] Test nhanh 3 câu KB đại diện: Câu 2 (quỹ đầu tư), Câu 8 (LTR), Câu 15 (Hiro).
 4. [ ] Mở sẵn các tab donganhcapital.com theo thứ tự hồi: Trang chủ → Dashboard → News → AI Analyst → Pro Signals → BCD Signals → pricing → AI Chat (đăng nhập sẵn tài khoản Pro/Premium).
 5. [ ] **KHÔNG chạy dev server DongAnhCapital local** (chiếm port 8000, cướp request của Lily).
