@@ -21,6 +21,26 @@ load_dotenv()
 
 GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 
+# Heuristic routing markers: obvious cases skip the router LLM round-trip.
+# Question markers win over greeting markers ("Chào Lily, độc quyền là gì?"
+# must route to QUESTION).
+_QUESTION_MARKERS = (
+    "?", "là gì", "la gi", "tại sao", "tai sao", "vì sao", "vi sao",
+    "như thế nào", "nhu the nao", "thế nào", "the nao", "trình bày",
+    "trinh bay", "giải thích", "giai thich", "so sánh", "so sanh",
+    "ví dụ", "vi du", "phân tích", "phan tich", "nêu", "tóm tắt",
+    "tom tat", "slide", "khái niệm", "khai niem", "quy luật", "quy luat",
+    "mâu thuẫn", "mau thuan", "độc quyền", "doc quyen", "cạnh tranh",
+    "canh tranh", "tư bản", "tu ban", "vnindex", "cổ phiếu", "co phieu",
+    "chứng khoán", "chung khoan", "tín hiệu", "tin hieu",
+    "donganh", "hiro",
+)
+_GREETING_MARKERS = (
+    "chào", "chao", "hello", "hi", "helo", "alo",
+    "cảm ơn", "cam on", "thank", "cám ơn",
+    "tạm biệt", "tam biet", "bye", "ok", "oke", "okay", "tuyệt", "tuyet",
+)
+
 
 class RAGPipeline:
     """
@@ -43,6 +63,24 @@ class RAGPipeline:
             self._client = Groq(api_key=api_key)
         return self._client
 
+    @staticmethod
+    def _classify_fast(question: str):
+        """
+        Heuristic GREETING/QUESTION classification for obvious inputs.
+        Returns None for the ambiguous middle (falls through to the
+        router LLM), so a bare topic like "vật chất" still gets the
+        careful route. Real questions can only gain speed, never quality:
+        they take the same QUESTION path either way.
+        """
+        q = question.lower().strip()
+        if any(marker in q for marker in _QUESTION_MARKERS):
+            return "QUESTION"
+        if len(q) > 50:
+            return "QUESTION"
+        if any(marker in q for marker in _GREETING_MARKERS):
+            return "GREETING"
+        return None
+
     def _prepare_messages(
         self,
         question: str,
@@ -56,17 +94,20 @@ class RAGPipeline:
         "question"/"answer") overrides the server-side shared history;
         `voice` selects the spoken-style persona for the robot.
         """
-        # Step 1: Agentic Routing (GREETING vs QUESTION)
-        router_messages = [
-            {"role": "user", "content": ROUTER_PROMPT.format(question=question)}
-        ]
-        router_completion = self.client.chat.completions.create(
-            model="llama-3.1-8b-instant", # Use fast model for routing
-            messages=router_messages,
-            temperature=0,
-            max_tokens=10,
-        )
-        route = router_completion.choices[0].message.content.strip().upper()
+        # Step 1: Routing (GREETING vs QUESTION) — heuristic first, router
+        # LLM only for the ambiguous middle (short input, no markers).
+        route = self._classify_fast(question)
+        if route is None:
+            router_messages = [
+                {"role": "user", "content": ROUTER_PROMPT.format(question=question)}
+            ]
+            router_completion = self.client.chat.completions.create(
+                model="llama-3.1-8b-instant", # Use fast model for routing
+                messages=router_messages,
+                temperature=0,
+                max_tokens=10,
+            )
+            route = router_completion.choices[0].message.content.strip().upper()
 
         if "GREETING" in route:
             # Skip retrieval for greetings
