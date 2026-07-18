@@ -16,9 +16,11 @@ import logging
 import os
 import subprocess
 import sys
+import time
+from collections import deque
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 from pydantic import BaseModel
@@ -336,6 +338,40 @@ async def start_mcp_pipe():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ─── Rate Limiting ──────────────────────────────────────────────────────────
+# The backend is publicly reachable through a permanent tunnel, so the chat
+# endpoints (the only ones that spend Groq quota) get a small per-IP
+# sliding-window limit. Localhost is exempt: the robot must never be throttled.
+
+_RL_BUCKETS: dict = {}
+_RL_MAX = 20          # requests
+_RL_WINDOW = 60.0     # seconds
+
+
+def rate_limit(request: Request):
+    fwd = request.headers.get("x-forwarded-for", "")
+    ip = fwd.split(",")[0].strip() if fwd else (
+        request.client.host if request.client else "?"
+    )
+    if ip in ("127.0.0.1", "::1", "localhost"):
+        return
+
+    now = time.time()
+    bucket = _RL_BUCKETS.setdefault(ip, deque())
+    while bucket and now - bucket[0] > _RL_WINDOW:
+        bucket.popleft()
+    if len(bucket) >= _RL_MAX:
+        raise HTTPException(
+            status_code=429,
+            detail="Bạn hỏi nhanh quá, chờ một chút rồi thử lại nhé.",
+        )
+    bucket.append(now)
+
+    # Crude memory cap for a long-running public demo
+    if len(_RL_BUCKETS) > 2000:
+        _RL_BUCKETS.clear()
+
+
 # ─── Existing Endpoints ─────────────────────────────────────────────────────
 
 # Lazy-load RAG pipeline only when needed
@@ -350,7 +386,7 @@ def get_rag():
     return _rag
 
 
-@router.post("/chat", response_model=ChatResponse)
+@router.post("/chat", response_model=ChatResponse, dependencies=[Depends(rate_limit)])
 async def chat(request: ChatRequest):
     """
     Ask a philosophy question.
@@ -377,7 +413,7 @@ async def chat(request: ChatRequest):
         raise HTTPException(status_code=500, detail=f"Error generating answer: {str(e)}")
 
 
-@router.post("/chat/stream")
+@router.post("/chat/stream", dependencies=[Depends(rate_limit)])
 async def chat_stream(request: ChatRequest):
     """
     Streaming variant of /chat (SSE). Tokens are JSON-wrapped so newlines
@@ -410,7 +446,7 @@ async def chat_stream(request: ChatRequest):
     )
 
 
-@router.post("/chat/robot", response_model=ChatResponse)
+@router.post("/chat/robot", response_model=ChatResponse, dependencies=[Depends(rate_limit)])
 async def chat_robot(request: ChatRequest):
     """
     Voice-mode answer for the XiaoZhi robot: same retriever, spoken-style
