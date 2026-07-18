@@ -1,4 +1,4 @@
-# HANDOFF — Lily & Hiro (session 17/07/2026)
+# HANDOFF — Lily & Hiro (cập nhật 18/07/2026)
 
 > File bàn giao cho session/người kế tiếp: mọi thứ đã làm, đang chạy, chưa làm, và các bẫy cần né.
 > Xem thêm: `todolist.txt` (việc còn chờ), `PRESENTATION.md` (kịch bản + checklist ngày D).
@@ -21,8 +21,11 @@ Quyết định đã chốt với user:
   - `app/rag/` — ChromaDB + e5-small (HuggingFace) + Groq → web/API/terminal (`main.py api|terminal|ingest`). Hiện: **1569 chunks / 67 docs**
   - `mcp/` — FAISS + TF-IDF + Groq → robot qua `mcp/mcp_pipe.py` (WebSocket bridge → `wss://api.xiaozhi.me`). Hiện: **1462 chunks / 5 docs**
 - **Slide-priority**: `retriever.py` + `prompts.py` ưu tiên chunk có `source` bắt đầu bằng `"slide"`. `ingest.py` split mọi file `Slide*_OCR.md` theo header `## [Slide <label>]` → source `"Slide 12"` / `"Slide KTCT 5"`
-- **MCP robot tools** (`mcp/mcp_rag.py`): `rag_search/answer/reindex/status` + 3 tool live DAC mới: `dac_vnindex`, `dac_ai_signals_today`, `dac_market_movers` (gọi `https://donganhcapital.onrender.com/api/...`, timeout 12s, có fallback msg)
-- **Frontend** (React/Vite): 2 môn học qua `src/data/subjects.js` (nguồn dữ liệu duy nhất). API base qua `src/config.js` (`VITE_API_URL`, bake lúc build)
+- **MCP robot tools** (`mcp/mcp_rag.py`): `rag_search/answer/reindex/status` + 3 tool live DAC: `dac_vnindex`, `dac_ai_signals_today`, `dac_market_movers` (timeout 12s; **có cache**: thành công thì lưu `mcp/.dac_cache.json`, API chết thì trả "so lieu phien gan nhat" thay vì chỉ xin lỗi; `DAC_API` env override được để test outage)
+- **Chuỗi fallback robot (18/07)**: XiaoZhi → mcp_pipe → mcp_rag `rag_answer` → **thử backend web trước** (probe `/health` 2s → POST `/chat/robot` timeout 45s, persona giọng nói, retriever ChromaDB) → lỗi thì rơi về FAISS local (prompt FAISS cũng đã voice-hoá, max_tokens 300). `LILY_WEB_BACKEND` env override được.
+- **Endpoints backend** (`app/api/routes.py`): `POST /chat` (nhận thêm `history` optional — absent = shared history cũ), `POST /chat/stream` (SSE, token JSON-wrapped, frontend tự fallback `/chat`), `POST /chat/robot` (voice mode, stateless), rate limit 20 req/60s/IP cho cả 3 (localhost miễn trừ — robot không bao giờ bị chặn). `/chat` + `/chat/robot` chạy trong threadpool (web + robot song song không nghẽn).
+- **Router**: heuristic trước (marker câu hỏi/chào, >50 ký tự), chỉ câu mơ hồ mới gọi router LLM — tiết kiệm 1 round-trip Groq/câu.
+- **Frontend** (React/Vite): 2 môn học qua `src/data/subjects.js` (nguồn dữ liệu duy nhất). API base qua `src/config.js`: ưu tiên `localStorage.LILY_API_URL` (khẩn cấp) → `VITE_API_URL` (bake lúc build = ngrok domain cố định) → localhost. Mọi call qua `apiFetch()` (tự gắn header `ngrok-skip-browser-warning`). ChatPage: streaming SSE + gửi 3 cặp history cuối.
 
 ## 3. Đã làm trong session này
 
@@ -57,17 +60,19 @@ Quyết định đã chốt với user:
 ## 4. Trạng thái đang chạy (lúc kết thúc session)
 
 - Backend Lily: chạy nền local port 8000 (`main.py api`)
-- Tunnel: `https://induction-aged-sin-logs.trycloudflare.com` (**URL đổi mỗi lần restart cloudflared**; đã bake vào build Vercel hiện tại — đổi tunnel là phải redeploy)
+- Tunnel: **đã chuyển sang ngrok static domain** (18/07) — URL cố định trong `NGROK_DOMAIN` của `.env`, không cần redeploy Vercel khi restart. Khởi động cả hệ: `.\start_all.ps1`; tắt: `.\stop_all.ps1`. (Bản build Vercel hiện tại vẫn bake URL cloudflare cũ — cần redeploy 1 lần cuối sau khi user setup ngrok, xem GUIDE mục setup.)
 - Robot bridge: mcp_pipe.py chạy nền, đã kết nối wss://api.xiaozhi.me OK (token thật trong `.env`, hạn tới ~2027). Khởi động lại: xem GUIDE_KHOI_DONG.md Bước 6
 - Vercel: production alias lily-hiro.vercel.app, protection OFF
 - Render DAC: service `DongAnhCapital` (srv-d5rqvl63jp1c73dmttn0, Singapore, free tier — ngủ sau 15p, cold start ~60s)
-- **Mọi thay đổi CHƯA COMMIT** — repo là clone mới + hàng loạt file sửa/tạo. User chưa yêu cầu commit/push. Cẩn thận đừng discard.
+- **Lịch sử Git là nguồn sự thật** cho trạng thái thay đổi và các mốc đã commit. Kiểm tra `git status` và `git log` trước khi tiếp tục; không suy luận trạng thái từ handoff này.
 
 ## 5. Chưa làm / chờ user
 
-1. ~~MCP_ENDPOINT~~ ĐÃ XONG 17/07: user gửi token, đã điền `.env`, mcp_pipe kết nối OK. **Còn lại**: test robot bằng giọng nói thật (câu triết học + câu KTCT + "VNINDEX hôm nay" + câu dẫn tới Hiro)
-2. Chạy thử toàn bộ kịch bản với robot thật trước ngày thuyết trình (checklist trong PRESENTATION.md)
-3. Chưa verify giao diện 2 môn bằng mắt trên browser (extension Claude-in-Chrome không kết nối được) — mới verify bằng bundle content + route 200
+1. **Setup ngrok (user, 1 lần, ~10 phút)**: tạo tài khoản + claim static domain + authtoken + `NGROK_DOMAIN` vào `.env` (từng bước trong GUIDE_KHOI_DONG.md mục setup). Sau đó **redeploy Vercel 1 lần cuối** với URL ngrok (lệnh trong GUIDE) — từ đó không phải redeploy vì tunnel nữa.
+2. Test robot bằng giọng nói thật (câu triết học + câu KTCT + "VNINDEX hôm nay" + câu dẫn tới Hiro) — persona giọng nói mới cần nghe thật để chỉnh
+3. Chạy thử toàn bộ kịch bản với robot thật trước ngày thuyết trình (checklist trong PRESENTATION.md)
+4. Chưa verify giao diện 2 môn + streaming bằng mắt trên browser — mới verify bằng curl/bundle content
+5. Quay video/screenshot dự phòng (Hiro + robot) như PRESENTATION.md liệt kê
 
 ## 6. BẪY & LƯU Ý (quan trọng nhất file này)
 
@@ -78,7 +83,8 @@ Quyết định đã chốt với user:
 - RAM 8GB — đừng chạy build + ingest + backend cùng lúc
 
 **Mạng:**
-- **Mạng chặn QUIC/UDP 7844** → cloudflared BẮT BUỘC `--protocol http2`. Quick tunnel cần ~15-30s propagate sau khi log ra URL (lỗi 1033 lúc đầu là bình thường)
+- Tunnel chính giờ là **ngrok** (TCP/TLS 443 — không bị ảnh hưởng bởi chặn QUIC/UDP). cloudflared chỉ còn là dự phòng khẩn cấp: BẮT BUỘC `--protocol http2`, cần ~15-30s propagate (lỗi 1033 lúc đầu là bình thường), repoint web bằng `localStorage.LILY_API_URL` không cần redeploy
+- **Port 8000 conflict (bẫy mới 18/07)**: dev server DongAnhCapital local (`uvicorn main:app --host 127.0.0.1 --port 8000`) bind 127.0.0.1 sẽ **cướp mọi request localhost** của Lily (bind 0.0.0.0) — web/tunnel/robot đều hỏng khó hiểu. `start_all.ps1` tự phát hiện và chặn; đừng chạy 2 server cùng lúc
 - GitHub clone rất chậm (~600KB/s) — shallow clone + background + timeout 10 phút
 
 **Code/pipeline:**
@@ -107,11 +113,12 @@ Quyết định đã chốt với user:
 | `data/Slide_KTCT_OCR.md` + `data/GiaoTrinh_KinhTeChinhTri_MacLenin.pdf` | Tri thức KTCT |
 | `app/rag/prompts.py` | Persona Lily + rule trích dẫn 4 nguồn |
 | `app/rag/ingest.py` | Split slide generalize (`Slide*_OCR.md`) |
-| `mcp/mcp_rag.py` | MCP server robot + 3 tool live DAC |
-| `mcp/rag_pipeline_faiss.py` | FAISS pipeline + persona (prompt trong `build_prompt` và `ask`) |
+| `mcp/mcp_rag.py` | MCP server robot + 3 tool live DAC (cache) + backend-first `rag_answer` |
+| `mcp/rag_pipeline_faiss.py` | FAISS pipeline dự phòng + persona giọng nói |
+| `start_all.ps1` / `stop_all.ps1` / `keepalive_dac.ps1` | Khởi động/tắt 1 lệnh + giữ Render DAC thức |
 | `frontend/src/data/subjects.js` | Nguồn duy nhất: 2 môn, lessons, quiz |
 | `frontend/src/data/quiz_ktct.json` | 60 câu KTCT (generated — sửa thì sửa BoCauHoi rồi parse lại) |
-| `frontend/src/config.js` | API_BASE (VITE_API_URL) |
+| `frontend/src/config.js` | API_BASE (localStorage override → VITE_API_URL) + `apiFetch` (header ngrok) |
 | `frontend/public/slides_ktct/` | 31 ảnh slide KTCT (generated từ ChuDe4Presentation.pdf) |
 | `PRESENTATION.md` | Kịch bản 3 phần + checklist ngày D + dự phòng |
 | `todolist.txt` | Việc xong / chờ / lệnh nhanh |
@@ -121,21 +128,29 @@ Memory dài hạn của Claude: `C:\Users\namet\.claude\projects\D--VsCode-LilyA
 ## 8. Lệnh nhanh (từ root repo)
 
 ```powershell
-# Backend
-venv\Scripts\python main.py api
-# Tunnel (nhớ http2!)
-& "C:\Program Files (x86)\cloudflared\cloudflared.exe" tunnel --protocol http2 --url http://localhost:8000
-# Redeploy frontend khi tunnel đổi (build local — --build-env KHÔNG hoạt động)
+# TẤT CẢ trong 1 lệnh (backend + ngrok + robot + DAC warm-up + keep-alive)
+.\start_all.ps1
+# Tắt tất cả
+.\stop_all.ps1
+
+# Thủ công từng phần (dự phòng — chi tiết trong GUIDE_KHOI_DONG.md):
+venv\Scripts\python main.py api                                  # backend
+.\ngrok.exe http --domain=<NGROK_DOMAIN> 8000                    # tunnel cố định
+cd mcp; ..\venv\Scripts\python mcp_pipe.py                       # robot
+
+# Redeploy frontend (CHỈ khi đổi domain ngrok / sửa code FE; --build-env KHÔNG hoạt động)
 cd frontend
 vercel pull --yes --environment production
-$env:VITE_API_URL='<tunnel URL>'; vercel build --prod --yes
+$env:VITE_API_URL='https://<NGROK_DOMAIN>'; vercel build --prod --yes
 vercel deploy --prebuilt --prod --yes
-# Robot (khi có token)
-cd mcp; ..\venv\Scripts\python mcp_pipe.py
+
 # Re-ingest (TẮT backend + XÓA chroma_db trước)
 venv\Scripts\python main.py ingest
 cd mcp; ..\venv\Scripts\python rag_pipeline_faiss.py ingest
+
 # Test nhanh
 curl -X POST http://localhost:8000/chat -H "Content-Type: application/json" -d '{"message":"..."}'
+curl -X POST http://localhost:8000/chat/robot -H "Content-Type: application/json" -d '{"message":"..."}'
+curl -N -X POST http://localhost:8000/chat/stream -H "Content-Type: application/json" -d '{"message":"..."}'
 cd mcp; ..\venv\Scripts\python rag_pipeline_faiss.py ask "..."
 ```

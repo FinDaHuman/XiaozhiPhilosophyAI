@@ -1,23 +1,56 @@
 # HƯỚNG DẪN KHỞI ĐỘNG LẠI TOÀN BỘ HỆ THỐNG (Lily & Hiro)
 
-> Dùng file này mỗi khi máy đã tắt backend/tunnel và cần bật lại (ví dụ: ngày thuyết trình).
-> Tổng thời gian: ~10-15 phút. Làm **đúng thứ tự** từ Bước 1 → 6.
+> Dùng file này mỗi khi cần bật lại hệ thống (ví dụ: ngày thuyết trình).
+> **Đường chính**: chạy `.\start_all.ps1` (1 lệnh, ~3-5 phút). Đường thủ công từng bước ở phần B là dự phòng.
 >
-> **Quy tắc quan trọng nhất**: URL tunnel Cloudflare **ĐỔI MỖI LẦN chạy lại** cloudflared,
-> và URL đó được "nướng" vào web lúc build → **đổi tunnel là BẮT BUỘC deploy lại Vercel** (Bước 4).
+> **Thay đổi lớn (18/07/2026)**: đã chuyển từ Cloudflare quick tunnel sang **ngrok static domain**
+> → URL backend **cố định vĩnh viễn**, KHÔNG cần deploy lại Vercel mỗi lần bật tunnel nữa.
 
 ---
 
-## Chuẩn bị: mở 3 cửa sổ PowerShell
+## Setup ngrok MỘT LẦN DUY NHẤT (nếu chưa làm)
 
-Bạn cần **3 cửa sổ PowerShell riêng** (backend, tunnel, lệnh phụ). Hai cửa sổ đầu phải
-**giữ mở suốt buổi thuyết trình** — đóng cửa sổ là chết backend/tunnel.
-
-Mở PowerShell: bấm `Win + X` → chọn "Terminal" (mở thêm tab bằng `Ctrl + Shift + T`).
+1. Tạo tài khoản tại https://dashboard.ngrok.com (miễn phí).
+2. Dashboard → **Domains** → tạo 1 static domain miễn phí (dạng `xxx.ngrok-free.app`). Ghi lại.
+3. Dashboard → **Your Authtoken** → copy token.
+4. Tải ngrok Windows tại https://ngrok.com/download, giải nén `ngrok.exe` vào thư mục gốc repo
+   `D:\VsCode\LilyAndHiro\` (đã có trong `.gitignore`) hoặc nơi nào đó trong PATH.
+5. Chạy 1 lần: `.\ngrok.exe config add-authtoken <TOKEN>`
+6. Thêm dòng sau vào `D:\VsCode\LilyAndHiro\.env`:
+   ```
+   NGROK_DOMAIN=<domain-cua-ban>.ngrok-free.app
+   ```
+7. Deploy lại Vercel 1 LẦN CUỐI với URL cố định (xem mục "Deploy lại Vercel" cuối file).
+   Sau lần này, không bao giờ phải redeploy vì tunnel nữa.
 
 ---
 
-## Bước 1 — Bật backend (cửa sổ 1, GIỮ MỞ)
+## A. Đường chính: 1 lệnh
+
+```powershell
+cd D:\VsCode\LilyAndHiro
+.\start_all.ps1
+```
+
+Script tự làm theo thứ tự: kiểm tra port 8000 trống → bật backend (chờ /health) → bật ngrok
+(verify tunnel) → bật robot bridge (mcp_pipe) → đánh thức server DongAnh Capital → bật vòng
+keep-alive DAC → in khối **READY** với đầy đủ URL.
+
+- Nếu bị chặn script: chạy 1 lần `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`.
+- Script mở thêm 3 cửa sổ (backend, robot, keep-alive) + ngrok — **giữ mở suốt buổi**.
+- Tắt tất cả sau buổi: `.\stop_all.ps1`
+
+**Kiểm tra sau khi READY:**
+1. Mở https://lily-hiro.vercel.app (Ctrl+F5) → chat thử `Mâu thuẫn biện chứng là gì?` → có `[Slide N]` + ảnh slide.
+2. Hỏi robot: `VNINDEX hôm nay thế nào?` → đọc số liệu thật.
+
+---
+
+## B. Đường thủ công (dự phòng khi script trục trặc)
+
+Mở 3 cửa sổ PowerShell (`Win + X` → Terminal, thêm tab `Ctrl + Shift + T`).
+
+### Bước 1 — Backend (cửa sổ 1, GIỮ MỞ)
 
 ```powershell
 cd D:\VsCode\LilyAndHiro
@@ -25,97 +58,28 @@ $env:PYTHONIOENCODING='utf-8'
 venv\Scripts\python main.py api
 ```
 
-- Chờ đến khi thấy dòng kiểu `Uvicorn running on http://0.0.0.0:8000` (lần đầu nạp model embedding có thể mất 1-2 phút).
-- **Không đóng cửa sổ này.**
-
-**Kiểm tra** (chạy ở cửa sổ 3):
+Chờ `Uvicorn running on http://0.0.0.0:8000` (lần đầu nạp model 1-2 phút). Kiểm tra ở cửa sổ 3:
 
 ```powershell
 Invoke-WebRequest -Uri "http://localhost:8000/health" -UseBasicParsing
 ```
 
-→ Phải thấy `StatusCode : 200` và `{"status":"ok"}`. Chưa thấy thì chờ thêm 30 giây rồi thử lại.
+→ `200` + `{"status":"ok"}`.
 
----
-
-## Bước 2 — Bật tunnel Cloudflare (cửa sổ 2, GIỮ MỞ)
+### Bước 2 — Tunnel ngrok (cửa sổ 2, GIỮ MỞ)
 
 ```powershell
-& "C:\Program Files (x86)\cloudflared\cloudflared.exe" tunnel --protocol http2 --url http://localhost:8000
+cd D:\VsCode\LilyAndHiro
+.\ngrok.exe http --domain=<domain-cua-ban>.ngrok-free.app 8000
 ```
 
-- **BẮT BUỘC có `--protocol http2`** — mạng nhà chặn QUIC/UDP, thiếu flag này tunnel sẽ chết với lỗi "exit 58".
-- Trong log sẽ hiện URL dạng:
-
-```
-https://xxxx-yyyy-zzzz-wwww.trycloudflare.com
-```
-
-→ **COPY URL này lại** — cần cho Bước 3 và 4. (URL mỗi lần chạy một khác.)
-- **Không đóng cửa sổ này.**
-
----
-
-## Bước 3 — Kiểm tra tunnel thông tới backend (cửa sổ 3)
-
-Thay `<URL-TUNNEL>` bằng URL vừa copy:
+URL cố định — không cần copy gì cả. Kiểm tra (cửa sổ 3):
 
 ```powershell
-Invoke-WebRequest -Uri "<URL-TUNNEL>/health" -UseBasicParsing
+Invoke-WebRequest -Uri "https://<domain-cua-ban>.ngrok-free.app/health" -Headers @{"ngrok-skip-browser-warning"="true"} -UseBasicParsing
 ```
 
-→ Phải thấy `200` + `{"status":"ok"}`.
-
-> Nếu lỗi "error 1033" hoặc không kết nối được: **bình thường trong ~30 giây đầu** sau khi
-> tunnel bật (DNS đang lan truyền). Chờ 30 giây, thử lại. Quá 2 phút vẫn lỗi → xem mục Sự cố cuối file.
-
----
-
-## Bước 4 — Deploy lại web Vercel với URL tunnel mới (cửa sổ 3)
-
-> **CẢNH BÁO**: KHÔNG dùng `vercel deploy --build-env VITE_API_URL=...` — lệnh đó
-> **âm thầm không nướng URL vào web** (đã dính lỗi này 17/07/2026, web public không chat được).
-> Làm đúng 4 lệnh dưới đây (build trên máy rồi đẩy lên).
-
-Thay `<URL-TUNNEL>` bằng URL ở Bước 2 (giữ nguyên dấu nháy đơn):
-
-```powershell
-cd D:\VsCode\LilyAndHiro\frontend
-vercel pull --yes --environment production
-$env:VITE_API_URL='<URL-TUNNEL>'
-vercel build --prod --yes
-vercel deploy --prebuilt --prod --yes
-```
-
-- `vercel build` mất ~30 giây, `vercel deploy` mất ~1-2 phút.
-- Kết thúc phải thấy dòng `▲ Aliased https://lily-hiro.vercel.app`.
-
-**Kiểm tra URL đã được nướng đúng** (chạy ngay sau `vercel build`, trước khi deploy cũng được):
-
-```powershell
-Select-String -Path .vercel\output\static\assets\index-*.js -Pattern "trycloudflare" -List | Select-Object -First 1
-```
-
-→ Phải có kết quả (tên file .js hiện ra). Không có kết quả = env chưa ăn, chạy lại từ dòng `$env:VITE_API_URL=...`.
-
----
-
-## Bước 5 — Kiểm tra web hoàn chỉnh
-
-1. Mở trình duyệt: **https://lily-hiro.vercel.app** (Ctrl+F5 để bỏ cache).
-2. Vào tab **Chat**, hỏi: `Mâu thuẫn biện chứng là gì?`
-   → Lily trả lời + panel bên phải hiện ảnh slide (trích dẫn `[Slide N]`).
-3. Hỏi thêm: `Độc quyền nhà nước là gì?` → trả lời có `[Slide KTCT N]`, ảnh deck KTCT hiện đúng.
-4. Nếu chat báo lỗi/không phản hồi → web đang trỏ tunnel cũ hoặc tunnel chết → làm lại Bước 3-4.
-
----
-
-## Bước 6 — Bật robot
-
-> Token đã điền sẵn trong `.env` (17/07/2026, hạn tới ~2027) — bình thường không cần sửa gì.
-> Nếu robot báo lỗi 401/403: lấy token mới tại console xiaozhi.me, sửa dòng `MCP_ENDPOINT=` trong `D:\VsCode\LilyAndHiro\.env`.
-
-1. Chạy (cửa sổ 3 hoặc mở cửa sổ 4, GIỮ MỞ):
+### Bước 3 — Robot (cửa sổ 3, GIỮ MỞ)
 
 ```powershell
 cd D:\VsCode\LilyAndHiro\mcp
@@ -123,36 +87,57 @@ $env:PYTHONIOENCODING='utf-8'
 ..\venv\Scripts\python mcp_pipe.py
 ```
 
-   Chờ log `Connecting to WebSocket endpoint` + `Started server process` — không thấy lỗi là đã nối.
+Chờ `Connecting to WebSocket endpoint` + `Started server process`.
 
-2. Test với robot 4 câu:
-   - 1 câu triết học: *"Mâu thuẫn biện chứng là gì?"*
-   - 1 câu KTCT: *"Độc quyền nhà nước là gì?"*
-   - 1 câu live data: *"VNINDEX hôm nay thế nào?"*
-   - 1 câu dẫn tới Hiro: *"Tôi muốn được tư vấn đầu tư cổ phiếu thì sao?"*
+> Robot giờ ưu tiên hỏi backend web (bộ não ChromaDB mạnh hơn, persona giọng nói);
+> backend tắt thì tự rơi về FAISS local — robot vẫn nói được, chỉ kém sâu hơn.
 
----
+### Bước 4 — Đánh thức DongAnh Capital
 
-## Trước giờ thuyết trình (thêm ~5 phút)
+```powershell
+Invoke-WebRequest -Uri "https://donganhcapital.onrender.com/api/vnindex?limit=1" -UseBasicParsing -TimeoutSec 120
+```
 
-- **Đánh thức server DongAnh Capital** (Render free ngủ sau 15 phút không dùng):
-  mở https://donganhcapital.com và bấm vài tab, hoặc:
-
-  ```powershell
-  Invoke-WebRequest -Uri "https://donganhcapital.onrender.com/api/market-status" -UseBasicParsing -TimeoutSec 120
-  ```
-
-  (lần đầu có thể mất 30-60 giây — server đang thức dậy, cứ chờ.)
-- Đăng nhập tài khoản Pro trên donganhcapital.com sẵn.
-- Mở sẵn tab https://lily-hiro.vercel.app.
-- Chạy thử kịch bản trong `PRESENTATION.md` một lượt.
+(Server Render free ngủ sau 15 phút — nếu không chạy keep-alive thì thỉnh thoảng gọi lại lệnh này.)
 
 ---
 
-## Thứ tự TẮT sau buổi thuyết trình
+## Khẩn cấp giữa buổi: ngrok chết / bị chặn mạng hội trường
 
-Bấm `Ctrl + C` trong từng cửa sổ (thứ tự nào cũng được): robot (mcp_pipe) → tunnel → backend.
-Không cần deploy lại gì khi tắt. Lần bật sau quay lại Bước 1.
+1. Bật Cloudflare quick tunnel thay thế (cửa sổ mới):
+   ```powershell
+   & "C:\Program Files (x86)\cloudflared\cloudflared.exe" tunnel --protocol http2 --url http://localhost:8000
+   ```
+   Copy URL `https://xxx.trycloudflare.com` trong log.
+2. Trên máy chiếu web, mở DevTools (F12) → Console → gõ:
+   ```js
+   localStorage.setItem('LILY_API_URL', 'https://xxx.trycloudflare.com'); location.reload()
+   ```
+   → Web lập tức trỏ sang tunnel mới, **KHÔNG cần deploy lại Vercel**.
+3. Xoá override khi xong: `localStorage.removeItem('LILY_API_URL'); location.reload()`
+
+---
+
+## Deploy lại Vercel (chỉ khi đổi domain ngrok hoặc sửa code frontend)
+
+> **CẢNH BÁO**: KHÔNG dùng `vercel deploy --build-env VITE_API_URL=...` — lệnh đó âm thầm
+> không nướng URL vào bundle (đã dính 17/07/2026). Làm đúng 4 lệnh dưới:
+
+```powershell
+cd D:\VsCode\LilyAndHiro\frontend
+vercel pull --yes --environment production
+$env:VITE_API_URL='https://<domain-cua-ban>.ngrok-free.app'
+vercel build --prod --yes
+vercel deploy --prebuilt --prod --yes
+```
+
+Kiểm tra URL đã nướng đúng trước khi deploy:
+
+```powershell
+Select-String -Path .vercel\output\static\assets\index-*.js -Pattern "ngrok-free" -List | Select-Object -First 1
+```
+
+Kết thúc phải thấy `▲ Aliased https://lily-hiro.vercel.app`.
 
 ---
 
@@ -160,15 +145,17 @@ Không cần deploy lại gì khi tắt. Lần bật sau quay lại Bước 1.
 
 | Triệu chứng | Nguyên nhân | Cách xử lý |
 |---|---|---|
-| Tunnel chết ngay, log có "exit 58" / QUIC timeout | Thiếu `--protocol http2` | Chạy lại đúng lệnh Bước 2 |
-| "error 1033" khi mở URL tunnel | DNS chưa lan truyền | Chờ 30-60 giây rồi thử lại |
-| Web chat không phản hồi | Web đang trỏ tunnel cũ | Làm lại Bước 3 → 4 |
-| Backend báo port 8000 đang bận | Backend cũ còn chạy ngầm | `Get-NetTCPConnection -LocalPort 8000 -State Listen` xem PID, rồi `Stop-Process -Id <PID> -Force`, chạy lại Bước 1 |
-| Chữ tiếng Việt trong terminal bị lỗi/crash | Console Windows mã hóa cp1252 | Đã có `$env:PYTHONIOENCODING='utf-8'` trong lệnh — đừng bỏ dòng đó |
-| `vercel` báo chưa đăng nhập | Hết phiên CLI | `vercel login` (tài khoản findahuman) rồi làm lại Bước 4 |
-| Lily trả lời "không tìm thấy thông tin" | Sai chroma_db / vừa thêm tài liệu chưa ingest | Xem mục re-ingest trong `HANDOFF.md` (nhớ: TẮT backend + XÓA thư mục `chroma_db` trước khi ingest lại) |
-| Robot không kết nối | Token sai/hết hạn trong `.env` | Lấy token mới ở console xiaozhi.me, sửa `.env`, chạy lại mcp_pipe |
+| start_all báo port 8000 bị chiếm | Backend cũ còn chạy, HOẶC **dev server DongAnhCapital local** đang chạy port 8000 | Tắt process đó trước (script in sẵn PID). Dev DAC local bind 127.0.0.1 sẽ "cướp" request của Lily |
+| ngrok báo lỗi auth | Chưa `config add-authtoken` | Chạy lại bước setup 5 |
+| ngrok bị chặn ở mạng lạ | Firewall hội trường | Dùng mục "Khẩn cấp giữa buổi" (cloudflared + localStorage) |
+| Web chat không phản hồi | Backend tắt / tunnel chết | Xem cửa sổ backend + ngrok; web tự fallback `/chat` thường nếu streaming lỗi |
+| Web báo "Bạn hỏi nhanh quá" (429) | Rate limit 20 câu/phút/IP (khách lạ spam) | Bình thường — localhost và robot không bao giờ bị giới hạn |
+| Chữ tiếng Việt terminal lỗi/crash | Console cp1252 | Đã có `$env:PYTHONIOENCODING='utf-8'` — đừng bỏ |
+| Lily "không tìm thấy thông tin" | Sai chroma_db / chưa ingest tài liệu mới | Xem re-ingest trong `HANDOFF.md` (TẮT backend + XÓA `chroma_db` trước) |
+| Robot không kết nối | Token sai/hết hạn trong `.env` | Token mới tại console xiaozhi.me → sửa `MCP_ENDPOINT` → chạy lại mcp_pipe |
+| Robot trả lời kiểu cũ (đọc cả ngoặc vuông) | Backend web tắt, đang chạy FAISS bản cũ chưa re-ingest | Bật backend rồi hỏi lại; FAISS cũng đã có persona giọng nói mới |
+| Câu "VNINDEX hôm nay" ra số liệu "phiên gần nhất" | Render DAC đang ngủ, robot dùng cache | Chấp nhận được; keep-alive sẽ giữ server thức trong buổi |
 
 ---
 
-*File liên quan: `PRESENTATION.md` (kịch bản), `HANDOFF.md` (chi tiết kỹ thuật), `todolist.txt` (việc còn lại).*
+*File liên quan: `PRESENTATION.md` (kịch bản + checklist ngày D), `HANDOFF.md` (chi tiết kỹ thuật), `todolist.txt` (việc còn lại).*

@@ -48,33 +48,30 @@
 
 ---
 
-## URL hiện tại (17/07/2026)
+## URL hiện tại (18/07/2026)
 
 - Website Lily (Vercel): **https://lily-hiro.vercel.app**
-- Tunnel backend: https://induction-aged-sin-logs.trycloudflare.com (đổi mỗi lần chạy lại cloudflared)
+- Tunnel backend: ngrok static domain — **cố định**, xem `NGROK_DOMAIN` trong `.env` (không đổi khi restart, không cần redeploy Vercel)
 - Backend local: http://localhost:8000
 
-## Checklist ngày thuyết trình (làm trước 15 phút)
+## Checklist ngày thuyết trình (làm trước 15+ phút)
 
-> **Hướng dẫn từng bước chi tiết (cd vào đâu, chạy gì, kiểm tra thế nào): xem `GUIDE_KHOI_DONG.md`.**
+> **Chi tiết từng bước + xử lý sự cố: xem `GUIDE_KHOI_DONG.md`.**
 
-1. [ ] Đánh thức backend DAC (Render free ngủ sau 15 phút):
-   `curl https://donganhcapital.onrender.com/api/health` — đợi tới khi trả `ok`
-2. [ ] Bật backend Lily (từ thư mục gốc repo): `venv\Scripts\python main.py api` (đợi log "Uvicorn running")
-3. [ ] Bật tunnel: `& "C:\Program Files (x86)\cloudflared\cloudflared.exe" tunnel --protocol http2 --url http://localhost:8000` — chép URL `*.trycloudflare.com` mới trong log
-   (mạng này chặn QUIC/UDP nên bắt buộc `--protocol http2`)
-4. [ ] Nếu URL tunnel đổi (luôn đổi sau khi restart): redeploy frontend với URL mới:
-   `cd frontend` rồi build local + prebuilt (KHÔNG dùng --build-env, nó không bake VITE_API_URL):
-   `vercel pull --yes --environment production`
-   `$env:VITE_API_URL='<URL tunnel mới>'; vercel build --prod --yes`
-   `vercel deploy --prebuilt --prod --yes` (~2 phút)
-5. [ ] Bật cầu robot: `cd mcp` rồi `..\venv\Scripts\python mcp_pipe.py` — chờ log "Started server process"; nếu lỗi 401/403 → token hết hạn, lấy token mới tại console xiaozhi.me và cập nhật `MCP_ENDPOINT` trong `.env`
-6. [ ] Test robot 1 câu triết học + 1 câu "VNINDEX hôm nay thế nào?"
-7. [ ] Mở sẵn các tab web: donganhcapital.com (Dashboard, AI Analyst, AI Chat) + website Lily trên Vercel
-8. [ ] Đăng nhập sẵn tài khoản Pro/Premium trên donganhcapital.com để demo Hiro
+1. [ ] Chạy `.\start_all.ps1` từ thư mục gốc repo → chờ khối **READY**
+   (script tự lo: backend + tunnel ngrok + robot + đánh thức DAC + keep-alive DAC)
+2. [ ] Mở https://lily-hiro.vercel.app (Ctrl+F5), chat thử 1 câu triết học + 1 câu KTCT → có trích dẫn slide + ảnh hiện đúng
+3. [ ] Test robot bằng giọng nói: 1 câu triết học + `"VNINDEX hôm nay thế nào?"` (câu này đồng thời prime cache số liệu cho robot)
+4. [ ] Mở sẵn các tab web: donganhcapital.com (Dashboard, AI Analyst, AI Chat) + website Lily trên Vercel
+5. [ ] Đăng nhập sẵn tài khoản Pro/Premium trên donganhcapital.com để demo Hiro
+6. [ ] **KHÔNG chạy dev server DongAnhCapital local trong buổi demo** (nó chiếm port 8000, cướp request của Lily — start_all sẽ tự phát hiện và cảnh báo)
+7. [ ] Sau buổi: `.\stop_all.ps1`
 
 ## Phương án dự phòng
 
-- **Mất mạng / Render chết**: bỏ câu hỏi số 3 (live), các câu 1-2-4 vẫn chạy vì dùng docs tĩnh trong FAISS local. Web DAC thay bằng screenshot/video quay sẵn.
+- **ngrok chết / mạng hội trường chặn**: bật cloudflared quick tunnel + repoint web bằng
+  `localStorage.setItem('LILY_API_URL', '<URL tunnel mới>')` trong DevTools Console — KHÔNG cần redeploy (chi tiết trong `GUIDE_KHOI_DONG.md` mục "Khẩn cấp giữa buổi").
+- **Mất mạng / Render chết**: câu "VNINDEX hôm nay" vẫn trả lời được bằng **số liệu cache phiên gần nhất** (robot tự nói rõ là số liệu gần nhất); các câu 1-2-4 chạy docs tĩnh. Web DAC thay bằng screenshot/video quay sẵn.
 - **Robot trục trặc**: chuyển demo Lily sang website (Vercel) hoặc terminal (`venv\Scripts\python main.py terminal`) — cùng một bộ não RAG.
+- **Backend Lily chết giữa buổi**: robot vẫn tự trả lời bằng FAISS local (giọng nói vẫn ổn, chỉ kém sâu hơn) — cứ demo tiếp, bật lại backend sau.
 - **Hiro hết quota / lỗi**: dùng screenshot hội thoại Hiro chuẩn bị sẵn.

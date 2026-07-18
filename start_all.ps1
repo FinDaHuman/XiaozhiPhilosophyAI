@@ -27,6 +27,19 @@ if (-not $domain) {
 $pids = @{}
 $skipHeader = @{ "ngrok-skip-browser-warning" = "true" }
 
+# --- 0) Port 8000 phai trong (vd: dev server DongAnhCapital local cung dung 8000) ---
+$conflict = Get-NetTCPConnection -LocalPort 8000 -State Listen -ErrorAction SilentlyContinue
+if ($conflict) {
+    Write-Host "[LOI] Port 8000 dang bi chiem:" -ForegroundColor Red
+    foreach ($c in $conflict) {
+        $proc = Get-Process -Id $c.OwningProcess -ErrorAction SilentlyContinue
+        Write-Host "      PID $($c.OwningProcess) ($($proc.ProcessName)) bind $($c.LocalAddress):8000" -ForegroundColor Red
+    }
+    Write-Host "      Neu la dev server DongAnhCapital local, tat no truoc khi demo Lily" -ForegroundColor Red
+    Write-Host "      (bind 127.0.0.1 se cuop request cua Lily va lam hong ca tunnel)." -ForegroundColor Red
+    exit 1
+}
+
 # --- 1) Backend (cua so rieng, giu mo) ---
 Write-Host "[1/6] Bat backend Lily (load embeddings lan dau co the mat 1-2 phut)..."
 $backendCmd = '$env:PYTHONIOENCODING="utf-8"; Set-Location "' + $root + '"; & "' + $py + '" main.py api'
