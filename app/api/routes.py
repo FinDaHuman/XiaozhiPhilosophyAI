@@ -20,7 +20,7 @@ from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.concurrency import run_in_threadpool
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 from pydantic import BaseModel
 
 from app.api.slide_extractor import extract_slide, get_lessons_json, parse_chia_slide
@@ -375,6 +375,39 @@ async def chat(request: ChatRequest):
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error generating answer: {str(e)}")
+
+
+@router.post("/chat/stream")
+async def chat_stream(request: ChatRequest):
+    """
+    Streaming variant of /chat (SSE). Tokens are JSON-wrapped so newlines
+    inside them cannot break SSE framing. The frontend falls back to
+    POST /chat automatically on any failure.
+    """
+    if not request.message.strip():
+        raise HTTPException(status_code=400, detail="Message cannot be empty")
+
+    hist = (
+        [t.model_dump() for t in request.history]
+        if request.history is not None
+        else None
+    )
+
+    def gen():
+        try:
+            for token in get_rag().ask_stream(request.message, history=hist):
+                yield "data: " + json.dumps({"token": token}, ensure_ascii=False) + "\n\n"
+            yield 'data: {"done": true}\n\n'
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            yield "data: " + json.dumps({"error": str(e)}, ensure_ascii=False) + "\n\n"
+
+    return StreamingResponse(
+        gen(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 
 @router.post("/chat/robot", response_model=ChatResponse)

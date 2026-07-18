@@ -46,6 +46,7 @@ const ChatPage = () => {
   ])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [isStreaming, setIsStreaming] = useState(false)
   const [activeSlide, setActiveSlide] = useState(null)
   const messagesEndRef = useRef(null)
   const inputRef = useRef(null)
@@ -75,6 +76,92 @@ const ChatPage = () => {
     return pairs.slice(-3)
   }
 
+  // Two decks: philosophy "[Slide 12]" and political economy "[Slide KTCT 5]".
+  // Open whichever citation appears first in the answer.
+  const openCitedSlide = (text) => {
+    const ktctMatch = text.match(/\[Slide\s*KTCT\s*(\d+)\]/i)
+    const mln111Match = text.match(/\[Slide\s*(\d+)\]/i)
+    if (ktctMatch && (!mln111Match || ktctMatch.index <= mln111Match.index)) {
+      setActiveSlide({ deck: 'ktct', num: ktctMatch[1] })
+    } else if (mln111Match) {
+      setActiveSlide({ deck: 'mln111', num: mln111Match[1] })
+    }
+  }
+
+  // Non-streaming path — kept intact as the automatic fallback.
+  const sendNonStreaming = async (userMessage, history) => {
+    const response = await apiFetch('/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: userMessage, history })
+    })
+
+    if (response.ok) {
+      const data = await response.json()
+      setMessages(prev => [...prev, { role: 'ai', text: data.answer }])
+      openCitedSlide(data.answer)
+    } else {
+      setMessages(prev => [...prev, { role: 'ai', text: 'Xin lỗi, tôi gặp lỗi kết nối. Vui lòng thử lại sau.' }])
+    }
+  }
+
+  // Streaming path: SSE tokens appended to the last message as they arrive.
+  // Throws before any token is shown so the caller can fall back cleanly.
+  const sendStreaming = async (userMessage, history) => {
+    const response = await apiFetch('/chat/stream', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: userMessage, history })
+    })
+    if (!response.ok || !response.body) throw new Error(`stream unavailable (${response.status})`)
+
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
+    let fullText = ''
+    let started = false
+
+    const showText = (text) => {
+      if (!started) {
+        started = true
+        setIsStreaming(true)
+        setMessages(prev => [...prev, { role: 'ai', text }])
+      } else {
+        setMessages(prev => {
+          const next = [...prev]
+          next[next.length - 1] = { role: 'ai', text }
+          return next
+        })
+      }
+    }
+
+    for (;;) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+      const events = buffer.split('\n\n')
+      buffer = events.pop()
+      for (const evt of events) {
+        const line = evt.split('\n').find(l => l.startsWith('data: '))
+        if (!line) continue
+        const data = JSON.parse(line.slice(6))
+        if (data.token) {
+          fullText += data.token
+          showText(fullText)
+        } else if (data.done) {
+          openCitedSlide(fullText)
+          return
+        } else if (data.error) {
+          if (!started) throw new Error(data.error)
+          showText(fullText + '\n\n(Kết nối bị gián đoạn — câu trả lời có thể chưa đầy đủ.)')
+          return
+        }
+      }
+    }
+    if (!started) throw new Error('empty stream')
+    openCitedSlide(fullText)
+  }
+
   const handleSend = async () => {
     if (!input.trim() || isLoading) return
 
@@ -85,33 +172,18 @@ const ChatPage = () => {
     setIsLoading(true)
 
     try {
-      const response = await apiFetch('/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userMessage, history })
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        setMessages(prev => [...prev, { role: 'ai', text: data.answer }])
-        
-        // Two decks: philosophy "[Slide 12]" and political economy "[Slide KTCT 5]".
-        // Pick whichever citation appears first in the answer.
-        const ktctMatch = data.answer.match(/\[Slide\s*KTCT\s*(\d+)\]/i)
-        const mln111Match = data.answer.match(/\[Slide\s*(\d+)\]/i)
-        if (ktctMatch && (!mln111Match || ktctMatch.index <= mln111Match.index)) {
-          setActiveSlide({ deck: 'ktct', num: ktctMatch[1] })
-        } else if (mln111Match) {
-          setActiveSlide({ deck: 'mln111', num: mln111Match[1] })
-        }
-      } else {
-        setMessages(prev => [...prev, { role: 'ai', text: 'Xin lỗi, tôi gặp lỗi kết nối. Vui lòng thử lại sau.' }])
+      try {
+        await sendStreaming(userMessage, history)
+      } catch (streamError) {
+        console.warn('Streaming failed, falling back to /chat:', streamError)
+        await sendNonStreaming(userMessage, history)
       }
     } catch (error) {
       console.error(error)
       setMessages(prev => [...prev, { role: 'ai', text: 'Không thể kết nối với máy chủ Lily. Vui lòng kiểm tra lại.' }])
     } finally {
       setIsLoading(false)
+      setIsStreaming(false)
     }
   }
 
@@ -264,7 +336,7 @@ const ChatPage = () => {
                 )
               })}
               
-              {isLoading && (
+              {isLoading && !isStreaming && (
                 <div className="flex gap-3">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-white shadow-soft">
                     <Bot className="h-5 w-5" aria-hidden="true" />

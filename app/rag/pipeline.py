@@ -129,6 +129,33 @@ class RAGPipeline:
 
         return answer
 
+    def ask_stream(self, question: str, *, history: Optional[list] = None):
+        """
+        Streaming variant of ask(): yields answer tokens as they arrive.
+        Same retrieval/prompt path; history semantics match ask().
+        """
+        messages = self._prepare_messages(question, history=history, voice=False)
+
+        stream = self.client.chat.completions.create(
+            model=GROQ_MODEL,
+            messages=messages,
+            temperature=0.3,
+            max_tokens=2048,
+            stream=True,
+        )
+        parts = []
+        for chunk in stream:
+            delta = chunk.choices[0].delta.content
+            if delta:
+                parts.append(delta)
+                yield delta
+
+        if history is None:
+            self._conversation_history.append({
+                "question": question,
+                "answer": "".join(parts),
+            })
+
     def clear_history(self):
         """Clear conversation history."""
         self._conversation_history.clear()
