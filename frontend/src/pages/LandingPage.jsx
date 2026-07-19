@@ -70,7 +70,7 @@ const LandingPage = () => {
                 Trợ lý Triết học & Kinh tế chính trị Mác - Lênin
               </div>
               <h1 className="heading-balance font-serif text-5xl font-bold leading-[1.02] md:text-7xl">
-                Học lý luận bằng đối thoại, nguồn rõ ràng, ví dụ gần đời sống.
+                Lily - The Innovative Product
               </h1>
               <p className="body-pretty mt-6 max-w-2xl text-lg leading-8 text-white/80 md:text-xl">
                 Lily giúp bạn đọc slide, hỏi lại khái niệm khó, kiểm tra mức hiểu — từ quy luật mâu thuẫn
