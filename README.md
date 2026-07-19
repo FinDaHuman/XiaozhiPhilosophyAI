@@ -79,6 +79,8 @@ GROQ_MODEL=llama-3.3-70b-versatile
 
 # Gemini fallback (chỉ dùng khi Groq gặp 429, timeout hoặc lỗi 5xx)
 GEMINI_API_KEY=your_gemini_api_key_here
+DAC_HIRO_INTERNAL_TOKEN=the_same_secret_as_donganhcapital
+DAC_HIRO_API_URL=https://api.donganhcapital.com/api/chat/internal/hiro
 GEMINI_MODEL=gemini-2.5-flash-lite
 
 # Cấu hình RAG

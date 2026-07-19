@@ -20,6 +20,7 @@ import time
 from collections import deque
 from pathlib import Path
 
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
@@ -464,6 +465,52 @@ async def chat_robot(request: ChatRequest):
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error generating answer: {str(e)}")
+
+
+@router.post("/chat/hiro", response_model=ChatResponse, dependencies=[Depends(rate_limit)])
+async def chat_hiro(request: ChatRequest):
+    """Proxy the presentation UI to DongAnh Capital's protected Hiro endpoint."""
+    message = request.message.strip()
+    if not message:
+        raise HTTPException(status_code=400, detail="Message cannot be empty")
+
+    token = os.getenv("DAC_HIRO_INTERNAL_TOKEN", "")
+    if not token:
+        logger.error("DAC_HIRO_INTERNAL_TOKEN is not configured")
+        raise HTTPException(status_code=503, detail="Hiro bridge is not configured")
+
+    messages = []
+    for turn in (request.history or [])[-5:]:
+        if turn.question.strip():
+            messages.append({"role": "user", "content": turn.question.strip()})
+        if turn.answer.strip():
+            messages.append({"role": "assistant", "content": turn.answer.strip()})
+    messages.append({"role": "user", "content": message})
+
+    endpoint = os.getenv(
+        "DAC_HIRO_API_URL",
+        "https://api.donganhcapital.com/api/chat/internal/hiro",
+    )
+    try:
+        timeout = httpx.Timeout(25.0, connect=5.0)
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            response = await client.post(
+                endpoint,
+                json={"messages": messages},
+                headers={"x-hiro-token": token},
+            )
+        if response.status_code != 200:
+            logger.warning("Hiro upstream returned HTTP %s", response.status_code)
+            raise HTTPException(status_code=503, detail="Hiro is temporarily unavailable")
+        reply = (response.json().get("reply") or "").strip()
+        if not reply:
+            raise ValueError("empty Hiro reply")
+        return ChatResponse(answer=reply)
+    except HTTPException:
+        raise
+    except (httpx.HTTPError, ValueError, KeyError) as e:
+        logger.warning("Hiro bridge request failed: %s", e)
+        raise HTTPException(status_code=503, detail="Hiro is temporarily unavailable")
 
 
 @router.get("/health", response_model=HealthResponse)

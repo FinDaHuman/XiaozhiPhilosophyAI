@@ -56,6 +56,14 @@ Returns the same `{ "answer": "..." }` envelope, but uses a short spoken
 persona without markdown or citation brackets. It is stateless and ignores
 `history`.
 
+### `POST /chat/hiro`
+
+Accepts the same `{ "message", "history" }` body and returns `{ "answer" }`.
+The Lily backend forwards the bounded conversation to DongAnh Capital's
+presentation-only Hiro endpoint. Configure `DAC_HIRO_INTERNAL_TOKEN` on Lily
+and the matching `HIRO_INTERNAL_TOKEN` on DongAnh Capital. Optionally override
+the upstream URL with `DAC_HIRO_API_URL`.
+
 ### Rate limiting
 
 All three chat endpoints share a sliding-window limit of 20 requests per 60

@@ -57,6 +57,9 @@ const LandingPage = () => {
               <Link to="/quiz" className="nav-link text-white/80 hover:bg-white/10 hover:text-white">
                 Ôn tập
               </Link>
+              <Link to="/hiro" className="nav-link text-white/80 hover:bg-white/10 hover:text-white">
+                Hiro
+              </Link>
             </nav>
           </header>
 

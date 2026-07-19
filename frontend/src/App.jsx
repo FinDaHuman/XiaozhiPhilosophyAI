@@ -1,9 +1,11 @@
-import { useEffect } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import LandingPage from './pages/LandingPage'
 import LessonPage from './pages/LessonPage'
 import QuizPage from './pages/QuizPage'
 import ChatPage from './pages/ChatPage'
+
+const HiroPage = lazy(() => import('./pages/HiroPage'))
 
 // SPA navigation keeps the previous scroll position; reset to top on every route change
 function ScrollToTop() {
@@ -27,6 +29,14 @@ function App() {
           <Route path="/quiz" element={<QuizPage />} />
           <Route path="/quiz/:subject" element={<QuizPage />} />
           <Route path="/chat" element={<ChatPage />} />
+          <Route
+            path="/hiro"
+            element={(
+              <Suspense fallback={<div className="min-h-screen bg-[#010304]" aria-label="Đang tải Hiro" />}>
+                <HiroPage />
+              </Suspense>
+            )}
+          />
         </Routes>
       </div>
     </BrowserRouter>
