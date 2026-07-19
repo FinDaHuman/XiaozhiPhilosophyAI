@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Send } from 'lucide-react'
 import { JarvisOrb } from 'jarvis-ai-web-animation'
@@ -59,6 +59,9 @@ function HiroPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [orbState, setOrbState] = useState('idle')
   const inputRef = useRef(null)
+  const transcriptRef = useRef(null)
+  const shouldStickToBottomRef = useRef(true)
+  const forceScrollToBottomRef = useRef(false)
 
   const assistant = ASSISTANTS[selected]
   const turns = threads[selected]
@@ -71,8 +74,26 @@ function HiroPage() {
     [turns],
   )
 
+  useLayoutEffect(() => {
+    const transcript = transcriptRef.current
+    if (!transcript) return
+
+    if (forceScrollToBottomRef.current || shouldStickToBottomRef.current) {
+      transcript.scrollTop = transcript.scrollHeight
+      shouldStickToBottomRef.current = true
+      forceScrollToBottomRef.current = false
+    }
+  }, [selected, visibleTurns])
+
+  const handleTranscriptScroll = (event) => {
+    const transcript = event.currentTarget
+    const distanceFromBottom = transcript.scrollHeight - transcript.scrollTop - transcript.clientHeight
+    shouldStickToBottomRef.current = distanceFromBottom <= 64
+  }
+
   const chooseAssistant = (id) => {
     if (isLoading || id === selected) return
+    forceScrollToBottomRef.current = true
     setSelected(id)
     setInput('')
     setOrbState('idle')
@@ -86,6 +107,7 @@ function HiroPage() {
 
     const activeAssistant = selected
     const history = buildHistory(threads[activeAssistant])
+    forceScrollToBottomRef.current = true
     setInput('')
     setIsLoading(true)
     setOrbState('thinking')
@@ -176,7 +198,13 @@ function HiroPage() {
           </section>
 
           {hasConversation && (
-            <section className="hiro-transcript" aria-label={`Cuộc trò chuyện với ${assistant.name}`} aria-live="polite">
+            <section
+              ref={transcriptRef}
+              className="hiro-transcript"
+              aria-label={`Cuộc trò chuyện với ${assistant.name}`}
+              aria-live="polite"
+              onScroll={handleTranscriptScroll}
+            >
               {visibleTurns.map((turn, index) => (
                 <article className="hiro-turn" key={`${turn.question}-${index}`}>
                   <div className="hiro-question">
