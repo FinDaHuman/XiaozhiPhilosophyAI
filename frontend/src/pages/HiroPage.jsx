@@ -34,9 +34,9 @@ const ASSISTANT_TITLES = {
   hiro: 'Hyper-scaled Investment & Risk Oversight',
 }
 
-const TITLE_DELETE_DELAY = 34
-const TITLE_TYPE_DELAY = 48
-const TITLE_PHASE_PAUSE = 140
+const TITLE_DELETE_DELAY = 18
+const TITLE_TYPE_DELAY = 25
+const TITLE_PHASE_PAUSE = 80
 
 function buildHistory(turns) {
   return turns
