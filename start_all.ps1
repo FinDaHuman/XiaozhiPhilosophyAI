@@ -72,14 +72,20 @@ try {
 }
 Start-Sleep -Seconds 4
 $tunnelOk = $false
-for ($i = 0; $i -lt 5; $i++) {
+for ($i = 0; $i -lt 8; $i++) {
     try {
-        $r = Invoke-RestMethod -Uri "https://$domain/health" -Headers $skipHeader -TimeoutSec 10
+        # Production browsers call this same-origin route. Vercel resolves the
+        # ngrok hostname server-side, so local DNS filters cannot break chat.
+        $r = Invoke-RestMethod -Uri "https://lily-hiro.vercel.app/api/health" -Headers $skipHeader -TimeoutSec 15
         if ($r.status -eq "ok") { $tunnelOk = $true; break }
     } catch { Start-Sleep -Seconds 3 }
 }
-if ($tunnelOk) { Write-Host "[OK] Tunnel: https://$domain" -ForegroundColor Green }
-else { Write-Host "[CANH BAO] Chua verify duoc tunnel - kiem tra cua so ngrok." -ForegroundColor Yellow }
+if ($tunnelOk) {
+    Write-Host "[OK] Web API proxy: https://lily-hiro.vercel.app/api -> https://$domain" -ForegroundColor Green
+} else {
+    Write-Host "[CANH BAO] Web API proxy chua toi duoc backend." -ForegroundColor Yellow
+    Write-Host "            Kiem tra cua so ngrok va https://lily-hiro.vercel.app/api/health" -ForegroundColor Yellow
+}
 
 # --- 4) Robot bridge (mcp_pipe.py, cua so rieng) ---
 Write-Host "[3/6] Bat robot bridge (mcp_pipe.py)..."

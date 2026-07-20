@@ -45,11 +45,11 @@
 - Backend:  venv\Scripts\python main.py api
 - Tunnel:   .\ngrok.exe http --domain=<NGROK_DOMAIN trong .env> 8000
 - Robot:    cd mcp; ..\venv\Scripts\python mcp_pipe.py
-- Redeploy FE (chỉ khi đổi domain/sửa code FE — KHÔNG dùng --build-env):
+- Redeploy FE (chỉ khi đổi domain/sửa code FE hoặc proxy):
     cd frontend
     vercel pull --yes --environment production
-    $env:VITE_API_URL='https://<NGROK_DOMAIN>'; vercel build --prod --yes
-    (kiểm tra: Select-String bundle trong .vercel\output\static\assets có "ngrok-free")
+    vercel build --prod --yes
     vercel deploy --prebuilt --prod --yes
+    (kiểm tra: Invoke-WebRequest https://lily-hiro.vercel.app/api/health)
 - Re-ingest khi thêm tài liệu vào data/: TẮT backend + XÓA chroma_db trước, rồi
     venv\Scripts\python main.py ingest; cd mcp; ..\venv\Scripts\python rag_pipeline_faiss.py ingest

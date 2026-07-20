@@ -1,4 +1,4 @@
-# HANDOFF — Lily & Hiro (cập nhật 18/07/2026)
+# HANDOFF — Lily & Hiro (cập nhật 20/07/2026)
 
 > File bàn giao cho session/người kế tiếp: mọi thứ đã làm, đang chạy, chưa làm, và các bẫy cần né.
 > Xem thêm: `todolist.txt` (việc còn chờ), `PRESENTATION.md` (kịch bản + checklist ngày D).
@@ -25,7 +25,7 @@ Quyết định đã chốt với user:
 - **Chuỗi fallback robot (18/07)**: XiaoZhi → mcp_pipe → mcp_rag `rag_answer` → **thử backend web trước** (probe `/health` 2s → POST `/chat/robot` timeout 45s, persona giọng nói, retriever ChromaDB) → lỗi thì rơi về FAISS local. Trong cả hai pipeline, generation thử Groq trước rồi chuyển `gemini-2.5-flash-lite` khi Groq gặp 429/timeout/5xx; prompt FAISS cũng đã voice-hoá, max_tokens 300. Để giữ quota free-tier, Groq không tự retry, Gemini 429 không retry và Gemini 5xx chỉ retry một lần. `LILY_WEB_BACKEND` env override được.
 - **Endpoints backend** (`app/api/routes.py`): `POST /chat` (nhận thêm `history` optional — absent = shared history cũ), `POST /chat/stream` (SSE, token JSON-wrapped, frontend tự fallback `/chat`), `POST /chat/robot` (voice mode, stateless), rate limit 20 req/60s/IP cho cả 3 (localhost miễn trừ — robot không bao giờ bị chặn). `/chat` + `/chat/robot` chạy trong threadpool (web + robot song song không nghẽn).
 - **Router/retriever**: heuristic trước (marker câu hỏi/chào, >50 ký tự), chỉ câu mơ hồ mới gọi router LLM. MultiQuery dùng Groq 8B fail-fast; nếu lỗi thì tự hạ xuống vector+BM25 để Gemini vẫn nhận được context.
-- **Frontend** (React/Vite): 2 môn học qua `src/data/subjects.js` (nguồn dữ liệu duy nhất). API base qua `src/config.js`: ưu tiên `localStorage.LILY_API_URL` (khẩn cấp) → `VITE_API_URL` (bake lúc build = ngrok domain cố định) → localhost. Mọi call qua `apiFetch()` (tự gắn header `ngrok-skip-browser-warning`). ChatPage: streaming SSE + gửi 3 cặp history cuối.
+- **Frontend** (React/Vite): 2 môn học qua `src/data/subjects.js` (nguồn dữ liệu duy nhất). API base qua `src/config.js`: ưu tiên `localStorage.LILY_API_URL` (khẩn cấp) → production same-origin `/api` → `VITE_API_URL`/localhost khi dev. `frontend/vercel.json` reverse-proxy `/api/:path*` đến ngrok trước SPA fallback, nên browser không tự resolve ngrok. Mọi call qua `apiFetch()` (tự gắn header `ngrok-skip-browser-warning`). ChatPage: streaming SSE + gửi 3 cặp history cuối.
 
 ## 3. Đã làm trong session này
 
@@ -36,7 +36,7 @@ Quyết định đã chốt với user:
 - Prompt rules mới: trích `[DongAnhCapital]`, giới thiệu Hiro khi hỏi tư vấn cổ phiếu, không cam kết lợi nhuận
 - 3 MCP tool live DAC (đã test thật, hoạt động)
 - `.env` chứa cấu hình Groq/Gemini và `MCP_ENDPOINT` thật; file được gitignore. Không ghi hoặc sao chép giá trị bí mật vào tài liệu/log.
-- Fix frontend hardcode `localhost:8000` → `src/config.js` + `VITE_API_URL`
+- Fix frontend hardcode `localhost:8000` → `src/config.js`; production đi qua Vercel same-origin `/api`, dev vẫn hỗ trợ `VITE_API_URL`
 - Deploy Vercel project **lily-ai**; user tự tắt Deployment Protection
 
 ### Đợt 2 — Thêm domain Kinh tế chính trị (MLN122)
@@ -60,7 +60,7 @@ Quyết định đã chốt với user:
 ## 4. Trạng thái ghi nhận lúc kết thúc session (không phải live health check)
 
 - Backend Lily: chạy nền local port 8000 (`main.py api`)
-- Tunnel: **đã chuyển sang ngrok static domain** (18/07) — URL cố định trong `NGROK_DOMAIN` của `.env`, không cần redeploy Vercel khi restart. Frontend production đã được build với domain này. Khởi động cả hệ: `.\start_all.ps1`; tắt: `.\stop_all.ps1`.
+- Tunnel: **ngrok static domain** (18/07), được Vercel reverse-proxy server-side từ `/api` (20/07). URL cố định trong `NGROK_DOMAIN` và `frontend/vercel.json`; không cần redeploy khi restart. Khởi động cả hệ: `.\start_all.ps1`; tắt: `.\stop_all.ps1`.
 - Robot bridge: mcp_pipe.py đã kết nối wss://api.xiaozhi.me OK; `MCP_ENDPOINT` thật nằm trong `.env`. Khởi động lại: xem GUIDE_KHOI_DONG.md Bước 6
 - Vercel: production alias lily-hiro.vercel.app, protection OFF
 - Render DAC: service `DongAnhCapital` (srv-d5rqvl63jp1c73dmttn0, Singapore, free tier — ngủ sau 15p, cold start ~60s)
@@ -70,7 +70,7 @@ Quyết định đã chốt với user:
 
 1. Test robot bằng giọng nói thật (câu triết học + câu KTCT + "VNINDEX hôm nay" + câu dẫn tới Hiro) — persona giọng nói mới cần nghe thật để chỉnh
 2. Chạy thử toàn bộ kịch bản với robot thật trước ngày thuyết trình (checklist trong PRESENTATION.md)
-3. Chưa verify giao diện 2 môn + streaming bằng mắt trên browser — mới verify bằng curl/bundle content
+3. Đã verify trực tiếp trên browser production `/hiro`: Hiro và Lily đều trả lời, console không lỗi; chưa chạy visual QA đầy đủ cho giao diện 2 môn + streaming ở `/chat`
 4. Quay video/screenshot dự phòng (Hiro + robot) như PRESENTATION.md liệt kê
 
 ## 6. BẪY & LƯU Ý (quan trọng nhất file này)
@@ -82,7 +82,7 @@ Quyết định đã chốt với user:
 - RAM 8GB — đừng chạy build + ingest + backend cùng lúc
 
 **Mạng:**
-- Tunnel chính giờ là **ngrok** (TCP/TLS 443 — không bị ảnh hưởng bởi chặn QUIC/UDP). cloudflared chỉ còn là dự phòng khẩn cấp: BẮT BUỘC `--protocol http2`, cần ~15-30s propagate (lỗi 1033 lúc đầu là bình thường), repoint web bằng `localStorage.LILY_API_URL` không cần redeploy
+- Tunnel chính là **ngrok**, nhưng browser production chỉ gọi Vercel `/api`; Vercel resolve ngrok server-side. Wi-Fi trường từng trả `ngrok.com` và domain tunnel về `94.140.14.33` (`standard-block.dns.adguard.com`), nên không dùng direct ngrok health làm gate. `start_all.ps1` kiểm tra `https://lily-hiro.vercel.app/api/health`. Cloudflared chỉ còn là dự phòng khi proxy thật sự lỗi: BẮT BUỘC `--protocol http2`, cần ~15-30s propagate, repoint bằng `localStorage.LILY_API_URL`.
 - **Port 8000 conflict (bẫy mới 18/07)**: dev server DongAnhCapital local (`uvicorn main:app --host 127.0.0.1 --port 8000`) bind 127.0.0.1 sẽ **cướp mọi request localhost** của Lily (bind 0.0.0.0) — web/tunnel/robot đều hỏng khó hiểu. `start_all.ps1` tự phát hiện và chặn; đừng chạy 2 server cùng lúc
 - GitHub clone rất chậm (~600KB/s) — shallow clone + background + timeout 10 phút
 
@@ -97,7 +97,7 @@ Quyết định đã chốt với user:
 **Vercel:**
 - Team này bật Deployment Protection mặc định cho project mới — tạo project mới nhớ tắt (user tự tắt trên dashboard; **classifier chặn Claude tự sửa qua API** — đừng thử lại, hãy nhờ user)
 - `vercel domains rm` KHÔNG xóa được subdomain cấp project → dùng REST API: `DELETE /v9/projects/lily-ai/domains/<domain>?teamId=team_VbCMm63EOZWCK4yuFqal9Qev` với token tại `%APPDATA%\xdg.data\com.vercel.cli\auth.json`
-- Deploy chuẩn (login: findahuman): build local + prebuilt. **CẢNH BÁO: `vercel deploy --build-env VITE_API_URL=...` KHÔNG bake env vào bundle (đã dính 17/07 — bundle fallback localhost:8000). Luôn build local rồi kiểm tra bundle trước khi đẩy.**
+- Deploy chuẩn (login: findahuman): `vercel pull --yes --environment production` → `vercel build --prod --yes` → `vercel deploy --prebuilt --prod --yes`. Production không dùng `VITE_API_URL`; kiểm tra `/api/health` sau deploy.
 
 **Nội dung:**
 - Không bao giờ cam kết/hứa lợi nhuận trong bất kỳ nội dung nào liên quan DAC (rule cứng của DAC); confidence = độ tin cậy model, không phải tỷ lệ thắng
@@ -120,7 +120,8 @@ Quyết định đã chốt với user:
 | `start_all.ps1` / `stop_all.ps1` / `keepalive_dac.ps1` | Khởi động/tắt 1 lệnh + giữ Render DAC thức |
 | `frontend/src/data/subjects.js` | Nguồn duy nhất: 2 môn, lessons, quiz |
 | `frontend/src/data/quiz_ktct.json` | 60 câu KTCT (generated — sửa thì sửa BoCauHoi rồi parse lại) |
-| `frontend/src/config.js` | API_BASE (localStorage override → VITE_API_URL) + `apiFetch` (header ngrok) |
+| `frontend/src/config.js` | API_BASE (localStorage override → production `/api` → dev URL) + `apiFetch` |
+| `frontend/vercel.json` | Reverse proxy `/api/:path*` đến ngrok trước SPA fallback |
 | `frontend/public/slides_ktct/` | 31 ảnh slide KTCT (generated từ ChuDe4Presentation.pdf) |
 | `PRESENTATION.md` | Kịch bản 3 phần + checklist ngày D + dự phòng |
 | `todolist.txt` | Việc xong / chờ / lệnh nhanh |
@@ -140,10 +141,10 @@ venv\Scripts\python main.py api                                  # backend
 .\ngrok.exe http --domain=<NGROK_DOMAIN> 8000                    # tunnel cố định
 cd mcp; ..\venv\Scripts\python mcp_pipe.py                       # robot
 
-# Redeploy frontend (CHỈ khi đổi domain ngrok / sửa code FE; --build-env KHÔNG hoạt động)
+# Redeploy frontend (CHỈ khi đổi domain ngrok / sửa code FE hoặc proxy)
 cd frontend
 vercel pull --yes --environment production
-$env:VITE_API_URL='https://<NGROK_DOMAIN>'; vercel build --prod --yes
+vercel build --prod --yes
 vercel deploy --prebuilt --prod --yes
 
 # Re-ingest (TẮT backend + XÓA chroma_db trước)

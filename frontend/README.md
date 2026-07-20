@@ -18,18 +18,22 @@ backend from the repository root with `venv\Scripts\python main.py api`.
 `src/config.js` resolves the API base in this order:
 
 1. `localStorage.LILY_API_URL` for an emergency browser-side override;
-2. build-time `VITE_API_URL`;
-3. `http://localhost:8000`.
+2. same-origin `/api` on production;
+3. build-time `VITE_API_URL` or `http://localhost:8000` during local development.
 
-Example local build:
+Vercel rewrites `/api/:path*` to the static ngrok origin in `vercel.json`.
+The browser therefore resolves only `lily-hiro.vercel.app`; DNS filters that
+block ngrok on a school or conference network do not break production chat.
+
+Optional local development override:
 
 ```powershell
 $env:VITE_API_URL='https://your-static-domain.ngrok-free.dev'
 npm run build
 ```
 
-`VITE_API_URL` is baked into the bundle. Verify the built assets before a
-production deploy. Full ngrok/Vercel instructions are in
+`VITE_API_URL` is ignored by production builds so a stale tunnel URL cannot be
+baked into the browser bundle. Full ngrok/Vercel instructions are in
 `../GUIDE_KHOI_DONG.md`.
 
 ## Project data
@@ -43,6 +47,7 @@ are served from `public/slides/` and `public/slides_ktct/`.
 
 ```powershell
 npm run lint
+npm test
 npm run build
 ```
 

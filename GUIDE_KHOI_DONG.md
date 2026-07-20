@@ -3,15 +3,17 @@
 > Dùng file này mỗi khi cần bật lại hệ thống (ví dụ: ngày thuyết trình).
 > **Đường chính**: chạy `.\start_all.ps1` (1 lệnh, ~3-5 phút). Đường thủ công từng bước ở phần B là dự phòng.
 >
-> **Thay đổi lớn (18/07/2026)**: đã chuyển từ Cloudflare quick tunnel sang **ngrok static domain**
-> → URL backend **cố định vĩnh viễn**, KHÔNG cần deploy lại Vercel mỗi lần bật tunnel nữa.
+> **Thay đổi lớn (20/07/2026)**: browser gọi **Vercel same-origin `/api` proxy**,
+> Vercel mới gọi ngrok static domain. Wi-Fi trường/hội trường chặn DNS ngrok sẽ
+> không làm hỏng web chat; URL backend vẫn cố định và không cần deploy lại mỗi lần bật tunnel.
 
 ---
 
 ## Setup ngrok MỘT LẦN DUY NHẤT (nếu chưa làm)
 
 > **ĐÃ LÀM XONG 18/07/2026** — domain: `crumpled-exciting-undertow.ngrok-free.dev`, authtoken đã lưu,
-> `NGROK_DOMAIN` đã có trong `.env`, Vercel đã bake URL này. Phần dưới chỉ để tham khảo nếu làm lại từ đầu.
+> `NGROK_DOMAIN` đã có trong `.env`, `frontend/vercel.json` đã trỏ proxy đến domain này.
+> Phần dưới chỉ để tham khảo nếu làm lại từ đầu.
 
 1. Tạo tài khoản tại https://dashboard.ngrok.com (miễn phí).
 2. Dashboard → **Domains** → tạo 1 static domain miễn phí (dạng `xxx.ngrok-free.app` hoặc `xxx.ngrok-free.dev`). Ghi lại.
@@ -22,7 +24,7 @@
    ```
    NGROK_DOMAIN=<domain-cua-ban>
    ```
-7. Deploy lại Vercel 1 LẦN CUỐI với URL cố định (xem mục "Deploy lại Vercel" cuối file).
+7. Cập nhật destination `/api/:path*` trong `frontend/vercel.json`, rồi deploy lại Vercel 1 LẦN CUỐI.
    Sau lần này, không bao giờ phải redeploy vì tunnel nữa.
 
 ---
@@ -35,7 +37,7 @@ cd D:\VsCode\LilyAndHiro
 ```
 
 Script tự làm theo thứ tự: kiểm tra port 8000 trống → bật backend (chờ /health) → bật ngrok
-(verify tunnel) → bật robot bridge (mcp_pipe) → đánh thức server DongAnh Capital → bật vòng
+(verify qua Vercel `/api/health`) → bật robot bridge (mcp_pipe) → đánh thức server DongAnh Capital → bật vòng
 keep-alive DAC → in khối **READY** với đầy đủ URL.
 
 - Nếu bị chặn script: chạy 1 lần `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`.
@@ -74,11 +76,14 @@ Invoke-WebRequest -Uri "http://localhost:8000/health" -UseBasicParsing
 ngrok http --url=crumpled-exciting-undertow.ngrok-free.dev 8000
 ```
 
-URL cố định — không cần copy gì cả. Kiểm tra (cửa sổ 3):
+URL cố định — không cần copy gì cả. Kiểm tra đúng đường production (cửa sổ 3):
 
 ```powershell
-Invoke-WebRequest -Uri "https://crumpled-exciting-undertow.ngrok-free.dev/health" -Headers @{"ngrok-skip-browser-warning"="true"} -UseBasicParsing
+Invoke-WebRequest -Uri "https://lily-hiro.vercel.app/api/health" -Headers @{"ngrok-skip-browser-warning"="true"} -UseBasicParsing
 ```
+
+Không dùng lỗi khi mở trực tiếp `ngrok.com` để kết luận tunnel chết: DNS của
+Wi-Fi có thể trả `standard-block.dns.adguard.com` trong khi Vercel proxy vẫn hoạt động.
 
 ### Bước 3 — Robot (cửa sổ 3, GIỮ MỞ)
 
@@ -103,7 +108,10 @@ Invoke-WebRequest -Uri "https://donganhcapital.onrender.com/api/vnindex?limit=1"
 
 ---
 
-## Khẩn cấp giữa buổi: ngrok chết / bị chặn mạng hội trường
+## Khẩn cấp giữa buổi: ngrok tunnel/provider thật sự không tới được
+
+Chỉ dùng mục này khi `https://lily-hiro.vercel.app/api/health` lỗi. Việc máy
+chiếu không mở trực tiếp được `ngrok.com` không còn ảnh hưởng web production.
 
 1. Bật Cloudflare quick tunnel thay thế (cửa sổ mới):
    ```powershell
@@ -119,23 +127,22 @@ Invoke-WebRequest -Uri "https://donganhcapital.onrender.com/api/vnindex?limit=1"
 
 ---
 
-## Deploy lại Vercel (chỉ khi đổi domain ngrok hoặc sửa code frontend)
+## Deploy lại Vercel (chỉ khi đổi domain ngrok hoặc sửa code frontend/proxy)
 
-> **CẢNH BÁO**: KHÔNG dùng `vercel deploy --build-env VITE_API_URL=...` — lệnh đó âm thầm
-> không nướng URL vào bundle (đã dính 17/07/2026). Làm đúng 4 lệnh dưới:
+Production không còn bake `VITE_API_URL` vào bundle. Domain backend nằm trong
+rewrite same-origin của `frontend/vercel.json`.
 
 ```powershell
 cd D:\VsCode\LilyAndHiro\frontend
 vercel pull --yes --environment production
-$env:VITE_API_URL='https://crumpled-exciting-undertow.ngrok-free.dev'
 vercel build --prod --yes
 vercel deploy --prebuilt --prod --yes
 ```
 
-Kiểm tra URL đã nướng đúng trước khi deploy:
+Kiểm tra sau khi deploy:
 
 ```powershell
-Select-String -Path .vercel\output\static\assets\index-*.js -Pattern "ngrok-free" -List | Select-Object -First 1
+Invoke-WebRequest -Uri "https://lily-hiro.vercel.app/api/health" -UseBasicParsing
 ```
 
 Kết thúc phải thấy `▲ Aliased https://lily-hiro.vercel.app`.
@@ -148,8 +155,8 @@ Kết thúc phải thấy `▲ Aliased https://lily-hiro.vercel.app`.
 |---|---|---|
 | start_all báo port 8000 bị chiếm | Backend cũ còn chạy, HOẶC **dev server DongAnhCapital local** đang chạy port 8000 | Tắt process đó trước (script in sẵn PID). Dev DAC local bind 127.0.0.1 sẽ "cướp" request của Lily |
 | ngrok báo lỗi auth | Chưa `config add-authtoken` | Chạy lại bước setup 5 |
-| ngrok bị chặn ở mạng lạ | Firewall hội trường | Dùng mục "Khẩn cấp giữa buổi" (cloudflared + localStorage) |
-| Web chat không phản hồi | Backend tắt / tunnel chết | Xem cửa sổ backend + ngrok; web tự fallback `/chat` thường nếu streaming lỗi |
+| Mở trực tiếp ngrok báo SSL/DNS block | Wi-Fi trả domain về `standard-block.dns.adguard.com` | Không ảnh hưởng production nếu `/api/health` trả 200; browser chỉ gọi Vercel |
+| Web chat không phản hồi | Backend tắt / Vercel proxy không tới tunnel | Mở `/api/health`, rồi xem cửa sổ backend + ngrok; Lily vẫn tự fallback từ streaming sang `/chat` |
 | Web báo "Bạn hỏi nhanh quá" (429) | Rate limit 20 câu/phút/IP (khách lạ spam) | Bình thường — localhost và robot không bao giờ bị giới hạn |
 | Chữ tiếng Việt terminal lỗi/crash | Console cp1252 | Đã có `$env:PYTHONIOENCODING='utf-8'` — đừng bỏ |
 | Lily "không tìm thấy thông tin" | Sai chroma_db / chưa ingest tài liệu mới | Xem re-ingest trong `HANDOFF.md` (TẮT backend + XÓA `chroma_db` trước) |

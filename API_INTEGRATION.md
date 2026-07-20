@@ -150,7 +150,11 @@ two-subject data in `frontend/src/data/subjects.js`.
 The frontend resolves its backend in this order:
 
 1. `localStorage.LILY_API_URL` emergency override;
-2. build-time `VITE_API_URL`;
-3. `http://localhost:8000`.
+2. same-origin `/api` proxy in production;
+3. build-time `VITE_API_URL` or `http://localhost:8000` in local development.
+
+`frontend/vercel.json` forwards `/api/:path*` to the static ngrok origin before
+the SPA fallback. This keeps the ngrok hostname out of the browser's DNS path
+and preserves POST bodies and SSE responses through the Vercel reverse proxy.
 
 See `GUIDE_KHOI_DONG.md` for ngrok and deployment operations.
