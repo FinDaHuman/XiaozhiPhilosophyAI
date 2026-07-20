@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Send } from 'lucide-react'
 import { JarvisOrb } from 'jarvis-ai-web-animation'
@@ -29,6 +29,15 @@ const ASSISTANTS = {
   },
 }
 
+const ASSISTANT_TITLES = {
+  lily: 'Language Integrated Learning Yield',
+  hiro: 'Hyper-scaled Investment & Risk Oversight',
+}
+
+const TITLE_DELETE_DELAY = 34
+const TITLE_TYPE_DELAY = 48
+const TITLE_PHASE_PAUSE = 140
+
 function buildHistory(turns) {
   return turns
     .filter(turn => turn.answer && !turn.failed)
@@ -58,10 +67,15 @@ function HiroPage() {
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [orbState, setOrbState] = useState('idle')
+  const [expandedTitles, setExpandedTitles] = useState({ lily: false, hiro: false })
+  const [displayedTitles, setDisplayedTitles] = useState({ lily: 'Lily', hiro: 'Hiro' })
+  const [typingTitles, setTypingTitles] = useState({ lily: false, hiro: false })
   const inputRef = useRef(null)
   const transcriptRef = useRef(null)
   const shouldStickToBottomRef = useRef(true)
   const forceScrollToBottomRef = useRef(false)
+  const titleTimersRef = useRef({})
+  const displayedTitlesRef = useRef({ lily: 'Lily', hiro: 'Hiro' })
 
   const assistant = ASSISTANTS[selected]
   const turns = threads[selected]
@@ -73,6 +87,10 @@ function HiroPage() {
     () => turns.map(turn => ({ ...turn, answer: cleanModelText(turn.answer || '') })),
     [turns],
   )
+
+  useEffect(() => () => {
+    Object.values(titleTimersRef.current).forEach(window.clearTimeout)
+  }, [])
 
   useLayoutEffect(() => {
     const transcript = transcriptRef.current
@@ -98,6 +116,58 @@ function HiroPage() {
     setInput('')
     setOrbState('idle')
     window.requestAnimationFrame(() => inputRef.current?.focus())
+  }
+
+  const updateDisplayedTitle = (id, value) => {
+    displayedTitlesRef.current[id] = value
+    setDisplayedTitles(previous => ({ ...previous, [id]: value }))
+  }
+
+  const animateTitle = (id, target) => {
+    window.clearTimeout(titleTimersRef.current[id])
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      updateDisplayedTitle(id, target)
+      setTypingTitles(previous => ({ ...previous, [id]: false }))
+      return
+    }
+
+    setTypingTitles(previous => ({ ...previous, [id]: true }))
+
+    const typeNextCharacter = (characterIndex = 0) => {
+      if (characterIndex >= target.length) {
+        setTypingTitles(previous => ({ ...previous, [id]: false }))
+        return
+      }
+
+      updateDisplayedTitle(id, target.slice(0, characterIndex + 1))
+      titleTimersRef.current[id] = window.setTimeout(
+        () => typeNextCharacter(characterIndex + 1),
+        TITLE_TYPE_DELAY,
+      )
+    }
+
+    const deleteNextCharacter = () => {
+      const current = displayedTitlesRef.current[id]
+      if (!current) {
+        titleTimersRef.current[id] = window.setTimeout(() => typeNextCharacter(), TITLE_PHASE_PAUSE)
+        return
+      }
+
+      updateDisplayedTitle(id, current.slice(0, -1))
+      titleTimersRef.current[id] = window.setTimeout(deleteNextCharacter, TITLE_DELETE_DELAY)
+    }
+
+    deleteNextCharacter()
+  }
+
+  const toggleAssistantTitle = () => {
+    if (hasConversation) return
+
+    const nextExpanded = !expandedTitles[selected]
+    const target = nextExpanded ? ASSISTANT_TITLES[selected] : assistant.name
+    setExpandedTitles(previous => ({ ...previous, [selected]: nextExpanded }))
+    animateTitle(selected, target)
   }
 
   const submit = async (event) => {
@@ -181,8 +251,20 @@ function HiroPage() {
 
         <div className="hiro-workspace">
           <section className="hiro-orb-region" aria-label={ariaStatus}>
-            {!hasConversation && <h1>{assistant.name}</h1>}
-            <div className="hiro-orb-shell">
+            {!hasConversation && (
+              <h1 className={expandedTitles[selected] ? 'is-expanded' : ''}>
+                <span>{displayedTitles[selected]}</span>
+                <i className={typingTitles[selected] ? 'is-visible' : ''} aria-hidden="true" />
+              </h1>
+            )}
+            <button
+              type="button"
+              className="hiro-orb-shell"
+              onClick={toggleAssistantTitle}
+              aria-label={hasConversation ? ariaStatus : `Chuyển đổi tên đầy đủ của ${assistant.name}`}
+              aria-disabled={hasConversation}
+              tabIndex={hasConversation ? -1 : 0}
+            >
               <JarvisOrb
                 key={selected}
                 size={orbSize}
@@ -194,7 +276,7 @@ function HiroPage() {
                 breathingIntensity={0.75}
                 ariaLabel={ariaStatus}
               />
-            </div>
+            </button>
           </section>
 
           {hasConversation && (
