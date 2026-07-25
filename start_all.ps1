@@ -2,6 +2,9 @@
 # Chay tu root repo:  .\start_all.ps1
 # Neu bi chan script:  Set-ExecutionPolicy -Scope CurrentUser RemoteSigned  (chay 1 lan)
 $ErrorActionPreference = "Continue"
+# Child processes inherit this value; keep it out of -Command strings so
+# Start-Process cannot strip the quotes around utf-8.
+$env:PYTHONIOENCODING = "utf-8"
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $py   = Join-Path $root "venv\Scripts\python.exe"
 
@@ -42,7 +45,7 @@ if ($conflict) {
 
 # --- 1) Backend (cua so rieng, giu mo) ---
 Write-Host "[1/6] Bat backend Lily (load embeddings lan dau co the mat 1-2 phut)..."
-$backendCmd = '$env:PYTHONIOENCODING="utf-8"; Set-Location "' + $root + '"; & "' + $py + '" main.py api'
+$backendCmd = 'Set-Location "' + $root + '"; & "' + $py + '" main.py api'
 $p = Start-Process powershell -ArgumentList '-NoExit','-Command',$backendCmd -PassThru
 $pids["backend"] = $p.Id
 
@@ -90,7 +93,7 @@ if ($tunnelOk) {
 # --- 4) Robot bridge (mcp_pipe.py, cua so rieng) ---
 Write-Host "[3/6] Bat robot bridge (mcp_pipe.py)..."
 $mcpDir = Join-Path $root "mcp"
-$pipeCmd = '$env:PYTHONIOENCODING="utf-8"; Set-Location "' + $mcpDir + '"; & "' + $py + '" mcp_pipe.py'
+$pipeCmd = 'Set-Location "' + $mcpDir + '"; & "' + $py + '" mcp_pipe.py'
 $p = Start-Process powershell -ArgumentList '-NoExit','-Command',$pipeCmd -PassThru
 $pids["mcp_pipe"] = $p.Id
 
